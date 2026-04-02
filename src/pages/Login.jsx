@@ -28,16 +28,19 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-medical">
-      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+      <div className="bg-white p-10 rounded-2xl shadow-soft w-full max-w-md border border-slate-100">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">CareLink HMS</h1>
-          <p className="text-gray-600">Connecting Care, Simplifying Healthcare</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl mb-4">
+            <span className="text-3xl">🏥</span>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">CareLink</h1>
+          <p className="text-slate-600 text-sm">Hospital Management System</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Email Address
             </label>
             <input
@@ -45,13 +48,13 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               placeholder="your.email@hospital.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Password
             </label>
             <input
@@ -59,7 +62,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               placeholder="••••••••"
             />
           </div>
@@ -67,15 +70,15 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all-smooth disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>CareLink HMS v1.0</p>
-          <p className="mt-2">For support: gabiondavidselorm@gmail.com</p>
+        <div className="mt-8 text-center text-xs text-slate-500">
+          <p>CareLink v1.0</p>
+          <p className="mt-1.5">Support: gabiondavidselorm@gmail.com</p>
         </div>
       </div>
     </div>

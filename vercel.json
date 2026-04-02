@@ -1,4 +1,5 @@
 {
+  "name": "carelink-hms-dgs",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",

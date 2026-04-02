@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
-import { toast } from 'react-toastify'
+import { getSupabaseCount, getSupabaseData, isSupabaseFailure, withTimeout } from '../services/queryTimeout'
 import {
   LineChart,
   Line,
@@ -27,6 +27,7 @@ import {
 
 const Reports = () => {
   const [loading, setLoading] = useState(true)
+  const [loadWarning, setLoadWarning] = useState('')
   const [analytics, setAnalytics] = useState({
     totalPatients: 0,
     totalRevenue: 0,
@@ -49,42 +50,62 @@ const Reports = () => {
 
   const fetchAnalytics = async () => {
     try {
-      // Total patients
-      const { count: patientsCount } = await supabase
-        .from('patients')
-        .select('*', { count: 'exact', head: true })
+      const results = await Promise.allSettled([
+        withTimeout(
+          supabase.from('patients').select('*', { count: 'exact', head: true }),
+          'Patients report',
+        ),
+        withTimeout(
+          supabase.from('prescriptions').select('*', { count: 'exact', head: true }),
+          'Prescriptions report',
+        ),
+        withTimeout(
+          supabase.from('claims').select('*', { count: 'exact', head: true }),
+          'Claims report',
+        ),
+        withTimeout(
+          supabase.from('claims').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+          'Pending claims report',
+        ),
+        withTimeout(
+          supabase.from('claims').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+          'Approved claims report',
+        ),
+        withTimeout(
+          supabase.from('payments').select('amount, payment_method, created_at').eq('status', 'completed'),
+          'Payments report',
+        ),
+        withTimeout(
+          supabase.from('drugs').select('*', { count: 'exact', head: true }).lt('stock', 10),
+          'Low stock report',
+        ),
+        withTimeout(
+          supabase.from('prescription_items').select('drug_name, quantity'),
+          'Prescription items report',
+        ),
+        withTimeout(
+          supabase.from('claims').select('status'),
+          'Claims status report',
+        ),
+      ])
 
-      // Total prescriptions
-      const { count: prescriptionsCount } = await supabase
-        .from('prescriptions')
-        .select('*', { count: 'exact', head: true })
+      const [
+        patientsResult,
+        prescriptionsResult,
+        claimsResult,
+        pendingClaimsResult,
+        approvedClaimsResult,
+        paymentsResult,
+        lowStockResult,
+        prescriptionItemsResult,
+        claimsStatusResult,
+      ] = results
 
-      // Total claims
-      const { count: claimsCount } = await supabase
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-
-      // Claims by status
-      const { count: pendingClaimsCount } = await supabase
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
-
-      const { count: approvedClaimsCount } = await supabase
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'approved')
-
-      // Total revenue
-      const { data: payments } = await supabase
-        .from('payments')
-        .select('amount, payment_method, created_at')
-        .eq('status', 'completed')
-
-      const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0
+      const payments = getSupabaseData(paymentsResult)
+      const totalRevenue = payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0)
 
       // Revenue by payment method
-      const revenueByMethod = payments?.reduce((acc, payment) => {
+      const revenueByMethod = payments.reduce((acc, payment) => {
         const method = payment.payment_method || 'unknown'
         const existing = acc.find((item) => item.name === method)
         if (existing) {
@@ -93,10 +114,10 @@ const Reports = () => {
           acc.push({ name: method, value: parseFloat(payment.amount || 0) })
         }
         return acc
-      }, []) || []
+      }, [])
 
       // Monthly revenue (last 6 months)
-      const monthlyRevenue = payments?.reduce((acc, payment) => {
+      const monthlyRevenue = payments.reduce((acc, payment) => {
         const month = new Date(payment.created_at).toLocaleDateString('en-US', {
           month: 'short',
           year: 'numeric',
@@ -108,35 +129,24 @@ const Reports = () => {
           acc.push({ month, revenue: parseFloat(payment.amount || 0) })
         }
         return acc
-      }, []) || []
+      }, [])
 
-      // Low stock drugs
-      const { count: lowStockCount } = await supabase
-        .from('drugs')
-        .select('*', { count: 'exact', head: true })
-        .lt('stock', 10)
-
-      // Top prescribed drugs
-      const { data: prescriptionItems } = await supabase
-        .from('prescription_items')
-        .select('drug_name, quantity')
-
-      const topDrugs = prescriptionItems?.reduce((acc, item) => {
-        const existing = acc.find((d) => d.name === item.drug_name)
+      const prescriptionItems = getSupabaseData(prescriptionItemsResult)
+      const topDrugs = prescriptionItems.reduce((acc, item) => {
+        const drugName = item.drug_name || 'Unknown drug'
+        const existing = acc.find((d) => d.name === drugName)
         if (existing) {
           existing.count += item.quantity
         } else {
-          acc.push({ name: item.drug_name, count: item.quantity })
+          acc.push({ name: drugName, count: item.quantity })
         }
         return acc
       }, [])
         .sort((a, b) => b.count - a.count)
-        .slice(0, 5) || []
+        .slice(0, 5)
 
-      // Claims by status
-      const { data: allClaims } = await supabase.from('claims').select('status')
-
-      const claimsByStatus = allClaims?.reduce((acc, claim) => {
+      const allClaims = getSupabaseData(claimsStatusResult)
+      const claimsByStatus = allClaims.reduce((acc, claim) => {
         const status = claim.status || 'unknown'
         const existing = acc.find((item) => item.name === status)
         if (existing) {
@@ -145,24 +155,30 @@ const Reports = () => {
           acc.push({ name: status, value: 1 })
         }
         return acc
-      }, []) || []
+      }, [])
+      const hasFailures = results.some(isSupabaseFailure)
 
       setAnalytics({
-        totalPatients: patientsCount || 0,
+        totalPatients: getSupabaseCount(patientsResult),
         totalRevenue,
-        totalClaims: claimsCount || 0,
-        pendingClaims: pendingClaimsCount || 0,
-        approvedClaims: approvedClaimsCount || 0,
-        totalPrescriptions: prescriptionsCount || 0,
-        lowStockDrugs: lowStockCount || 0,
+        totalClaims: getSupabaseCount(claimsResult),
+        pendingClaims: getSupabaseCount(pendingClaimsResult),
+        approvedClaims: getSupabaseCount(approvedClaimsResult),
+        totalPrescriptions: getSupabaseCount(prescriptionsResult),
+        lowStockDrugs: getSupabaseCount(lowStockResult),
         revenueByMethod,
         claimsByStatus,
         monthlyRevenue: monthlyRevenue.slice(-6),
         topDrugs,
       })
+      setLoadWarning(
+        hasFailures
+          ? 'Some report data could not be loaded. Check your Supabase connection and table permissions.'
+          : '',
+      )
     } catch (error) {
       console.error('Error fetching analytics:', error)
-      toast.error('Failed to load analytics')
+      setLoadWarning('Reports could not be loaded. Check your Supabase connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -171,8 +187,10 @@ const Reports = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="spinner"></div>
+        <div className="min-h-[320px] flex flex-col items-center justify-center text-center">
+          <div className="spinner mb-4"></div>
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">Loading reports</h2>
+          <p className="text-slate-600">Fetching analytics and preparing your dashboard.</p>
         </div>
       </DashboardLayout>
     )
@@ -181,6 +199,12 @@ const Reports = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {loadWarning ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-amber-800">
+            {loadWarning}
+          </div>
+        ) : null}
+
         {/* Header */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-2xl font-bold text-gray-800">Reports & Analytics</h2>

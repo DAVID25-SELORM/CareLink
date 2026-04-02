@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
-import { toast } from 'react-toastify'
+import { withTimeout } from '../services/queryTimeout'
 
 /**
  * Patients List Page
@@ -13,6 +13,7 @@ const Patients = () => {
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [loadWarning, setLoadWarning] = useState('')
 
   useEffect(() => {
     fetchPatients()
@@ -20,16 +21,18 @@ const Patients = () => {
 
   const fetchPatients = async () => {
     try {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const { data, error } = await withTimeout(
+        supabase.from('patients').select('*').order('created_at', { ascending: false }),
+        'Patients list',
+      )
 
       if (error) throw error
       setPatients(data || [])
+      setLoadWarning('')
     } catch (error) {
       console.error('Error fetching patients:', error)
-      toast.error('Failed to load patients')
+      setPatients([])
+      setLoadWarning('Patients could not be loaded. Check your Supabase connection and table permissions.')
     } finally {
       setLoading(false)
     }
@@ -44,8 +47,10 @@ const Patients = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="spinner"></div>
+        <div className="min-h-[320px] flex flex-col items-center justify-center text-center">
+          <div className="spinner mb-4"></div>
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">Loading patients</h2>
+          <p className="text-slate-600">Fetching registered patient records.</p>
         </div>
       </DashboardLayout>
     )
@@ -54,6 +59,12 @@ const Patients = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {loadWarning ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-amber-800">
+            {loadWarning}
+          </div>
+        ) : null}
+
         {/* Header Actions */}
         <div className="flex justify-between items-center">
           <div className="flex-1 max-w-md">

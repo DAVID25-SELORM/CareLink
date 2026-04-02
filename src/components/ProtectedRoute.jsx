@@ -12,8 +12,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="spinner"></div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-slate-200 p-8 text-center">
+          <div className="spinner mx-auto mb-4"></div>
+          <h1 className="text-xl font-semibold text-slate-800 mb-2">Loading CareLink</h1>
+          <p className="text-slate-600">
+            We are checking your session and preparing the page.
+          </p>
+        </div>
       </div>
     )
   }
@@ -24,7 +30,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-lg shadow p-8 text-center">
           <h1 className="text-2xl font-bold text-dark mb-3">Access Restricted</h1>
           <p className="text-gray-600 mb-6">

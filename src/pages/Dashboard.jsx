@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
-import { toast } from 'react-toastify'
+import { getSupabaseCount, getSupabaseData, isSupabaseFailure, withTimeout } from '../services/queryTimeout'
 
 /**
  * Dashboard Page
@@ -18,6 +18,7 @@ const Dashboard = () => {
     lowStockDrugs: 0
   })
   const [loading, setLoading] = useState(true)
+  const [loadWarning, setLoadWarning] = useState('')
 
   useEffect(() => {
     fetchDashboardStats()
@@ -25,52 +26,62 @@ const Dashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      // Fetch total patients
-      const { count: patientsCount } = await supabase
-        .from('patients')
-        .select('*', { count: 'exact', head: true })
+      const results = await Promise.allSettled([
+        withTimeout(
+          supabase.from('patients').select('*', { count: 'exact', head: true }),
+          'Patients summary',
+        ),
+        withTimeout(
+          supabase.from('prescriptions').select('*', { count: 'exact', head: true }),
+          'Prescriptions summary',
+        ),
+        withTimeout(
+          supabase.from('claims').select('*', { count: 'exact', head: true }),
+          'Claims summary',
+        ),
+        withTimeout(
+          supabase.from('claims').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+          'Pending claims summary',
+        ),
+        withTimeout(
+          supabase.from('payments').select('amount').eq('status', 'completed'),
+          'Payments summary',
+        ),
+        withTimeout(
+          supabase.from('drugs').select('*', { count: 'exact', head: true }).lt('stock', 10),
+          'Low stock summary',
+        ),
+      ])
 
-      // Fetch total prescriptions
-      const { count: prescriptionsCount } = await supabase
-        .from('prescriptions')
-        .select('*', { count: 'exact', head: true })
+      const [
+        patientsResult,
+        prescriptionsResult,
+        claimsResult,
+        pendingClaimsResult,
+        paymentsResult,
+        lowStockResult,
+      ] = results
 
-      // Fetch total claims
-      const { count: claimsCount } = await supabase
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-
-      // Fetch pending claims
-      const { count: pendingClaimsCount } = await supabase
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
-
-      // Fetch total revenue
-      const { data: payments } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('status', 'completed')
-
-      const totalRevenue = payments?.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0) || 0
-
-      // Fetch low stock drugs
-      const { count: lowStockCount } = await supabase
-        .from('drugs')
-        .select('*', { count: 'exact', head: true })
-        .lt('stock', 10)
+      const payments = getSupabaseData(paymentsResult)
+      const totalRevenue = payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0)
+      const hasFailures = results.some(isSupabaseFailure)
 
       setStats({
-        totalPatients: patientsCount || 0,
-        totalPrescriptions: prescriptionsCount || 0,
-        totalClaims: claimsCount || 0,
-        pendingClaims: pendingClaimsCount || 0,
-        totalRevenue: totalRevenue,
-        lowStockDrugs: lowStockCount || 0
+        totalPatients: getSupabaseCount(patientsResult),
+        totalPrescriptions: getSupabaseCount(prescriptionsResult),
+        totalClaims: getSupabaseCount(claimsResult),
+        pendingClaims: getSupabaseCount(pendingClaimsResult),
+        totalRevenue,
+        lowStockDrugs: getSupabaseCount(lowStockResult),
       })
+      setLoadWarning(
+        hasFailures
+          ? 'Some dashboard data could not be loaded. Check your Supabase connection and table permissions.'
+          : '',
+      )
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
-      toast.error('Failed to load dashboard statistics')
+      setLoadWarning('Dashboard data could not be loaded. Check your Supabase connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -92,8 +103,10 @@ const Dashboard = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="spinner"></div>
+        <div className="min-h-[320px] flex flex-col items-center justify-center text-center">
+          <div className="spinner mb-4"></div>
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">Loading dashboard</h2>
+          <p className="text-slate-600">Fetching summary data from CareLink.</p>
         </div>
       </DashboardLayout>
     )
@@ -102,6 +115,12 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {loadWarning ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-amber-800">
+            {loadWarning}
+          </div>
+        ) : null}
+
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-2xl font-bold text-dark mb-2">Welcome to CareLink HMS</h2>
           <p className="text-gray-600">Your comprehensive hospital management solution</p>

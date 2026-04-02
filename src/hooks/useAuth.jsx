@@ -14,6 +14,49 @@ import { logAuditEvent } from '../services/auditLog'
  */
 
 const AuthContext = createContext(null)
+const ROLE_CACHE_PREFIX = 'carelink-role:'
+
+const getRoleCacheKey = (authUser) => {
+  if (!authUser) return null
+  return `${ROLE_CACHE_PREFIX}${authUser.id || authUser.email || 'anonymous'}`
+}
+
+const getCachedRole = (authUser) => {
+  const cacheKey = getRoleCacheKey(authUser)
+  if (!cacheKey) return null
+
+  try {
+    return window.localStorage.getItem(cacheKey)
+  } catch (error) {
+    console.warn('Unable to read cached role:', error)
+    return null
+  }
+}
+
+const cacheRole = (authUser, role) => {
+  const cacheKey = getRoleCacheKey(authUser)
+  if (!cacheKey || !role) return
+
+  try {
+    window.localStorage.setItem(cacheKey, role)
+  } catch (error) {
+    console.warn('Unable to cache role:', error)
+  }
+}
+
+const getFallbackRole = (authUser) =>
+  authUser?.user_metadata?.role ||
+  authUser?.app_metadata?.role ||
+  getCachedRole(authUser) ||
+  'staff'
+
+const withTimeout = (promise, timeoutMs = 3000) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Request timed out after ${Math.round(timeoutMs / 1000)} seconds`)), timeoutMs)
+    }),
+  ])
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -34,12 +77,14 @@ export const AuthProvider = ({ children }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         setUser(session.user)
-        await fetchUserRole(session.user)
+        setUserRole(getFallbackRole(session.user))
+        setLoading(false)
+        fetchUserRole(session.user)
       } else {
         setUser(null)
         setUserRole(null)
+        setLoading(false)
       }
-      setLoading(false)
     })
 
     return () => {
@@ -51,11 +96,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const {
         data: { session },
-      } = await supabase.auth.getSession()
+      } = await withTimeout(supabase.auth.getSession(), 3000)
 
       if (session) {
         setUser(session.user)
-        await fetchUserRole(session.user)
+        setUserRole(getFallbackRole(session.user))
+        fetchUserRole(session.user)
       }
     } catch (error) {
       console.error('Error checking user:', error)
@@ -74,11 +120,14 @@ export const AuthProvider = ({ children }) => {
       let roleRecord = null
 
       if (authUser.id) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', authUser.id)
-          .maybeSingle()
+        const { data, error } = await withTimeout(
+          supabase
+            .from('users')
+            .select('role')
+            .eq('id', authUser.id)
+            .maybeSingle(),
+          3000,
+        )
 
         if (error) throw error
         roleRecord = data
@@ -86,20 +135,28 @@ export const AuthProvider = ({ children }) => {
 
       // The setup docs create users by email, so support that path too.
       if (!roleRecord && authUser.email) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('email', authUser.email)
-          .maybeSingle()
+        const { data, error } = await withTimeout(
+          supabase
+            .from('users')
+            .select('role')
+            .eq('email', authUser.email)
+            .maybeSingle(),
+          3000,
+        )
 
         if (error) throw error
         roleRecord = data
       }
 
-      setUserRole(roleRecord?.role || 'staff')
+      const resolvedRole = roleRecord?.role || getFallbackRole(authUser)
+      setUserRole(resolvedRole)
+      cacheRole(authUser, resolvedRole)
+      return resolvedRole
     } catch (error) {
       console.error('Error fetching user role:', error)
-      setUserRole('staff')
+      const fallbackRole = getFallbackRole(authUser)
+      setUserRole(fallbackRole)
+      return fallbackRole
     }
   }
 
@@ -161,7 +218,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   )
 }

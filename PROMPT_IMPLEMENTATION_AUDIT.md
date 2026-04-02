@@ -51,6 +51,7 @@ Status keys:
 | NHIS support in patient records | Done | Patient registration/list pages include NHIS fields. |
 | MoMo provider support (MTN, Telecel, AirtelTigo) | Partial | Schema supports `momo_provider`, but the UI does not collect or manage provider details yet. |
 | Stock alerts if stock < 10 | Done | Reflected in dashboard and drug inventory UI. |
+| Doctor-facing prescription entry | Done | `src/pages/Prescriptions.jsx` creates prescriptions and prescription items for pharmacy and billing. |
 
 ## Phase 3: Mobile App
 

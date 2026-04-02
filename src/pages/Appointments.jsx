@@ -162,30 +162,30 @@ const Appointments = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Appointments</h2>
+          <h2 className="text-2xl font-semibold text-slate-800">Appointments Schedule</h2>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all-smooth shadow-sm hover:shadow"
           >
-            {showAddForm ? 'Cancel' : 'Book Appointment'}
+            {showAddForm ? '✕ Close' : '+ New Appointment'}
           </button>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-gray-600 text-sm">Upcoming</p>
-            <p className="text-2xl font-bold text-blue-600">{upcomingAppointments.length}</p>
+          <div className="bg-white rounded-xl shadow-card p-5 border border-slate-100">
+            <p className="text-slate-500 text-xs font-medium uppercase tracking-wide">Upcoming</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">{upcomingAppointments.length}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-gray-600 text-sm">Today</p>
-            <p className="text-2xl font-bold text-green-600">
+          <div className="bg-white rounded-xl shadow-card p-5 border border-slate-100">
+            <p className="text-slate-500 text-xs font-medium uppercase tracking-wide">Today</p>
+            <p className="text-3xl font-bold text-green-600 mt-2">
               {appointments.filter(a => a.appointment_date === today).length}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <p className="text-gray-600 text-sm">Completed</p>
-            <p className="text-2xl font-bold text-gray-600">
+          <div className="bg-white rounded-xl shadow-card p-5 border border-slate-100">
+            <p className="text-slate-500 text-xs font-medium uppercase tracking-wide">Completed</p>
+            <p className="text-3xl font-bold text-slate-700 mt-2">
               {appointments.filter(a => a.status === 'completed').length}
             </p>
           </div>
@@ -193,14 +193,14 @@ const Appointments = () => {
 
         {/* Add Appointment Form */}
         {showAddForm && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Book New Appointment</h3>
+          <div className="bg-white rounded-xl shadow-soft p-6 border border-slate-100">
+            <h3 className="text-lg font-semibold text-slate-800 mb-5">Book New Appointment</h3>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <select
                 value={formData.patient_id}
                 onChange={(e) => setFormData({...formData, patient_id: e.target.value})}
                 required
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="">Select Patient</option>
                 {patients.map(patient => (
@@ -211,7 +211,7 @@ const Appointments = () => {
                 value={formData.doctor_id}
                 onChange={(e) => setFormData({...formData, doctor_id: e.target.value})}
                 required
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="">Select Doctor</option>
                 {doctors.map(doctor => (
@@ -224,25 +224,25 @@ const Appointments = () => {
                 onChange={(e) => setFormData({...formData, appointment_date: e.target.value})}
                 required
                 min={today}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <input
                 type="time"
                 value={formData.appointment_time}
                 onChange={(e) => setFormData({...formData, appointment_time: e.target.value})}
                 required
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <textarea
                 value={formData.reason}
                 onChange={(e) => setFormData({...formData, reason: e.target.value})}
-                placeholder="Reason for appointment"
+                placeholder="Reason for appointment..."
                 rows="3"
-                className="md:col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="md:col-span-2 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <button
                 type="submit"
-                className="md:col-span-2 bg-medical hover:bg-green-600 text-white py-2 rounded-lg transition"
+                className="md:col-span-2 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg transition-all-smooth font-medium text-sm shadow-sm"
               >
                 Book Appointment
               </button>
@@ -251,75 +251,78 @@ const Appointments = () => {
         )}
 
         {/* Appointments Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-white rounded-xl shadow-soft overflow-hidden border border-slate-100">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Patient
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Doctor
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Date & Time
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Reason
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-slate-100">
               {appointments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                    No appointments scheduled
+                  <td colSpan="6" className="px-6 py-16 text-center text-slate-500 text-sm">
+                    <div className="flex flex-col items-center">
+                      <span className="text-4xl mb-2">📅</span>
+                      <p>No appointments scheduled yet</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 appointments.map((appointment) => (
-                  <tr key={appointment.id} className="hover:bg-gray-50">
+                  <tr key={appointment.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-medium">{appointment.patients?.name}</div>
-                      <div className="text-sm text-gray-600">{appointment.patients?.phone}</div>
+                      <div className="font-medium text-slate-800">{appointment.patients?.name}</div>
+                      <div className="text-xs text-slate-500">{appointment.patients?.phone}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-6 py-4 text-sm text-slate-700">
                       {appointment.users?.full_name || appointment.users?.email || appointment.doctor_name || '-'}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-medium">{new Date(appointment.appointment_date).toLocaleDateString()}</div>
-                      <div className="text-sm text-gray-600">{appointment.appointment_time}</div>
+                      <div className="font-medium text-slate-800">{new Date(appointment.appointment_date).toLocaleDateString('en-GB')}</div>
+                      <div className="text-xs text-slate-500">{appointment.appointment_time}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-6 py-4 text-sm text-slate-600">
                       {appointment.reason || '-'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-blue-100 text-blue-800'
+                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                        appointment.status === 'completed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                        appointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border border-red-200' :
+                        'bg-blue-50 text-blue-700 border border-blue-200'
                       }`}>
                         {appointment.status}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       {appointment.status === 'scheduled' && (
-                        <div className="flex space-x-2">
+                        <div className="flex gap-3">
                           <button
                             onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                            className="text-green-600 hover:text-green-800 text-sm"
+                            className="text-green-600 hover:text-green-700 text-sm font-medium"
                           >
                             Complete
                           </button>
                           <button
                             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                            className="text-red-600 hover:text-red-800 text-sm"
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
                           >
                             Cancel
                           </button>
