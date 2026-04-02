@@ -177,6 +177,7 @@ SELECT
   (SELECT id FROM users WHERE email = 'doctor@carelink.com'),
   'Dr. Sarah Johnson',
   '2026-04-01',
+  '16:00:00',
   'Cold and flu symptoms',
   'completed'
 WHERE EXISTS (SELECT 1 FROM patients WHERE name = 'Grace Owusu');
