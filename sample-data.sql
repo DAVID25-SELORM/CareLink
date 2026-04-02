@@ -174,7 +174,6 @@ WHERE EXISTS (SELECT 1 FROM patients WHERE name = 'Ama Tetteh');
 INSERT INTO appointments (patient_id, doctor_id, doctor_name, appointment_date, appointment_time, reason, status)
 SELECT 
   (SELECT id FROM patients WHERE name = 'Grace Owusu'),
-  (SELECT id FROM patients WHERE name = 'Grace Owusu'),
   (SELECT id FROM users WHERE email = 'doctor@carelink.com'),
   'Dr. Sarah Johnson',
   '2026-04-01',
