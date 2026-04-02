@@ -14,7 +14,7 @@ Status keys:
 | --- | --- | --- |
 | React + Vite project | Done | Vite app is configured in `package.json` and `vite.config.js`. |
 | Folder structure with `components`, `pages`, `hooks`, `layouts` | Done | Present under `src/`. |
-| Folder structure with `services` | Missing | No `src/services` directory yet. |
+| Folder structure with `services` | Done | `src/services/auditLog.js` is present and used by the app. |
 | Supabase client via env vars | Done | `src/supabaseClient.js` reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. |
 | Email/password auth | Done | Implemented in `src/hooks/useAuth.jsx`. |
 | Role-based access | Partial | Role-aware sidebar and route guards exist, but deeper feature-level authorization still depends on backend/RLS. |
@@ -94,7 +94,7 @@ Status keys:
 | Alerts for low drug stock | Partial | Low stock is visible in UI, but not emitted as a notification feed. |
 | Analytics for revenue, drugs, claims | Done | Reports page covers these. |
 | Audit log in database schema | Done | `audit_log` table is documented in `DATABASE_SETUP.md`. |
-| Audit log writes from app code | Missing | No app code currently writes to `audit_log`. |
+| Audit log writes from app code | Done | Core create/update flows now attempt to write to `audit_log` through `src/services/auditLog.js`. |
 
 ## Business / Product Prompt
 
@@ -116,7 +116,7 @@ Status keys:
 
 1. Replace `.env` placeholders with real Supabase project values.
 2. Configure the real Supabase project using `DATABASE_SETUP.md`, including RLS.
-3. Add app-level writes to `audit_log`.
+3. Enable `audit_log` insert policies in Supabase so the new client-side audit writes can succeed.
 4. Add a proper notification center for low stock, new prescriptions, and appointments.
 5. Add MoMo provider selection for `cash / momo / insurance / card` payment flows.
 6. Build the separate Expo mobile app if Phase 3 is still in scope.

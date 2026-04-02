@@ -131,9 +131,6 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       const currentUser = user
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-
       await logAuditEvent({
         user: currentUser,
         action: 'sign_out',
@@ -141,6 +138,10 @@ export const AuthProvider = ({ children }) => {
         recordId: currentUser?.id || null,
         oldValues: { email: currentUser?.email || null },
       })
+
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+
       setUser(null)
       setUserRole(null)
       toast.success('Logged out successfully')

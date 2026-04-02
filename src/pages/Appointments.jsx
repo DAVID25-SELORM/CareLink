@@ -38,7 +38,7 @@ const Appointments = () => {
         .select(`
           *,
           patients (name, phone),
-          users (email)
+          users (email, full_name)
         `)
         .order('appointment_date', { ascending: true })
 
@@ -290,7 +290,7 @@ const Appointments = () => {
                       <div className="text-sm text-gray-600">{appointment.patients?.phone}</div>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {appointment.users?.email}
+                      {appointment.users?.full_name || appointment.users?.email || appointment.doctor_name || '-'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium">{new Date(appointment.appointment_date).toLocaleDateString()}</div>
