@@ -1,0 +1,52 @@
+<svg width="960" height="400" viewBox="0 0 960 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="carelinkGreen" x1="200" y1="40" x2="420" y2="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5CE154" />
+      <stop offset="1" stop-color="#0F8B3A" />
+    </linearGradient>
+    <linearGradient id="carelinkBlue" x1="360" y1="40" x2="610" y2="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38A8FF" />
+      <stop offset="1" stop-color="#0A43C8" />
+    </linearGradient>
+    <linearGradient id="carelinkStem" x1="295" y1="30" x2="495" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3BE06C" />
+      <stop offset="1" stop-color="#0B52C9" />
+    </linearGradient>
+    <filter id="softShadow" x="120" y="20" width="520" height="300" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#081226" flood-opacity="0.2" />
+    </filter>
+    <linearGradient id="wordGreen" x1="140" y1="305" x2="392" y2="305" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2BCF49" />
+      <stop offset="1" stop-color="#0F8F3D" />
+    </linearGradient>
+    <linearGradient id="wordBlue" x1="390" y1="305" x2="708" y2="305" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1E6AFF" />
+      <stop offset="1" stop-color="#083BC6" />
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <rect x="186" y="116" width="252" height="96" rx="28" fill="url(#carelinkGreen)" />
+    <rect x="334" y="38" width="96" height="252" rx="28" fill="url(#carelinkStem)" />
+    <rect x="364" y="38" width="212" height="120" rx="28" fill="url(#carelinkBlue)" />
+    <rect x="328" y="108" width="212" height="120" rx="28" fill="url(#carelinkBlue)" opacity="0.92" />
+
+    <path d="M238 166H362V88" stroke="white" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M412 88V166H520" stroke="white" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M412 166V242" stroke="white" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+
+    <circle cx="238" cy="166" r="20" fill="none" stroke="white" stroke-width="12" />
+    <circle cx="362" cy="88" r="20" fill="none" stroke="white" stroke-width="12" />
+    <circle cx="520" cy="166" r="20" fill="none" stroke="white" stroke-width="12" />
+    <circle cx="412" cy="242" r="20" fill="none" stroke="white" stroke-width="12" />
+  </g>
+
+  <ellipse cx="386" cy="302" rx="124" ry="10" fill="#0F172A" opacity="0.14" />
+
+  <text x="130" y="356" fill="url(#wordGreen)" font-family="Segoe UI, Arial, sans-serif" font-size="102" font-weight="800" letter-spacing="-3">Care</text>
+  <text x="378" y="356" fill="url(#wordBlue)" font-family="Segoe UI, Arial, sans-serif" font-size="102" font-weight="800" letter-spacing="-3">Link</text>
+
+  <line x1="214" y1="378" x2="328" y2="378" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" opacity="0.45" />
+  <line x1="622" y1="378" x2="736" y2="378" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" opacity="0.45" />
+  <text x="357" y="392" fill="#6B7280" font-family="Segoe UI, Arial, sans-serif" font-size="46" font-weight="600" letter-spacing="14">HMS</text>
+</svg>

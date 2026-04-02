@@ -16,6 +16,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8fafc;
   color: #1e293b;
+  overflow-x: hidden;
 }
 
 code {
@@ -62,5 +63,12 @@ code {
 @layer utilities {
   .transition-all-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer components {
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }

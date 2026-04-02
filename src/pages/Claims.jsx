@@ -147,7 +147,7 @@ const Claims = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-primary text-white' : 'bg-gray-100'}`}
@@ -176,7 +176,8 @@ const Claims = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="table-scroll">
+            <table className="min-w-[960px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -234,7 +235,7 @@ const Claims = () => {
                       {new Date(claim.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex space-x-2">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         {claim.status === 'pending' && (
                           <button
                             onClick={() => updateClaimStatus(claim.id, 'submitted')}
@@ -257,7 +258,8 @@ const Claims = () => {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       </div>
     </DashboardLayout>

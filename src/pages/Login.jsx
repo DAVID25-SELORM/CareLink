@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import carelinkLogo from '../assets/carelink-logo.svg'
 
 /**
  * Login Page
@@ -19,23 +20,24 @@ const Login = () => {
     setLoading(true)
 
     const { data, error } = await signIn(email, password)
-    
+
     setLoading(false)
-    
+
     if (data && !error) {
       navigate('/dashboard')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-100 p-4">
       <div className="bg-white p-10 rounded-2xl shadow-soft w-full max-w-md border border-slate-100">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl mb-4">
-            <span className="text-3xl">🏥</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">CareLink</h1>
-          <p className="text-slate-600 text-sm">Hospital Management System</p>
+          <img
+            src={carelinkLogo}
+            alt="CareLink HMS logo"
+            className="mx-auto h-28 w-auto"
+          />
+          <p className="text-slate-600 text-sm mt-5">Secure staff access to the CareLink hospital management system.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -63,7 +65,7 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              placeholder="••••••••"
+              placeholder="........"
             />
           </div>
 

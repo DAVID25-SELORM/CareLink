@@ -161,11 +161,11 @@ const Appointments = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold text-slate-800">Appointments Schedule</h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-xl font-semibold text-slate-800 sm:text-2xl">Appointments Schedule</h2>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all-smooth shadow-sm hover:shadow"
+            className="w-full rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-all-smooth shadow-sm hover:bg-blue-700 hover:shadow sm:w-auto"
           >
             {showAddForm ? '✕ Close' : '+ New Appointment'}
           </button>
@@ -252,7 +252,8 @@ const Appointments = () => {
 
         {/* Appointments Table */}
         <div className="bg-white rounded-xl shadow-soft overflow-hidden border border-slate-100">
-          <table className="min-w-full divide-y divide-slate-200">
+          <div className="table-scroll">
+            <table className="min-w-[960px] divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
                 <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
@@ -313,7 +314,7 @@ const Appointments = () => {
                     </td>
                     <td className="px-6 py-4">
                       {appointment.status === 'scheduled' && (
-                        <div className="flex gap-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                           <button
                             onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
                             className="text-green-600 hover:text-green-700 text-sm font-medium"
@@ -333,7 +334,8 @@ const Appointments = () => {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       </div>
     </DashboardLayout>

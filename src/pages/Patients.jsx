@@ -66,8 +66,8 @@ const Patients = () => {
         ) : null}
 
         {/* Header Actions */}
-        <div className="flex justify-between items-center">
-          <div className="flex-1 max-w-md">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="w-full lg:max-w-md">
             <input
               type="text"
               placeholder="Search by name, phone, or NHIS number..."
@@ -78,7 +78,7 @@ const Patients = () => {
           </div>
           <Link
             to="/patients/register"
-            className="ml-4 bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition flex items-center"
+            className="w-full rounded-lg bg-primary px-6 py-2 text-center text-white transition hover:bg-blue-600 sm:w-auto"
           >
             <span className="mr-2">➕</span>
             Register New Patient
@@ -87,7 +87,8 @@ const Patients = () => {
 
         {/* Patients Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="table-scroll">
+            <table className="min-w-[860px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -154,7 +155,8 @@ const Patients = () => {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
         {/* Summary */}

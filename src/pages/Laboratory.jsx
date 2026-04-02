@@ -157,11 +157,11 @@ const Laboratory = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-2xl font-bold">Laboratory Tests</h2>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition flex items-center"
+            className="w-full rounded-lg bg-primary px-6 py-2 text-white transition hover:bg-blue-600 sm:w-auto"
           >
             <span className="mr-2">{showAddForm ? 'Close' : 'Add'}</span>
             {showAddForm ? 'Cancel' : 'Request New Test'}
@@ -250,7 +250,8 @@ const Laboratory = () => {
         )}
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="table-scroll">
+            <table className="min-w-[920px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -336,12 +337,13 @@ const Laboratory = () => {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
         {selectedTest && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50 p-4 sm:items-center">
+            <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6">
               <h3 className="text-lg font-semibold mb-4">
                 {selectedTest.status === 'pending' ? 'Add Test Result' : 'Test Result'}
               </h3>
@@ -357,7 +359,7 @@ const Laboratory = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary mb-4"
                 placeholder="Enter test result details..."
               />
-              <div className="flex justify-end space-x-3">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   onClick={() => {
                     setSelectedTest(null)

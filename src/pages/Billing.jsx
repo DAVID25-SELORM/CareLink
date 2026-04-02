@@ -209,7 +209,7 @@ const Billing = () => {
                     selectedPrescription?.id === prescription.id ? 'bg-blue-50' : ''
                   }`}
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <h4 className="font-medium">{prescription.patients?.name}</h4>
                       <p className="text-sm text-gray-600">{prescription.patients?.phone}</p>
@@ -252,7 +252,7 @@ const Billing = () => {
                   ) : (
                     <div className="space-y-2">
                       {prescriptionItems.map((item) => (
-                        <div key={item.id} className="flex justify-between p-3 bg-gray-50 rounded">
+                        <div key={item.id} className="flex flex-col gap-2 rounded bg-gray-50 p-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <p className="font-medium">{item.drugs?.name || item.drug_name}</p>
                             <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
@@ -269,7 +269,7 @@ const Billing = () => {
                 {prescriptionItems.length > 0 && (
                   <>
                     <div className="pt-4 border-t">
-                      <div className="flex justify-between items-center mb-4">
+                      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span className="font-semibold">Total Amount:</span>
                         <span className="text-2xl font-bold text-primary">
                           GHS {calculateTotal().toFixed(2)}

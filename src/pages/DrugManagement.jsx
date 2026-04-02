@@ -94,11 +94,11 @@ const DrugManagement = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-2xl font-bold">Drug Inventory</h2>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition flex items-center"
+            className="w-full rounded-lg bg-primary px-6 py-2 text-white transition hover:bg-blue-600 sm:w-auto"
           >
             <span className="mr-2">{showAddForm ? '✕' : '➕'}</span>
             {showAddForm ? 'Cancel' : 'Add New Drug'}
@@ -162,7 +162,8 @@ const DrugManagement = () => {
 
         {/* Drugs Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="table-scroll">
+            <table className="min-w-[720px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -229,7 +230,8 @@ const DrugManagement = () => {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       </div>
     </DashboardLayout>
