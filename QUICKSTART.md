@@ -38,9 +38,10 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ### Step 4: Create Database Tables (2 min)
 
 1. Go to Supabase **SQL Editor**
-2. Copy SQL from `DATABASE_SETUP.md`
-3. Run each section (users, patients, drugs, etc.)
-4. Verify tables created
+2. Run `database-setup.sql`
+3. Create your owner/admin Auth user
+4. Run `setup-users.sql`
+5. Verify tables and owner user are ready
 
 ### Step 5: Start the App (1 min)
 
@@ -66,10 +67,9 @@ Open: **http://localhost:5173**
 
 **In SQL Editor:**
 
-```sql
-INSERT INTO users (email, role, full_name)
-VALUES ('admin@carelink.com', 'admin', 'Admin User');
-```
+Run:
+
+- `setup-users.sql`
 
 **Now Login:**
 - Email: `admin@carelink.com`
@@ -200,6 +200,11 @@ git push -u origin main
 # Add environment variables
 # Deploy!
 ```
+
+For real client rollout, use:
+
+- `HOSPITAL_ONBOARDING_CHECKLIST.md`
+- `HOSPITAL_INTAKE_TEMPLATE.md`
 
 ### Option 2: Manual Deploy
 

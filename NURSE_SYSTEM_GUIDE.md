@@ -34,7 +34,7 @@ Main actions:
 - submit a shift handover
 
 ### Database Objects
-Running [`nurse-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/nurse-system-setup.sql) creates:
+Running [`nurse-system-setup.sql`](./nurse-system-setup.sql) creates:
 
 - `patient_vitals`
 - `nurse_notes`
@@ -75,7 +75,7 @@ Admins have full access to the nurse module data through the SQL policies.
 ### 1. Run the SQL
 In Supabase SQL Editor:
 
-1. Open [`nurse-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/nurse-system-setup.sql)
+1. Open [`nurse-system-setup.sql`](./nurse-system-setup.sql)
 2. Copy the full script
 3. Paste and run it
 
@@ -128,9 +128,9 @@ order by tablename, policyname;
 
 ## Files Involved
 
-- [src/pages/NurseDashboard.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/pages/NurseDashboard.jsx)
-- [src/pages/UserManagement.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/pages/UserManagement.jsx)
-- [src/pages/Dashboard.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/pages/Dashboard.jsx)
-- [src/App.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/App.jsx)
-- [src/layouts/DashboardLayout.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/layouts/DashboardLayout.jsx)
-- [nurse-system-setup.sql](c:/Users/RealTimeIT/Desktop/CareLink/nurse-system-setup.sql)
+- [src/pages/NurseDashboard.jsx](./src/pages/NurseDashboard.jsx)
+- [src/pages/UserManagement.jsx](./src/pages/UserManagement.jsx)
+- [src/pages/Dashboard.jsx](./src/pages/Dashboard.jsx)
+- [src/App.jsx](./src/App.jsx)
+- [src/layouts/DashboardLayout.jsx](./src/layouts/DashboardLayout.jsx)
+- [nurse-system-setup.sql](./nurse-system-setup.sql)

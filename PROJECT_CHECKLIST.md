@@ -2,6 +2,8 @@
 
 Complete checklist to launch your Hospital Management System
 
+For client rollout, use `HOSPITAL_ONBOARDING_CHECKLIST.md` together with this file.
+
 ---
 
 ## 🎯 Pre-Launch Checklist
@@ -36,17 +38,10 @@ Complete checklist to launch your Hospital Management System
 
 - [ ] **Run Database Setup**
   - [ ] Open Supabase SQL Editor
-  - [ ] Run `users` table creation
-  - [ ] Run `patients` table creation
-  - [ ] Run `drugs` table creation
-  - [ ] Run `prescriptions` table creation
-  - [ ] Run `prescription_items` table creation
-  - [ ] Run `payments` table creation
-  - [ ] Run `claims` table creation
-  - [ ] Run `lab_tests` table creation
-  - [ ] Run `appointments` table creation
-  - [ ] Enable Row Level Security (RLS)
-  - [ ] Create RLS policies
+  - [ ] Run `database-setup.sql`
+  - [ ] Create owner/admin Auth user
+  - [ ] Run `setup-users.sql`
+  - [ ] Run optional module SQL scripts as needed
 
 - [ ] **Add Sample Data**
   - [ ] Insert sample drugs
@@ -57,8 +52,8 @@ Complete checklist to launch your Hospital Management System
   - [ ] Go to Authentication -> Users
   - [ ] Create admin user
   - [ ] Note email and password
-  - [ ] Add user to `users` table
-  - [ ] Set role to 'admin'
+  - [ ] Run `setup-users.sql`
+  - [ ] Confirm owner/admin role synced to `users` table
 
 ### Phase 3: Local Testing
 

@@ -2,7 +2,7 @@
 
 This guide explains the CareLink database schema.
 
-For Supabase SQL Editor, use the runnable script in [`database-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/database-setup.sql) instead of pasting this Markdown file.
+For Supabase SQL Editor, use the runnable script in [`database-setup.sql`](./database-setup.sql) instead of pasting this Markdown file.
 
 ---
 
@@ -10,10 +10,10 @@ For Supabase SQL Editor, use the runnable script in [`database-setup.sql`](c:/Us
 
 1. Go to your Supabase project
 2. Navigate to **SQL Editor**
-3. Run [`database-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/database-setup.sql) first
+3. Run [`database-setup.sql`](./database-setup.sql) first
 4. Create your owner/admin account in **Authentication -> Users**
 5. Create any optional demo/test role accounts you want to use for system checks
-6. Run [`setup-users.sql`](c:/Users/RealTimeIT/Desktop/CareLink/setup-users.sql) to sync the owner account and any test users
+6. Run [`setup-users.sql`](./setup-users.sql) to sync the owner account and any test users
 7. Then run any module setup scripts your hospital needs
 8. Enable Row Level Security (RLS) policies
 
@@ -291,9 +291,9 @@ CREATE INDEX idx_audit_log_created ON audit_log(created_at);
 
 After the core schema is ready, run the extra scripts that match the hospital workflow you want to enable:
 
-- [`nurse-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/nurse-system-setup.sql) for vitals, nurse notes, care tasks, and shift handovers
-- [`records-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/records-system-setup.sql) for medical records and record requests
-- [`referrals-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/referrals-setup.sql) for doctor-to-doctor referrals
+- [`nurse-system-setup.sql`](./nurse-system-setup.sql) for vitals, nurse notes, care tasks, and shift handovers
+- [`records-system-setup.sql`](./records-system-setup.sql) for medical records and record requests
+- [`referrals-setup.sql`](./referrals-setup.sql) for doctor-to-doctor referrals
 
 These scripts are designed to run after the base tables in this guide exist.
 
@@ -460,7 +460,7 @@ CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments
 1. ✅ Run all SQL commands above in Supabase SQL Editor
 2. ✅ Create your owner/admin Auth user
 3. ✅ Create optional test role Auth users if needed
-4. ✅ Run [`setup-users.sql`](c:/Users/RealTimeIT/Desktop/CareLink/setup-users.sql)
+4. ✅ Run [`setup-users.sql`](./setup-users.sql)
 5. ✅ Test connection from your React app
 6. ✅ Insert sample data for testing
 

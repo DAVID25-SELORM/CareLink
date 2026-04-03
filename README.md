@@ -93,7 +93,9 @@ npm install
 1. Go to [https://supabase.com](https://supabase.com)
 2. Create a new project
 3. Copy your project URL and anon key
-4. Run the SQL commands from `DATABASE_SETUP.md` in your Supabase SQL editor
+4. Run `database-setup.sql` in your Supabase SQL editor
+5. Create your owner/admin Auth user
+6. Run `setup-users.sql` to sync roles and user metadata
 
 ### Step 4: Environment Variables
 
@@ -128,7 +130,7 @@ CareLink HMS uses the following main tables:
 - **lab_tests** - Laboratory tests
 - **appointments** - Patient appointments
 
-See `DATABASE_SETUP.md` for complete SQL schema.
+See `DATABASE_SETUP.md` for the schema guide and `database-setup.sql` for the runnable base setup.
 
 ---
 
@@ -146,21 +148,31 @@ See `DATABASE_SETUP.md` for complete SQL schema.
 
 See `DEPLOYMENT.md` for detailed instructions.
 
+### Hospital Onboarding
+
+For onboarding a real hospital client, use:
+
+- `HOSPITAL_ONBOARDING_CHECKLIST.md`
+- `HOSPITAL_INTAKE_TEMPLATE.md`
+
+Current recommended model:
+
+- one Supabase project per hospital
+- one Vercel project per hospital
+- one dedicated production deployment per hospital
+
 ---
 
 ## 📖 User Guide
 
 ### Default Login
 
-After setting up the database, create a user in Supabase:
+After setting up the database:
 
-```sql
--- Example: Create admin user
-INSERT INTO users (email, role)
-VALUES ('admin@carelink.com', 'admin');
-```
-
-Then use Supabase Auth to create the authentication account.
+1. Create the owner/admin user in Supabase Authentication
+2. Run `setup-users.sql`
+3. Login with that owner/admin account
+4. Create real hospital staff from the in-app User Management screen
 
 ### Workflow
 

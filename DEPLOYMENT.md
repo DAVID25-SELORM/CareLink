@@ -12,7 +12,7 @@ Before deploying, ensure you have:
 - ✅ Vercel account (free tier works)
 - ✅ Supabase project created and configured
 - ✅ All code committed to Git
-- ✅ Database tables created (see DATABASE_SETUP.md)
+- ✅ Database tables created (run `database-setup.sql`)
 - ✅ Optional module scripts run for the roles you plan to use
 
 ---
@@ -161,11 +161,11 @@ https://carelink-hms.vercel.app/dashboard
 
 ### 4.4 Run Module SQL Scripts
 
-If your hospital will use the newer role-specific modules, run these in Supabase SQL Editor after the base schema:
+If your hospital will use the newer role-specific modules, run these in Supabase SQL Editor after `database-setup.sql` and `setup-users.sql`:
 
-- [`nurse-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/nurse-system-setup.sql)
-- [`records-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/records-system-setup.sql)
-- [`referrals-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/referrals-setup.sql)
+- [`nurse-system-setup.sql`](./nurse-system-setup.sql)
+- [`records-system-setup.sql`](./records-system-setup.sql)
+- [`referrals-setup.sql`](./referrals-setup.sql)
 
 ---
 
@@ -180,15 +180,13 @@ If your hospital will use the newer role-specific modules, run these in Supabase
    - Password: (create a strong password)
 4. Click **Create User**
 
-### 5.2 Add User to `users` Table
+### 5.2 Sync Owner User to `public.users`
 
 Go to **SQL Editor** and run:
 
-```sql
-INSERT INTO users (email, role, full_name, phone)
-VALUES 
-  ('admin@carelink.com', 'admin', 'Admin User', '+233247654381');
-```
+- `setup-users.sql`
+
+This keeps the app user record aligned with the real Supabase Auth user ID.
 
 ---
 
@@ -209,6 +207,21 @@ Use the admin credentials you created.
 - ✅ Prescription creation
 - ✅ Billing
 - ✅ Reports
+
+---
+
+## 🏥 Hospital Rollout
+
+When onboarding a real hospital, use:
+
+- [HOSPITAL_ONBOARDING_CHECKLIST.md](./HOSPITAL_ONBOARDING_CHECKLIST.md)
+- [HOSPITAL_INTAKE_TEMPLATE.md](./HOSPITAL_INTAKE_TEMPLATE.md)
+
+Current recommended production model:
+
+- one Supabase project per hospital
+- one Vercel project per hospital
+- one isolated deployment per hospital
 
 ---
 

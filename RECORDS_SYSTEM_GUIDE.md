@@ -16,7 +16,7 @@ The records dashboard is available at `/records`.
 - patient list with quick record-add action
 
 ### Database Objects
-Running [`records-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/records-system-setup.sql) creates:
+Running [`records-system-setup.sql`](./records-system-setup.sql) creates:
 
 - `medical_records`
 - `record_requests`
@@ -60,7 +60,7 @@ Admins can:
 ### 1. Run the SQL
 In Supabase SQL Editor:
 
-1. Open [`records-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/records-system-setup.sql)
+1. Open [`records-system-setup.sql`](./records-system-setup.sql)
 2. Copy the full script
 3. Paste and run it
 
@@ -110,9 +110,9 @@ order by tablename, policyname;
 
 ## Files Involved
 
-- [src/pages/RecordsDashboard.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/pages/RecordsDashboard.jsx)
-- [src/pages/UserManagement.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/pages/UserManagement.jsx)
-- [src/pages/Dashboard.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/pages/Dashboard.jsx)
-- [src/App.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/App.jsx)
-- [src/layouts/DashboardLayout.jsx](c:/Users/RealTimeIT/Desktop/CareLink/src/layouts/DashboardLayout.jsx)
-- [records-system-setup.sql](c:/Users/RealTimeIT/Desktop/CareLink/records-system-setup.sql)
+- [src/pages/RecordsDashboard.jsx](./src/pages/RecordsDashboard.jsx)
+- [src/pages/UserManagement.jsx](./src/pages/UserManagement.jsx)
+- [src/pages/Dashboard.jsx](./src/pages/Dashboard.jsx)
+- [src/App.jsx](./src/App.jsx)
+- [src/layouts/DashboardLayout.jsx](./src/layouts/DashboardLayout.jsx)
+- [records-system-setup.sql](./records-system-setup.sql)
