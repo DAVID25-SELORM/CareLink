@@ -9,6 +9,7 @@ import AppErrorBoundary from './components/AppErrorBoundary'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import DoctorDashboard from './pages/DoctorDashboard'
+import NurseDashboard from './pages/NurseDashboard'
 import UserManagement from './pages/UserManagement'
 import Patients from './pages/Patients'
 import PatientRegistration from './pages/PatientRegistration'
@@ -63,6 +64,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin', 'doctor']}>
                   <DoctorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/nurse-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'nurse']}>
+                  <NurseDashboard />
                 </ProtectedRoute>
               }
             />

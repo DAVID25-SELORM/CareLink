@@ -25,10 +25,12 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [loadWarning, setLoadWarning] = useState('')
 
-  // Redirect doctors to their specialized dashboard
+  // Redirect doctors and nurses to their specialized dashboards
   useEffect(() => {
     if (userRole === 'doctor') {
       navigate('/doctor-dashboard', { replace: true })
+    } else if (userRole === 'nurse') {
+      navigate('/nurse-dashboard', { replace: true })
     }
   }, [userRole, navigate])
 

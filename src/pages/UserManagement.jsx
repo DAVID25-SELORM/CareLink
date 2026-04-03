@@ -48,6 +48,11 @@ const DOCTOR_SPECIALTIES = [
   'Emergency Medicine Specialist'
 ]
 
+const NURSE_TYPES = [
+  'General Nurse',
+  'Midwife'
+]
+
 const ROLES = ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse']
 
 const UserManagement = () => {
@@ -100,7 +105,7 @@ const UserManagement = () => {
             role: formData.role,
             full_name: formData.full_name,
             phone: formData.phone,
-            specialty: formData.role === 'doctor' ? formData.specialty : null
+            specialty: (formData.role === 'doctor' || formData.role === 'nurse') ? formData.specialty : null
           }
         }
       })
@@ -120,8 +125,8 @@ const UserManagement = () => {
         phone: formData.phone
       }
 
-      // Only add specialty for doctors
-      if (formData.role === 'doctor' && formData.specialty) {
+      // Add specialty for doctors and nurses
+      if ((formData.role === 'doctor' || formData.role === 'nurse') && formData.specialty) {
         userData.specialty = formData.specialty
       }
 
@@ -181,7 +186,7 @@ const UserManagement = () => {
 
       if (error) throw error
       
-      toast.success('Doctor specialty updated successfully')
+      toast.success('Specialty updated successfully')
       fetchUsers()
     } catch (error) {
       console.error('Error updating specialty:', error)
@@ -305,6 +310,19 @@ const UserManagement = () => {
                           {DOCTOR_SPECIALTIES.map(specialty => (
                             <option key={specialty} value={specialty}>
                               {getSpecialtyIcon(specialty)} {specialty}
+                            </option>
+                          ))}
+                        </select>
+                      ) : user.role === 'nurse' ? (
+                        <select
+                          value={user.specialty || ''}
+                          onChange={(e) => updateUserSpecialty(user.id, e.target.value)}
+                          className="text-sm px-3 py-1 border border-gray-300 rounded cursor-pointer bg-white"
+                        >
+                          <option value="">Select Type</option>
+                          {NURSE_TYPES.map(type => (
+                            <option key={type} value={type}>
+                              👩‍⚕️ {type}
                             </option>
                           ))}
                         </select>
@@ -434,6 +452,27 @@ const UserManagement = () => {
                       {DOCTOR_SPECIALTIES.map(specialty => (
                         <option key={specialty} value={specialty}>
                           {getSpecialtyIcon(specialty)} {specialty}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {formData.role === 'nurse' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nurse Type *
+                    </label>
+                    <select
+                      required={formData.role === 'nurse'}
+                      value={formData.specialty}
+                      onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select Type</option>
+                      {NURSE_TYPES.map(type => (
+                        <option key={type} value={type}>
+                          👩‍⚕️ {type}
                         </option>
                       ))}
                     </select>
