@@ -4,10 +4,12 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
+import { SpecialtyComponents } from '../components/SpecialtyDashboards'
 
 /**
  * Doctor Dashboard Page
  * Personalized dashboard for doctors with specialty-specific views
+ * Each of the 36 medical specialties has a customized dashboard
  * Author: David Gabion Selorm
  */
 
@@ -276,6 +278,16 @@ const DoctorDashboard = () => {
             subtitle="Prescriptions written"
           />
         </div>
+
+        {/* Specialty-Specific Dashboard Section */}
+        {doctorInfo?.specialty && SpecialtyComponents[doctorInfo.specialty] && (
+          <div className="mb-6">
+            {(() => {
+              const SpecialtyComponent = SpecialtyComponents[doctorInfo.specialty]
+              return <SpecialtyComponent stats={stats} doctorInfo={doctorInfo} />
+            })()}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Today's Schedule */}
