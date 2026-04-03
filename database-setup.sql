@@ -224,21 +224,51 @@ COMMENT ON TABLE audit_log IS 'Stores audit events for key application actions';
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS specialty TEXT;
 
+-- Add patient_id column if it doesn't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'patients' AND column_name = 'patient_id'
+  ) THEN
+    ALTER TABLE patients 
+      ADD COLUMN patient_id TEXT DEFAULT ('PT-' || UPPER(SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', '') FROM 1 FOR 10)));
+  END IF;
+END $$;
+
+-- Add insurance_number column if it doesn't exist
 ALTER TABLE patients
   ADD COLUMN IF NOT EXISTS insurance_number TEXT;
 
-ALTER TABLE patients
-  ADD COLUMN IF NOT EXISTS patient_id TEXT;
-
-ALTER TABLE patients
-  ALTER COLUMN patient_id SET DEFAULT ('PT-' || UPPER(SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', '') FROM 1 FOR 10)));
-
+-- Update any NULL patient_id values
 UPDATE patients
 SET patient_id = ('PT-' || UPPER(SUBSTRING(REPLACE(gen_random_uuid()::TEXT, '-', '') FROM 1 FOR 10)))
 WHERE patient_id IS NULL;
 
-ALTER TABLE patients
-  ALTER COLUMN patient_id SET NOT NULL;
+-- Add unique constraint on patient_id if it doesn't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE table_name = 'patients' 
+    AND constraint_name = 'patients_patient_id_key'
+  ) THEN
+    ALTER TABLE patients ADD CONSTRAINT patients_patient_id_key UNIQUE (patient_id);
+  END IF;
+END $$;
+
+-- Set patient_id to NOT NULL if it isn't already
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'patients' 
+    AND column_name = 'patient_id' 
+    AND is_nullable = 'YES'
+  ) THEN
+    ALTER TABLE patients ALTER COLUMN patient_id SET NOT NULL;
+  END IF;
+END $$;
 
 -- Create indexes for columns added via compatibility migrations
 CREATE INDEX IF NOT EXISTS idx_patients_patient_id ON patients(patient_id);
