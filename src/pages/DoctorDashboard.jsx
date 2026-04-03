@@ -5,6 +5,8 @@ import { supabase } from '../supabaseClient'
 import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import { SpecialtyComponents } from '../components/SpecialtyDashboards'
+import DoctorAppointmentBooking from '../components/DoctorAppointmentBooking'
+import PatientReferral from '../components/PatientReferral'
 
 /**
  * Doctor Dashboard Page
@@ -29,6 +31,8 @@ const DoctorDashboard = () => {
   const [todaySchedule, setTodaySchedule] = useState([])
   const [recentPrescriptions, setRecentPrescriptions] = useState([])
   const [pendingLabs, setPendingLabs] = useState([])
+  const [showBookingModal, setShowBookingModal] = useState(false)
+  const [showReferralModal, setShowReferralModal] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -238,12 +242,26 @@ const DoctorDashboard = () => {
                 })}
               </p>
             </div>
-            <button
-              onClick={() => navigate('/prescriptions')}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              + New Prescription
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowBookingModal(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+              >
+                📅 Book Appointment
+              </button>
+              <button
+                onClick={() => setShowReferralModal(true)}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2"
+              >
+                🔄 Refer Patient
+              </button>
+              <button
+                onClick={() => navigate('/prescriptions')}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                📋 New Prescription
+              </button>
+            </div>
           </div>
         </div>
 
@@ -440,6 +458,19 @@ const DoctorDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <DoctorAppointmentBooking 
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        onSuccess={fetchDoctorData}
+      />
+      
+      <PatientReferral 
+        isOpen={showReferralModal}
+        onClose={() => setShowReferralModal(false)}
+        onSuccess={fetchDoctorData}
+      />
     </DashboardLayout>
   )
 }
