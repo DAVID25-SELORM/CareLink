@@ -230,6 +230,38 @@ ALTER TABLE users
   ADD CONSTRAINT users_role_check
   CHECK (role IN ('admin', 'doctor', 'pharmacist', 'nurse', 'cashier', 'records_officer'));
 
+DO $$
+DECLARE
+  phone_constraint RECORD;
+  phone_index RECORD;
+BEGIN
+  FOR phone_constraint IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel
+      ON rel.oid = con.conrelid
+    JOIN pg_namespace nsp
+      ON nsp.oid = rel.relnamespace
+    WHERE nsp.nspname = 'public'
+      AND rel.relname = 'users'
+      AND con.contype = 'u'
+      AND pg_get_constraintdef(con.oid) ILIKE '%(phone)%'
+  LOOP
+    EXECUTE format('ALTER TABLE public.users DROP CONSTRAINT IF EXISTS %I', phone_constraint.conname);
+  END LOOP;
+
+  FOR phone_index IN
+    SELECT idx.indexname
+    FROM pg_indexes idx
+    WHERE idx.schemaname = 'public'
+      AND idx.tablename = 'users'
+      AND idx.indexdef ILIKE 'CREATE UNIQUE INDEX%'
+      AND idx.indexdef ILIKE '%(phone)%'
+  LOOP
+    EXECUTE format('DROP INDEX IF EXISTS public.%I', phone_index.indexname);
+  END LOOP;
+END $$;
+
 -- Add patient_id column if it doesn't exist
 DO $$ 
 BEGIN

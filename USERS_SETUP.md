@@ -116,6 +116,16 @@ ORDER BY role;
 
 ---
 
+### Optional Step 3: Sync Auth Dashboard Profile Fields
+
+If you want Supabase **Authentication -> Users** to also show the user's name, phone, role, and specialty metadata, run:
+
+- [`sync-auth-metadata.sql`](./sync-auth-metadata.sql)
+
+This is optional. CareLink itself reads staff names and roles from `public.users`.
+
+---
+
 ## ✅ Verification
 
 After running the SQL, you should see:

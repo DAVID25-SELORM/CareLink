@@ -461,8 +461,9 @@ CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments
 2. ✅ Create your owner/admin Auth user
 3. ✅ Create optional test role Auth users if needed
 4. ✅ Run [`setup-users.sql`](./setup-users.sql)
-5. ✅ Test connection from your React app
-6. ✅ Insert sample data for testing
+5. ✅ Optional: run [`sync-auth-metadata.sql`](./sync-auth-metadata.sql) if you want names and phones to appear in the Supabase Auth dashboard
+6. ✅ Test connection from your React app
+7. ✅ Insert sample data for testing
 
 ---
 
