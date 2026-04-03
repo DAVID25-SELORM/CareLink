@@ -162,7 +162,32 @@ const DoctorDashboard = () => {
       'Ophthalmologist': '👁️',
       'ENT Specialist': '👂',
       'Neurologist': '🧠',
-      'Oncologist': '🎗️'
+      'Oncologist': '🎗️',
+      'Radiologist': '📷',
+      'Anesthesiologist': '💉',
+      'Pathologist': '🔬',
+      'Urologist': '🩺',
+      'Gastroenterologist': '🫀',
+      'Endocrinologist': '⚕️',
+      'Rheumatologist': '🦴',
+      'Pulmonologist': '🫁',
+      'Nephrologist': '🩺',
+      'Dietician/Nutritionist': '🥗',
+      'Optometrist': '👓',
+      'Physiotherapist': '🏃',
+      'Dentist': '🦷',
+      'General Surgeon': '🔪',
+      'Neurosurgeon': '🧠',
+      'Plastic Surgeon': '✨',
+      'Obstetrician': '🤰',
+      'Speech Therapist': '🗣️',
+      'Occupational Therapist': '🧩',
+      'Clinical Psychologist': '💭',
+      'Hematologist': '🩸',
+      'Allergist/Immunologist': '🤧',
+      'Infectious Disease Specialist': '🦠',
+      'Geriatrician': '👴',
+      'Emergency Medicine Specialist': '🚑'
     }
     return icons[specialty] || '🩺'
   }

@@ -29,7 +29,23 @@ const DOCTOR_SPECIALTIES = [
   'Endocrinologist',
   'Rheumatologist',
   'Pulmonologist',
-  'Nephrologist'
+  'Nephrologist',
+  'Dietician/Nutritionist',
+  'Optometrist',
+  'Physiotherapist',
+  'Dentist',
+  'General Surgeon',
+  'Neurosurgeon',
+  'Plastic Surgeon',
+  'Obstetrician',
+  'Speech Therapist',
+  'Occupational Therapist',
+  'Clinical Psychologist',
+  'Hematologist',
+  'Allergist/Immunologist',
+  'Infectious Disease Specialist',
+  'Geriatrician',
+  'Emergency Medicine Specialist'
 ]
 
 const ROLES = ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse']
