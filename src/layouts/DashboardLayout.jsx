@@ -24,9 +24,10 @@ const DashboardLayout = ({ children }) => {
   }
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: 'DB', roles: ['admin', 'doctor', 'pharmacist'] },
+    { name: 'Dashboard', path: '/dashboard', icon: 'DB', roles: ['admin', 'doctor', 'pharmacist', 'cashier'] },
     { name: 'Patients', path: '/patients', icon: 'PT', roles: ['admin', 'doctor', 'pharmacist'] },
     { name: 'Prescriptions', path: '/prescriptions', icon: 'Rx', roles: ['admin', 'doctor'] },
+    { name: 'Cashier', path: '/cashier', icon: '💰', roles: ['admin', 'cashier'] },
     { name: 'Pharmacy', path: '/pharmacy', icon: 'PH', roles: ['admin', 'pharmacist'] },
     { name: 'Drugs', path: '/drugs', icon: 'DR', roles: ['admin', 'pharmacist'] },
     { name: 'Billing', path: '/billing', icon: 'BL', roles: ['admin'] },

@@ -75,6 +75,21 @@ SET
   phone = '+233244999000',
   updated_at = NOW();
 
+-- Create/Update Cashier User
+INSERT INTO users (email, role, full_name, phone)
+VALUES (
+  'cashier@carelink.com', 
+  'cashier', 
+  'Sarah Mensah', 
+  '+233245888999'
+)
+ON CONFLICT (email) DO UPDATE 
+SET 
+  role = 'cashier', 
+  full_name = 'Sarah Mensah',
+  phone = '+233245888999',
+  updated_at = NOW();
+
 -- ============================================
 -- VERIFY USERS CREATED
 -- ============================================
@@ -92,8 +107,9 @@ ORDER BY
     WHEN 'admin' THEN 1
     WHEN 'doctor' THEN 2
     WHEN 'pharmacist' THEN 3
-    WHEN 'nurse' THEN 4
-    ELSE 5
+    WHEN 'cashier' THEN 4
+    WHEN 'nurse' THEN 5
+    ELSE 6
   END;
 
 -- ============================================
@@ -104,5 +120,6 @@ ORDER BY
 -- admin@carelink.com       | admin       | David Gabion Selorm | +233247654381  | ...        | ...
 -- doctor@carelink.com      | doctor      | Dr. Sarah Johnson   | +233244555666  | ...        | ...
 -- pharmacist@carelink.com  | pharmacist  | Michael Mensah      | +233244777888  | ...        | ...
+-- cashier@carelink.com     | cashier     | Sarah Mensah        | +233245888999  | ...        | ...
 -- nurse@carelink.com       | nurse       | Grace Afful         | +233244999000  | ...        | ...
 -- ============================================

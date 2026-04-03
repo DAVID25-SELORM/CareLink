@@ -24,7 +24,7 @@ Stores user accounts with roles for access control.
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('admin', 'doctor', 'pharmacist', 'nurse')),
+  role TEXT NOT NULL CHECK (role IN ('admin', 'doctor', 'pharmacist', 'nurse', 'cashier')),
   full_name TEXT,
   phone TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

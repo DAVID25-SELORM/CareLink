@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard'
 import Patients from './pages/Patients'
 import PatientRegistration from './pages/PatientRegistration'
 import Prescriptions from './pages/Prescriptions'
+import Cashier from './pages/Cashier'
 import Pharmacy from './pages/Pharmacy'
 import DrugManagement from './pages/DrugManagement'
 import Billing from './pages/Billing'
@@ -75,6 +76,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin', 'doctor']}>
                   <Prescriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'cashier']}>
+                  <Cashier />
                 </ProtectedRoute>
               }
             />

@@ -11,6 +11,7 @@ import { logAuditEvent } from '../services/auditLog'
  * - Admin: Full system access
  * - Doctor: Patient & prescription management
  * - Pharmacist: Pharmacy & dispensing
+ * - Cashier: Payment processing
  */
 
 const AuthContext = createContext(null)
