@@ -19,52 +19,50 @@
 -- ============================================
 -- STEP 1: Remove phone UNIQUE constraint
 -- Phone numbers should not be unique (staff can share phones)
+-- These must run OUTSIDE of transactions to take effect immediately
+-- ============================================
+
+-- Drop the constraint directly (most important step)
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_phone_key CASCADE;
+
+-- Drop any unique indexes on phone
+DROP INDEX IF EXISTS public.users_phone_key;
+DROP INDEX IF EXISTS public.idx_users_phone_unique;
+
+-- Create a regular (non-unique) index if it doesn't exist
+CREATE INDEX IF NOT EXISTS idx_users_phone ON public.users(phone) WHERE phone IS NOT NULL;
+
+-- ============================================
+-- STEP 2: Verify constraint is gone before proceeding
 -- ============================================
 
 DO $$
 DECLARE
-  phone_constraint RECORD;
-  phone_index RECORD;
+  constraint_count INTEGER;
 BEGIN
-  -- Drop all unique constraints on phone column
-  FOR phone_constraint IN
-    SELECT con.conname
-    FROM pg_constraint con
-    JOIN pg_class rel
-      ON rel.oid = con.conrelid
-    JOIN pg_namespace nsp
-      ON nsp.oid = rel.relnamespace
-    WHERE nsp.nspname = 'public'
-      AND rel.relname = 'users'
-      AND con.contype = 'u'
-      AND (
-        pg_get_constraintdef(con.oid) ILIKE '%phone%'
-        OR con.conname ILIKE '%phone%'
-      )
-  LOOP
-    RAISE NOTICE 'Dropping constraint: %', phone_constraint.conname;
-    EXECUTE format('ALTER TABLE public.users DROP CONSTRAINT IF EXISTS %I', phone_constraint.conname);
-  END LOOP;
-
-  -- Drop any unique indexes on phone
-  FOR phone_index IN
-    SELECT idx.indexname
-    FROM pg_indexes idx
-    WHERE idx.schemaname = 'public'
-      AND idx.tablename = 'users'
-      AND idx.indexdef ILIKE 'CREATE UNIQUE INDEX%'
-      AND (
-        idx.indexdef ILIKE '%phone%'
-        OR idx.indexname ILIKE '%phone%'
-      )
-  LOOP
-    RAISE NOTICE 'Dropping unique index: %', phone_index.indexname;
-    EXECUTE format('DROP INDEX IF EXISTS public.%I', phone_index.indexname);
-  END LOOP;
+  SELECT COUNT(*)
+  INTO constraint_count
+  FROM pg_constraint con
+  JOIN pg_class rel ON rel.oid = con.conrelid
+  JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+  WHERE nsp.nspname = 'public'
+    AND rel.relname = 'users'
+    AND con.contype = 'u'
+    AND (
+      pg_get_constraintdef(con.oid) ILIKE '%phone%'
+      OR con.conname ILIKE '%phone%'
+    );
   
-  -- Explicitly drop the known constraint if it still exists
-  ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_phone_key;
+  IF constraint_count > 0 THEN
+    RAISE EXCEPTION 'Phone UNIQUE constraint still exists! Cannot proceed.';
+  ELSE
+    RAISE NOTICE 'Phone constraint successfully removed. Proceeding...';
+  END IF;
 END $$;
+
+-- ============================================
+-- STEP 3: Fix owner account
+-- ============================================
 
 DO $$
 DECLARE
@@ -209,20 +207,6 @@ BEGIN
     DELETE FROM public.users
     WHERE id = existing_user_id;
   END IF;
-END $$;
-
--- ============================================
--- STEP 3: Ensure phone UNIQUE constraint stays removed
--- (In case any triggers or processes try to recreate it)
--- ============================================
-
-DO $$
-BEGIN
-  -- Final check: drop the constraint if it somehow still exists
-  ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_phone_key;
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE NOTICE 'Phone constraint already removed or does not exist';
 END $$;
 
 -- ============================================

@@ -14,18 +14,14 @@
 -- RUN THIS ONCE to permanently fix the issue
 -- ============================================
 
--- Drop the phone UNIQUE constraint if it exists
-DO $$
-BEGIN
-  -- Try to drop the constraint
-  ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_phone_key;
-  RAISE NOTICE 'Successfully dropped users_phone_key constraint';
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE NOTICE 'Constraint may not exist or already dropped: %', SQLERRM;
-END $$;
+-- Drop the phone UNIQUE constraint directly (most critical step)
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_phone_key CASCADE;
 
--- Drop any unique indexes on phone column
+-- Drop any unique indexes that might exist
+DROP INDEX IF EXISTS public.users_phone_key;
+DROP INDEX IF EXISTS public.idx_users_phone_unique;
+
+-- Scan and drop any other unique indexes on phone column
 DO $$
 DECLARE
   phone_index RECORD;
@@ -42,10 +38,8 @@ BEGIN
       )
   LOOP
     RAISE NOTICE 'Dropping unique index: %', phone_index.indexname;
-    EXECUTE format('DROP INDEX IF EXISTS public.%I', phone_index.indexname);
+    EXECUTE format('DROP INDEX IF EXISTS public.%I CASCADE', phone_index.indexname);
   END LOOP;
-  
-  RAISE NOTICE 'All phone unique indexes removed';
 END $$;
 
 -- Create a regular (non-unique) index for performance
