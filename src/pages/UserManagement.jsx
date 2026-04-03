@@ -53,7 +53,7 @@ const NURSE_TYPES = [
   'Midwife'
 ]
 
-const ROLES = ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse']
+const ROLES = ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse', 'records_officer']
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])
@@ -200,7 +200,8 @@ const UserManagement = () => {
       doctor: 'bg-blue-100 text-blue-800',
       pharmacist: 'bg-green-100 text-green-800',
       cashier: 'bg-purple-100 text-purple-800',
-      nurse: 'bg-pink-100 text-pink-800'
+      nurse: 'bg-pink-100 text-pink-800',
+      records_officer: 'bg-indigo-100 text-indigo-800'
     }
     return colors[role] || 'bg-gray-100 text-gray-800'
   }

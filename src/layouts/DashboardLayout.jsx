@@ -24,17 +24,18 @@ const DashboardLayout = ({ children }) => {
   }
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: 'DB', roles: ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse'] },
-    { name: 'Patients', path: '/patients', icon: 'PT', roles: ['admin', 'doctor', 'pharmacist', 'nurse'] },
-    { name: 'Prescriptions', path: '/prescriptions', icon: 'Rx', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Dashboard', path: '/dashboard', icon: 'DB', roles: ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse', 'records_officer'] },
+    { name: 'Patients', path: '/patients', icon: 'PT', roles: ['admin', 'doctor', 'pharmacist', 'nurse', 'records_officer'] },
+    { name: 'Prescriptions', path: '/prescriptions', icon: 'Rx', roles: ['admin', 'doctor'] },
     { name: 'Cashier', path: '/cashier', icon: '💰', roles: ['admin', 'cashier'] },
     { name: 'Pharmacy', path: '/pharmacy', icon: 'PH', roles: ['admin', 'pharmacist'] },
     { name: 'Drugs', path: '/drugs', icon: 'DR', roles: ['admin', 'pharmacist'] },
     { name: 'Billing', path: '/billing', icon: 'BL', roles: ['admin'] },
     { name: 'Claims', path: '/claims', icon: 'CL', roles: ['admin'] },
-    { name: 'Laboratory', path: '/laboratory', icon: 'LB', roles: ['admin', 'doctor', 'nurse'] },
-    { name: 'Appointments', path: '/appointments', icon: 'AP', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Laboratory', path: '/laboratory', icon: 'LB', roles: ['admin', 'doctor'] },
+    { name: 'Appointments', path: '/appointments', icon: 'AP', roles: ['admin', 'doctor'] },
     { name: 'Referrals', path: '/referrals', icon: '🔄', roles: ['admin', 'doctor'] },
+    { name: 'Records', path: '/records', icon: 'RC', roles: ['admin', 'records_officer'] },
     { name: 'Reports', path: '/reports', icon: 'RP', roles: ['admin'] },
     { name: 'Users', path: '/users', icon: '👥', roles: ['admin'] },
   ]

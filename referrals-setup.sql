@@ -47,6 +47,7 @@ ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for referrals table
 -- Doctors can view referrals they made or received
+DROP POLICY IF EXISTS "Doctors can view their referrals" ON referrals;
 CREATE POLICY "Doctors can view their referrals"
 ON referrals FOR SELECT
 USING (
@@ -60,6 +61,7 @@ USING (
 );
 
 -- Doctors can create referrals
+DROP POLICY IF EXISTS "Doctors can create referrals" ON referrals;
 CREATE POLICY "Doctors can create referrals"
 ON referrals FOR INSERT
 WITH CHECK (
@@ -71,12 +73,11 @@ WITH CHECK (
 );
 
 -- Doctors can update referrals they received (to accept/reject)
+DROP POLICY IF EXISTS "Doctors can update received referrals" ON referrals;
 CREATE POLICY "Doctors can update received referrals"
 ON referrals FOR UPDATE
 USING (
   auth.uid() = referred_to_doctor_id
-  OR
-  auth.uid() = referring_doctor_id
   OR
   EXISTS (
     SELECT 1 FROM users
@@ -86,6 +87,7 @@ USING (
 );
 
 -- Admins can view all referrals
+DROP POLICY IF EXISTS "Admins can view all referrals" ON referrals;
 CREATE POLICY "Admins can view all referrals"
 ON referrals FOR ALL
 USING (

@@ -23,6 +23,7 @@ import Laboratory from './pages/Laboratory'
 import Appointments from './pages/Appointments'
 import Referrals from './pages/Referrals'
 import Reports from './pages/Reports'
+import RecordsDashboard from './pages/RecordsDashboard'
 
 /**
  * CareLink HMS - Main Application Component
@@ -179,7 +180,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+              <Route
+                path="/records"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'records_officer']}>
+                    <RecordsDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
