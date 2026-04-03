@@ -20,6 +20,7 @@ import Billing from './pages/Billing'
 import Claims from './pages/Claims'
 import Laboratory from './pages/Laboratory'
 import Appointments from './pages/Appointments'
+import Referrals from './pages/Referrals'
 import Reports from './pages/Reports'
 
 /**
@@ -142,6 +143,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'doctor']}>
                     <Appointments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/referrals"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor']}>
+                    <Referrals />
                   </ProtectedRoute>
                 }
               />

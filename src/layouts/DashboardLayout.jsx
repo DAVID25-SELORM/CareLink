@@ -34,6 +34,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Claims', path: '/claims', icon: 'CL', roles: ['admin'] },
     { name: 'Laboratory', path: '/laboratory', icon: 'LB', roles: ['admin', 'doctor'] },
     { name: 'Appointments', path: '/appointments', icon: 'AP', roles: ['admin', 'doctor'] },
+    { name: 'Referrals', path: '/referrals', icon: '🔄', roles: ['admin', 'doctor'] },
     { name: 'Reports', path: '/reports', icon: 'RP', roles: ['admin'] },
     { name: 'Users', path: '/users', icon: '👥', roles: ['admin'] },
   ]
