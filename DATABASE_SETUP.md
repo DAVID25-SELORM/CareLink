@@ -8,8 +8,9 @@ This guide will help you set up the complete database schema for CareLink HMS in
 
 1. Go to your Supabase project
 2. Navigate to **SQL Editor**
-3. Copy and run the SQL commands below **in order**
-4. Enable Row Level Security (RLS) policies
+3. Run the core schema below first
+4. Then run any module setup scripts your hospital needs
+5. Enable Row Level Security (RLS) policies
 
 ---
 
@@ -24,7 +25,7 @@ Stores user accounts with roles for access control.
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('admin', 'doctor', 'pharmacist', 'nurse', 'cashier')),
+  role TEXT NOT NULL CHECK (role IN ('admin', 'doctor', 'pharmacist', 'nurse', 'cashier', 'records_officer')),
   full_name TEXT,
   phone TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -279,6 +280,18 @@ CREATE INDEX idx_audit_log_created ON audit_log(created_at);
 
 ---
 
+## Optional Module Scripts
+
+After the core schema is ready, run the extra scripts that match the hospital workflow you want to enable:
+
+- [`nurse-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/nurse-system-setup.sql) for vitals, nurse notes, care tasks, and shift handovers
+- [`records-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/records-system-setup.sql) for medical records and record requests
+- [`referrals-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/referrals-setup.sql) for doctor-to-doctor referrals
+
+These scripts are designed to run after the base tables in this guide exist.
+
+---
+
 ## 🔐 Row Level Security (RLS)
 
 Enable RLS for data protection:
@@ -384,6 +397,15 @@ Expected tables:
 - prescription_items
 - prescriptions
 - users
+
+Optional module tables after their scripts are run:
+- medical_records
+- nurse_notes
+- nurse_tasks
+- patient_vitals
+- record_requests
+- referrals
+- shift_handovers
 
 ---
 

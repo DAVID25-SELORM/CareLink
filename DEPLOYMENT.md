@@ -13,6 +13,7 @@ Before deploying, ensure you have:
 - ✅ Supabase project created and configured
 - ✅ All code committed to Git
 - ✅ Database tables created (see DATABASE_SETUP.md)
+- ✅ Optional module scripts run for the roles you plan to use
 
 ---
 
@@ -157,6 +158,14 @@ https://carelink-hms.vercel.app/dashboard
 1. Go to **Authentication** → **Providers**
 2. Enable **Email** provider
 3. Configure email templates (optional)
+
+### 4.4 Run Module SQL Scripts
+
+If your hospital will use the newer role-specific modules, run these in Supabase SQL Editor after the base schema:
+
+- [`nurse-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/nurse-system-setup.sql)
+- [`records-system-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/records-system-setup.sql)
+- [`referrals-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/referrals-setup.sql)
 
 ---
 
