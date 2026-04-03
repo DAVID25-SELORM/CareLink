@@ -61,7 +61,7 @@ Open: **http://localhost:5173**
 
 1. Go to **Authentication** → **Users**
 2. Click **Add User**
-3. Email: `admin@carelink.com`
+3. Email: `owner.carelink@gmail.com`
 4. Password: (choose strong password)
 5. Click **Create User**
 
@@ -72,7 +72,7 @@ Run:
 - `setup-users.sql`
 
 **Now Login:**
-- Email: `admin@carelink.com`
+- Email: `owner.carelink@gmail.com`
 - Password: (your password)
 
 ---

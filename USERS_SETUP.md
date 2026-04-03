@@ -30,7 +30,7 @@ Create these accounts:
 
 | Email | Password | Role |
 |-------|----------|------|
-| `admin@carelink.com` | (strong password) | Admin |
+| `owner.carelink@gmail.com` | (strong password) | Owner/Admin |
 | `doctor@carelink.com` | (strong password) | Doctor |
 | `pharmacist@carelink.com` | (strong password) | Pharmacist |
 | `nurse@carelink.com` | (strong password) | Nurse |
@@ -55,7 +55,7 @@ Copy and run this SQL:
 -- 1. ADMIN USER
 INSERT INTO users (email, role, full_name, phone)
 VALUES (
-  'admin@carelink.com', 
+  'owner.carelink@gmail.com', 
   'admin', 
   'David Gabion Selorm', 
   '+233247654381'
@@ -123,7 +123,7 @@ After running the SQL, you should see:
 ```
 email                      | role        | full_name           | phone
 ---------------------------|-------------|---------------------|---------------
-admin@carelink.com        | admin       | David Gabion Selorm | +233247654381
+owner.carelink@gmail.com  | admin       | David Gabion Selorm | +233247654381
 doctor@carelink.com       | doctor      | Dr. Sarah Johnson   | +233244555666
 nurse@carelink.com        | nurse       | Grace Afful         | +233244999000
 pharmacist@carelink.com   | pharmacist  | Michael Mensah      | +233244777888
@@ -137,7 +137,7 @@ Use these to test your system:
 
 ### Admin Login
 ```
-Email: admin@carelink.com
+Email: owner.carelink@gmail.com
 Password: (the one you set in Step 1)
 ```
 

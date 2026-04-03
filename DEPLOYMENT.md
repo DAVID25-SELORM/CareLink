@@ -176,7 +176,7 @@ If your hospital will use the newer role-specific modules, run these in Supabase
 1. Go to **Authentication** → **Users**
 2. Click **Add User**
 3. Enter:
-   - Email: `admin@carelink.com` (or your email)
+   - Email: `owner.carelink@gmail.com` (or your owner email)
    - Password: (create a strong password)
 4. Click **Create User**
 

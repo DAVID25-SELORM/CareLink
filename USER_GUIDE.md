@@ -45,7 +45,7 @@ CareLink HMS supports different user roles with specific permissions:
 ### Default Credentials (Demo)
 
 ```
-Email: admin@carelink.com
+Email: owner.carelink@gmail.com
 Password: [Set by admin]
 ```
 

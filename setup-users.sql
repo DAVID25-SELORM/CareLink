@@ -15,7 +15,7 @@
 -- 5. All remaining rows are demo/test role accounts for system checks.
 --
 -- OWNER ACCOUNT:
--- - admin@carelink.com
+-- - owner.carelink@gmail.com
 --
 -- TEST ACCOUNTS:
 -- - doctor@carelink.com
@@ -38,7 +38,7 @@ BEGIN
     SELECT *
     FROM (
       VALUES
-        ('admin@carelink.com', 'admin', NULL, 'David Gabion Selorm', '+233247654381'),
+        ('owner.carelink@gmail.com', 'admin', NULL, 'David Gabion Selorm', '+233247654381'),
         ('doctor@carelink.com', 'doctor', 'General Practitioner', 'Test Doctor Account', '+233240000001'),
         ('pharmacist@carelink.com', 'pharmacist', NULL, 'Test Pharmacist Account', '+233240000002'),
         ('nurse@carelink.com', 'nurse', 'General Nurse', 'Test Nurse Account', '+233240000003'),
@@ -193,7 +193,7 @@ WITH desired_users AS (
   SELECT *
   FROM (
     VALUES
-      ('admin@carelink.com', 'admin'),
+      ('owner.carelink@gmail.com', 'admin'),
       ('doctor@carelink.com', 'doctor'),
       ('pharmacist@carelink.com', 'pharmacist'),
       ('nurse@carelink.com', 'nurse'),
@@ -230,7 +230,7 @@ FROM public.users u
 LEFT JOIN auth.users au
   ON LOWER(u.email) = LOWER(au.email)
 WHERE LOWER(u.email) IN (
-  'admin@carelink.com',
+  'owner.carelink@gmail.com',
   'doctor@carelink.com',
   'pharmacist@carelink.com',
   'nurse@carelink.com',
