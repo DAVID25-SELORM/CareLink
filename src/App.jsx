@@ -24,6 +24,7 @@ import Appointments from './pages/Appointments'
 import Referrals from './pages/Referrals'
 import Reports from './pages/Reports'
 import RecordsDashboard from './pages/RecordsDashboard'
+import HospitalOnboarding from './pages/HospitalOnboarding'
 
 /**
  * CareLink HMS - Main Application Component
@@ -185,6 +186,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'records_officer']}>
                     <RecordsDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/hospital-onboarding"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <HospitalOnboarding />
                   </ProtectedRoute>
                 }
               />

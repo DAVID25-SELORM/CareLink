@@ -2,6 +2,12 @@
 
 Use this checklist each time you onboard a new hospital onto CareLink HMS.
 
+Optional internal tracking:
+
+- Run [hospital-onboarding-setup.sql](./hospital-onboarding-setup.sql) in your own CareLink owner instance
+- Then use the in-app `/hospital-onboarding` page to track rollout status, tasks, and go-live readiness
+- This tracks implementations; it does not automatically provision Supabase or Vercel
+
 ---
 
 ## Current Deployment Model

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import carelinkLogo from '../assets/carelink-logo.svg'
+import { canAccessPlatformOnboarding } from '../constants/platformAccess'
 
 /**
  * Dashboard Layout Component
@@ -13,6 +14,7 @@ const DashboardLayout = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const showPlatformOnboarding = canAccessPlatformOnboarding(user, userRole)
 
   useEffect(() => {
     setMobileNavOpen(false)
@@ -25,6 +27,7 @@ const DashboardLayout = ({ children }) => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'DB', roles: ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse', 'records_officer'] },
+    { name: 'Hospitals', path: '/hospital-onboarding', icon: 'HM', roles: ['admin'], ownerOnly: true },
     { name: 'Patients', path: '/patients', icon: 'PT', roles: ['admin', 'doctor', 'pharmacist', 'nurse', 'records_officer'] },
     { name: 'Prescriptions', path: '/prescriptions', icon: 'Rx', roles: ['admin', 'doctor'] },
     { name: 'Cashier', path: '/cashier', icon: '💰', roles: ['admin', 'cashier'] },
@@ -41,6 +44,10 @@ const DashboardLayout = ({ children }) => {
   ]
 
   const filteredMenuItems = menuItems.filter((item) => {
+    if (item.ownerOnly && !showPlatformOnboarding) {
+      return false
+    }
+
     if (userRole === 'admin') return true
     if (!userRole || userRole === 'staff') {
       return ['/dashboard', '/patients', '/patients/register'].includes(item.path)

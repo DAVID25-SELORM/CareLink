@@ -346,6 +346,7 @@ const UserManagement = () => {
             </tbody>
           </table>
         </div>
+        </div>
 
         {/* Add User Modal */}
         {showModal && (

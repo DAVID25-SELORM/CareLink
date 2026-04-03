@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { getSupabaseCount, getSupabaseData, isSupabaseFailure, withTimeout } from '../services/queryTimeout'
 import { useAuth } from '../hooks/useAuth'
+import { canAccessPlatformOnboarding } from '../constants/platformAccess'
 
 /**
  * Dashboard Page
@@ -14,6 +15,7 @@ import { useAuth } from '../hooks/useAuth'
 const Dashboard = () => {
   const navigate = useNavigate()
   const { user, userRole } = useAuth()
+  const showPlatformOnboarding = canAccessPlatformOnboarding(user, userRole)
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalPrescriptions: 0,
@@ -142,6 +144,15 @@ const Dashboard = () => {
           <p className="text-sm sm:text-base text-gray-600">Your comprehensive hospital management solution</p>
         </div>
 
+        {showPlatformOnboarding ? (
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-blue-900 shadow-sm">
+            <h3 className="text-lg font-semibold">Platform owner tools are available</h3>
+            <p className="mt-1 text-sm leading-6 text-blue-800">
+              Use the hospital onboarding hub to track new client rollouts, intake details, provisioning tasks, and go-live readiness across implementations.
+            </p>
+          </div>
+        ) : null}
+
         {/* Statistics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <StatCard
@@ -187,28 +198,37 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <a
-              href="/patients/register"
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${showPlatformOnboarding ? 'xl:grid-cols-4' : 'lg:grid-cols-3'}`}>
+            <Link
+              to="/patients/register"
               className="flex items-center min-h-[44px] p-3 sm:p-4 bg-primary text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition"
             >
               <span className="mr-3 text-xl sm:text-2xl">➕</span>
               <span className="text-sm sm:text-base font-medium">Register New Patient</span>
-            </a>
-            <a
-              href="/pharmacy"
+            </Link>
+            <Link
+              to="/pharmacy"
               className="flex items-center min-h-[44px] p-3 sm:p-4 bg-medical text-white rounded-lg hover:bg-green-600 active:bg-green-700 transition"
             >
               <span className="mr-3 text-xl sm:text-2xl">💊</span>
               <span className="text-sm sm:text-base font-medium">Pharmacy Dashboard</span>
-            </a>
-            <a
-              href="/reports"
+            </Link>
+            <Link
+              to="/reports"
               className="flex items-center min-h-[44px] p-3 sm:p-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 active:bg-purple-700 transition"
             >
               <span className="mr-3 text-xl sm:text-2xl">📊</span>
               <span className="text-sm sm:text-base font-medium">View Reports</span>
-            </a>
+            </Link>
+            {showPlatformOnboarding ? (
+              <Link
+                to="/hospital-onboarding"
+                className="flex items-center min-h-[44px] p-3 sm:p-4 bg-slate-900 text-white rounded-lg hover:bg-slate-800 active:bg-slate-950 transition"
+              >
+                <span className="mr-3 text-xl sm:text-2xl">HM</span>
+                <span className="text-sm sm:text-base font-medium">Onboard Hospitals</span>
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>
