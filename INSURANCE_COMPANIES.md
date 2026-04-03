@@ -59,8 +59,7 @@ When registering a new patient:
    - Enter the patient's NHIS number
 
 3. **If Private Insurance selected:**
-   - Select insurance company from dropdown (required)
-   - The dropdown contains all 21 insurance companies plus "Other"
+   - Select insurance company from dropdown (required)   - Enter insurance number/policy number (optional)   - The dropdown contains all 21 insurance companies plus "Other"
 
 4. **Data Validation:**
    - Insurance company name is required when "Private Insurance" is selected
@@ -122,6 +121,7 @@ CREATE TABLE patients (
   nhis_number TEXT,          -- For NHIS patients
   insurance_type TEXT,       -- 'nhis', 'private', or null
   insurance_name TEXT,       -- Company name for private insurance
+  insurance_number TEXT,     -- Policy/membership number for private insurance
   address TEXT,
   -- ... other fields
 )
@@ -145,7 +145,8 @@ CREATE TABLE patients (
   "name": "Jane Smith",
   "insurance_type": "private",
   "nhis_number": null,
-  "insurance_name": "Glico Life Insurance"
+  "insurance_name": "Glico Healthcare",
+  "insurance_number": "HI-2024-123456"
 }
 ```
 

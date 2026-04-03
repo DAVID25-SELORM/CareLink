@@ -53,6 +53,7 @@ CREATE TABLE patients (
   nhis_number TEXT,
   insurance_type TEXT CHECK (insurance_type IN ('nhis', 'private', 'none')),
   insurance_name TEXT,
+  insurance_number TEXT,
   emergency_contact TEXT,
   emergency_phone TEXT,
   blood_group TEXT,
@@ -65,6 +66,7 @@ CREATE TABLE patients (
 CREATE INDEX idx_patients_name ON patients(name);
 CREATE INDEX idx_patients_phone ON patients(phone);
 CREATE INDEX idx_patients_nhis ON patients(nhis_number);
+CREATE INDEX idx_patients_insurance_number ON patients(insurance_number);
 ```
 
 ### 3. Drugs Table
