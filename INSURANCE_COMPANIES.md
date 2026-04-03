@@ -1,51 +1,32 @@
 # Private Health Insurance Companies in Ghana
 
 ## Overview
-This document lists the private health insurance companies available in the CareLink HMS system for patient registration.
+This document lists the **health insurance** companies available in the CareLink HMS system for patient registration.
 
-## Supported Insurance Companies
+**Note:** This list includes only health/medical insurance providers. Life insurance and life assurance companies have been excluded as they do not provide health coverage.
 
-The following private health insurance companies are integrated into the patient registration system:
+## Supported Health Insurance Companies
+
+The following private **health insurance** companies are integrated into the patient registration system:
 
 1. **Acacia Health Insurance**
 2. **Ace Medical Insurance**
-3. **Activa International Insurance**
-4. **Allianz Life Insurance Ghana**
-5. **Apex Health Insurance**
-6. **Area Life Assurance**
-7. **Best Assurance Health Insurance**
-8. **Cosmopolitan Health Insurance**
-9. **Donewell Life Assurance**
-10. **Dosh Health Insurance**
-11. **Emple Health Insurance**
-12. **Enterprise Life Assurance**
-13. **Equity Health Insurance**
-14. **Express Life Insurance**
-15. **Glico Healthcare**
-16. **Glico Life Insurance**
-17. **GN Life Insurance**
-18. **Healthnet Insurance Ghana**
-19. **Hollard Insurance Ghana**
-20. **Imperial General Assurance**
-21. **International Health Insurance Ghana**
-22. **Libra Life Insurance**
-23. **Metropolitan Life Insurance**
-24. **Nationwide Medical Insurance**
-25. **Nova Health Insurance**
-26. **Petra Health Insurance**
-27. **Phoenix Life Assurance**
-28. **Premier Health Insurance**
-29. **Premier Life Insurance**
-30. **Provident Life Assurance**
-31. **Prudential Life Insurance Ghana**
-32. **Quality Insurance Company**
-33. **Saham Life Insurance**
-34. **SIC Life Company**
-35. **Star Life Assurance**
-36. **Ultimate Health Insurance**
-37. **UnitedHealthcare Ghana**
-38. **Vanguard Life Assurance**
-39. **Other** (for companies not listed)
+3. **Apex Health Insurance**
+4. **Best Assurance Health Insurance**
+5. **Cosmopolitan Health Insurance**
+6. **Dosh Health Insurance**
+7. **Emple Health Insurance**
+8. **Equity Health Insurance**
+9. **Glico Healthcare**
+10. **Healthnet Insurance Ghana**
+11. **International Health Insurance Ghana**
+12. **Nationwide Medical Insurance**
+13. **Nova Health Insurance**
+14. **Petra Health Insurance**
+15. **Premier Health Insurance**
+16. **Ultimate Health Insurance**
+17. **UnitedHealthcare Ghana**
+18. **Other** (for companies not listed)
 
 ## Insurance Types
 
@@ -120,9 +101,8 @@ If a new insurance company needs to be added:
 const PRIVATE_INSURANCE_COMPANIES = [
   'Acacia Health Insurance',
   'Ace Medical Insurance',
-  'Activa International Insurance',
-  // ... existing companies ...
-  'New Insurance Company Name',  // Add here
+  // ... existing health insurance companies ...
+  'New Health Insurance Company Name',  // Add here
   'Other'
 ]
 ```
@@ -200,13 +180,14 @@ CREATE TABLE patients (
 
 ### Testing Checklist
 - [ ] Dropdown displays all 39 options
+- [ ] "Private Insurance" se18 health insurance options
 - [ ] "Private Insurance" selection shows company dropdown
 - [ ] Company selection is required when private insurance chosen
 - [ ] Data saves correctly to database
 - [ ] Insurance info displays in patient list
 - [ ] Billing system recognizes insurance type
 - [ ] Can search/filter patients by insurance
-
+- [ ] Only health insurance companies appear (no life insurance)
 ## Support
 
 For questions or issues with insurance configuration:
