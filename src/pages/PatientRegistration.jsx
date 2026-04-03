@@ -11,6 +11,32 @@ import { supabase } from '../supabaseClient'
  * Register new patients into the system
  */
 
+// Private Health Insurance Companies in Ghana
+const PRIVATE_INSURANCE_COMPANIES = [
+  'Activa International Insurance',
+  'Allianz Life Insurance Ghana',
+  'Area Life Assurance',
+  'Donewell Life Assurance',
+  'Enterprise Life Assurance',
+  'Express Life Insurance',
+  'Glico Life Insurance',
+  'GN Life Insurance',
+  'Hollard Insurance Ghana',
+  'Imperial General Assurance',
+  'Libra Life Insurance',
+  'Metropolitan Life Insurance',
+  'Phoenix Life Assurance',
+  'Premier Life Insurance',
+  'Provident Life Assurance',
+  'Prudential Life Insurance Ghana',
+  'Quality Insurance Company',
+  'Saham Life Insurance',
+  'Star Life Assurance',
+  'SIC Life Company',
+  'Vanguard Life Assurance',
+  'Other'
+]
+
 const PatientRegistration = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -188,16 +214,22 @@ const PatientRegistration = () => {
                 {formData.insurance_type === 'private' && (
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Insurance Company Name
+                      Insurance Company Name <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="insurance_name"
                       value={formData.insurance_name}
                       onChange={handleChange}
+                      required={formData.insurance_type === 'private'}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="e.g., Glico, Enterprise Insurance"
-                    />
+                    >
+                      <option value="">Select Insurance Company</option>
+                      {PRIVATE_INSURANCE_COMPANIES.map((company) => (
+                        <option key={company} value={company}>
+                          {company}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
               </div>
