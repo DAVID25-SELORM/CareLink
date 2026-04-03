@@ -207,7 +207,6 @@ CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at DESC);
 COMMENT ON TABLE users IS 'Stores CareLink staff accounts and role metadata';
 COMMENT ON COLUMN users.specialty IS 'Doctor specialty or nurse type when applicable';
 COMMENT ON TABLE patients IS 'Stores registered patient records';
-COMMENT ON COLUMN patients.patient_id IS 'Human-friendly CareLink patient identifier used in records and search';
 COMMENT ON TABLE drugs IS 'Stores drug inventory and pricing';
 COMMENT ON TABLE prescriptions IS 'Stores doctor prescriptions';
 COMMENT ON TABLE prescription_items IS 'Stores prescription drug line items';
@@ -273,6 +272,10 @@ END $$;
 -- Create indexes for columns added via compatibility migrations
 CREATE INDEX IF NOT EXISTS idx_patients_patient_id ON patients(patient_id);
 CREATE INDEX IF NOT EXISTS idx_patients_insurance_number ON patients(insurance_number);
+
+-- Add comments for compatibility-migrated columns
+COMMENT ON COLUMN patients.patient_id IS 'Human-friendly CareLink patient identifier used in records and search';
+COMMENT ON COLUMN patients.insurance_number IS 'Policy or membership number for private health insurance companies';
 
 -- ============================================
 -- 3. UPDATED_AT TRIGGERS
