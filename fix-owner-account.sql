@@ -26,8 +26,14 @@
 ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_phone_key CASCADE;
 
 -- Drop any unique indexes on phone
-DROP INDEX IF EXISTS public.users_phone_key;
-DROP INDEX IF EXISTS public.idx_users_phone_unique;
+DROP INDEX IF EXISTS public.users_phone_key CASCADE;
+DROP INDEX IF EXISTS public.idx_users_phone_unique CASCADE;
+
+-- Clear phone from any duplicate legacy rows to prevent conflicts
+UPDATE public.users
+SET phone = NULL, updated_at = NOW()
+WHERE phone = '+233247654381'
+  AND LOWER(email) != 'owner.carelink@gmail.com';
 
 -- Create a regular (non-unique) index if it doesn't exist
 CREATE INDEX IF NOT EXISTS idx_users_phone ON public.users(phone) WHERE phone IS NOT NULL;
