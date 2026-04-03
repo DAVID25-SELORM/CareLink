@@ -102,13 +102,13 @@ const PatientRegistration = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-8">
-          <h2 className="text-2xl font-bold text-dark mb-6">Register New Patient</h2>
+      <div className="max-w-3xl mx-auto px-2 sm:px-0">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6 lg:p-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-dark mb-4 sm:mb-6">Register New Patient</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name <span className="text-red-500">*</span>
@@ -119,7 +119,7 @@ const PatientRegistration = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
                   placeholder="Enter patient's full name"
                 />
               </div>
@@ -136,7 +136,7 @@ const PatientRegistration = () => {
                   required
                   min="0"
                   max="150"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
                   placeholder="Age"
                 />
               </div>

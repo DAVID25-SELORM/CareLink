@@ -44,6 +44,63 @@ code {
   background: #94a3b8;
 }
 
+/* Responsive Table Utilities */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+/* Responsive Typography */
+@layer utilities {
+  .text-responsive-lg {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  @screen md {
+    .text-responsive-lg {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+  }
+  
+  .text-responsive-base {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  @screen md {
+    .text-responsive-base {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+}
+
+/* Touch-Friendly Buttons */
+@layer components {
+  .btn-mobile {
+    @apply min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+  
+  .btn-primary-mobile {
+    @apply btn-mobile bg-primary text-white hover:bg-blue-600 active:bg-blue-700;
+  }
+  
+  .btn-secondary-mobile {
+    @apply btn-mobile bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300;
+  }
+}
+
 /* Loading Spinner */
 .spinner {
   border: 3px solid #e2e8f0;

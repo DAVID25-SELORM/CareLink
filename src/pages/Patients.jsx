@@ -66,19 +66,19 @@ const Patients = () => {
         ) : null}
 
         {/* Header Actions */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="w-full lg:max-w-md">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="w-full sm:max-w-md">
             <input
               type="text"
               placeholder="Search by name, phone, or NHIS number..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
             />
           </div>
           <Link
             to="/patients/register"
-            className="w-full rounded-lg bg-primary px-6 py-2 text-center text-white transition hover:bg-blue-600 sm:w-auto"
+            className="w-full sm:w-auto min-h-[44px] flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-center text-white transition hover:bg-blue-600 active:bg-blue-700"
           >
             <span className="mr-2">➕</span>
             Register New Patient
@@ -87,8 +87,8 @@ const Patients = () => {
 
         {/* Patients Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="table-scroll">
-            <table className="min-w-[860px] divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

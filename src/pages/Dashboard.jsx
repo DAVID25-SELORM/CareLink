@@ -104,14 +104,14 @@ const Dashboard = () => {
   }
 
   const StatCard = ({ title, value, icon, color, subtitle }) => (
-    <div className={`bg-white rounded-lg shadow p-6 border-l-4 ${color}`}>
+    <div className={`bg-white rounded-lg shadow p-4 sm:p-6 border-l-4 ${color}`}>
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600 text-sm font-medium">{title}</p>
-          <h3 className="text-3xl font-bold mt-2">{value}</h3>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+        <div className="min-w-0 flex-1 pr-2">
+          <p className="text-gray-600 text-xs sm:text-sm font-medium truncate">{title}</p>
+          <h3 className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 truncate">{value}</h3>
+          {subtitle && <p className="text-xs text-gray-500 mt-1 truncate">{subtitle}</p>}
         </div>
-        <div className="text-4xl">{icon}</div>
+        <div className="text-3xl sm:text-4xl shrink-0">{icon}</div>
       </div>
     </div>
   )
@@ -137,13 +137,13 @@ const Dashboard = () => {
           </div>
         ) : null}
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-dark mb-2">Welcome to CareLink HMS</h2>
-          <p className="text-gray-600">Your comprehensive hospital management solution</p>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-dark mb-2">Welcome to CareLink HMS</h2>
+          <p className="text-sm sm:text-base text-gray-600">Your comprehensive hospital management solution</p>
         </div>
 
         {/* Statistics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <StatCard
             title="Total Patients"
             value={stats.totalPatients}
@@ -185,29 +185,29 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <a
               href="/patients/register"
-              className="flex items-center p-4 bg-primary text-white rounded-lg hover:bg-blue-600 transition"
+              className="flex items-center min-h-[44px] p-3 sm:p-4 bg-primary text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition"
             >
-              <span className="mr-3 text-2xl">➕</span>
-              <span className="font-medium">Register New Patient</span>
+              <span className="mr-3 text-xl sm:text-2xl">➕</span>
+              <span className="text-sm sm:text-base font-medium">Register New Patient</span>
             </a>
             <a
               href="/pharmacy"
-              className="flex items-center p-4 bg-medical text-white rounded-lg hover:bg-green-600 transition"
+              className="flex items-center min-h-[44px] p-3 sm:p-4 bg-medical text-white rounded-lg hover:bg-green-600 active:bg-green-700 transition"
             >
-              <span className="mr-3 text-2xl">💊</span>
-              <span className="font-medium">Pharmacy Dashboard</span>
+              <span className="mr-3 text-xl sm:text-2xl">💊</span>
+              <span className="text-sm sm:text-base font-medium">Pharmacy Dashboard</span>
             </a>
             <a
               href="/reports"
-              className="flex items-center p-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition"
+              className="flex items-center min-h-[44px] p-3 sm:p-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 active:bg-purple-700 transition"
             >
-              <span className="mr-3 text-2xl">📊</span>
-              <span className="font-medium">View Reports</span>
+              <span className="mr-3 text-xl sm:text-2xl">📊</span>
+              <span className="text-sm sm:text-base font-medium">View Reports</span>
             </a>
           </div>
         </div>

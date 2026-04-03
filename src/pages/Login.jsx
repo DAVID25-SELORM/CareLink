@@ -29,18 +29,18 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-100 p-4">
-      <div className="bg-white p-10 rounded-2xl shadow-soft w-full max-w-md border border-slate-100">
-        <div className="text-center mb-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-100 p-4 sm:p-6">
+      <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-soft w-full max-w-md border border-slate-100">
+        <div className="text-center mb-6 sm:mb-8">
           <img
             src={carelinkLogo}
             alt="CareLink HMS logo"
-            className="mx-auto h-28 w-auto"
+            className="mx-auto h-20 sm:h-28 w-auto"
           />
-          <p className="text-slate-600 text-sm mt-5">Secure staff access to the CareLink hospital management system.</p>
+          <p className="text-slate-600 text-xs sm:text-sm mt-4 sm:mt-5">Secure staff access to the CareLink hospital management system.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Email Address
