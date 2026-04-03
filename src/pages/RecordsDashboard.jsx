@@ -176,6 +176,40 @@ const RecordsDashboard = () => {
     }
   }
 
+  const handleCreateRequest = async (e) => {
+    e.preventDefault()
+
+    if (!selectedPatient) {
+      toast.error('Please select a patient')
+      return
+    }
+
+    try {
+      const requestData = {
+        patient_id: selectedPatient.id,
+        requested_by: requestForm.requested_by.trim() || recordsOfficer?.full_name || user.email,
+        request_type: requestForm.request_type,
+        purpose: requestForm.purpose,
+        urgency: requestForm.urgency,
+      }
+
+      const { error } = await supabase
+        .from('record_requests')
+        .insert([requestData])
+
+      if (error) throw error
+
+      toast.success('Record request submitted successfully!')
+      setShowRequestModal(false)
+      resetRequestForm()
+      fetchRecordRequests()
+      setActiveTab('requests')
+    } catch (error) {
+      console.error('Error creating record request:', error)
+      toast.error('Failed to create record request')
+    }
+  }
+
   const handleProcessRequest = async (requestId, status) => {
     try {
       const { error } = await supabase
@@ -258,11 +292,23 @@ const RecordsDashboard = () => {
 
   const resetRequestForm = () => {
     setRequestForm({
-      requested_by: '',
+      requested_by: recordsOfficer?.full_name || user?.email || '',
       request_type: 'view',
       purpose: '',
       urgency: 'normal'
     })
+    setselectedPatient(null)
+  }
+
+  const openRequestModal = (patient = null) => {
+    setselectedPatient(patient)
+    setRequestForm({
+      requested_by: recordsOfficer?.full_name || user?.email || '',
+      request_type: 'view',
+      purpose: '',
+      urgency: 'normal'
+    })
+    setShowRequestModal(true)
   }
 
   const getStatusBadge = (status) => {
@@ -355,7 +401,7 @@ const RecordsDashboard = () => {
 
         {/* Search Bar */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <input
               type="text"
               placeholder="Search by patient name, patient ID, or file number..."
@@ -363,13 +409,21 @@ const RecordsDashboard = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
-            <button
-              onClick={() => setShowAddRecordModal(true)}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              <span className="text-xl">+</span>
-              Add Record
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAddRecordModal(true)}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <span className="text-xl">+</span>
+                Add Record
+              </button>
+              <button
+                onClick={() => openRequestModal()}
+                className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition"
+              >
+                New Request
+              </button>
+            </div>
           </div>
         </div>
 
@@ -686,6 +740,12 @@ const RecordsDashboard = () => {
                           >
                             Add Record
                           </button>
+                          <button
+                            onClick={() => openRequestModal(patient)}
+                            className="w-full mt-2 text-xs px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+                          >
+                            Create Request
+                          </button>
                         </div>
                       )
                     })}
@@ -851,6 +911,134 @@ const RecordsDashboard = () => {
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
                     Add Record
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showRequestModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full">
+              <div className="border-b border-gray-200 px-6 py-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold">Create Record Request</h2>
+                  <button
+                    onClick={() => {
+                      setShowRequestModal(false)
+                      resetRequestForm()
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleCreateRequest} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Patient *
+                  </label>
+                  <select
+                    required
+                    value={selectedPatient?.id || ''}
+                    onChange={(e) => {
+                      const patient = patients.find((item) => item.id === e.target.value)
+                      setselectedPatient(patient || null)
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="">Choose a patient...</option>
+                    {patients.map((patient) => (
+                      <option key={patient.id} value={patient.id}>
+                        {patient.name} - {patient.patient_id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Requested By *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={requestForm.requested_by}
+                      onChange={(e) => setRequestForm({ ...requestForm, requested_by: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      placeholder="Requester name or department"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Request Type *
+                    </label>
+                    <select
+                      required
+                      value={requestForm.request_type}
+                      onChange={(e) => setRequestForm({ ...requestForm, request_type: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="view">View</option>
+                      <option value="copy">Copy</option>
+                      <option value="transfer">Transfer</option>
+                      <option value="audit">Audit</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Purpose *
+                  </label>
+                  <textarea
+                    required
+                    value={requestForm.purpose}
+                    onChange={(e) => setRequestForm({ ...requestForm, purpose: e.target.value })}
+                    rows="4"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    placeholder="State why this record is being requested..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Urgency *
+                  </label>
+                  <select
+                    required
+                    value={requestForm.urgency}
+                    onChange={(e) => setRequestForm({ ...requestForm, urgency: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="emergency">Emergency</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowRequestModal(false)
+                      resetRequestForm()
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                  >
+                    Submit Request
                   </button>
                 </div>
               </form>

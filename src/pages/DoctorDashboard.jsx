@@ -57,6 +57,7 @@ const DoctorDashboard = () => {
       // Get today's date
       const today = new Date().toISOString().split('T')[0]
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const oneWeekFromToday = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
       // Fetch today's appointments
       const { data: todayAppts, error: todayError } = await supabase
@@ -70,20 +71,25 @@ const DoctorDashboard = () => {
       setTodaySchedule(todayAppts || [])
 
       // Fetch upcoming appointments (next 7 days)
-      const { data: upcomingAppts, error: upcomingError } = await supabase
+      const { count: upcomingAppointmentsCount, error: upcomingError } = await supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('doctor_id', user.id)
         .gte('appointment_date', today)
+        .lte('appointment_date', oneWeekFromToday)
         .eq('status', 'scheduled')
 
+      if (upcomingError) throw upcomingError
+
       // Fetch completed appointments today
-      const { data: completedAppts, error: completedError } = await supabase
+      const { count: completedAppointmentsCount, error: completedError } = await supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('doctor_id', user.id)
         .eq('appointment_date', today)
         .eq('status', 'completed')
+
+      if (completedError) throw completedError
 
       // Fetch total unique patients
       const { data: patients, error: patientsError } = await supabase
@@ -91,14 +97,18 @@ const DoctorDashboard = () => {
         .select('patient_id')
         .eq('doctor_id', user.id)
 
+      if (patientsError) throw patientsError
+
       const uniquePatients = patients ? [...new Set(patients.map(p => p.patient_id))].length : 0
 
       // Fetch prescriptions this week
-      const { data: weekPrescriptions, error: weekError } = await supabase
+      const { count: weeklyPrescriptionCount, error: weekError } = await supabase
         .from('prescriptions')
         .select('*', { count: 'exact', head: true })
         .eq('doctor_id', user.id)
         .gte('created_at', oneWeekAgo)
+
+      if (weekError) throw weekError
 
       // Fetch recent prescriptions
       const { data: recentRx, error: recentError } = await supabase
@@ -111,6 +121,14 @@ const DoctorDashboard = () => {
       if (!recentError) setRecentPrescriptions(recentRx || [])
 
       // Fetch pending lab tests
+      const { count: pendingLabCount, error: pendingLabCountError } = await supabase
+        .from('lab_tests')
+        .select('*', { count: 'exact', head: true })
+        .eq('requested_by', user.id)
+        .in('status', ['pending', 'in_progress'])
+
+      if (pendingLabCountError) throw pendingLabCountError
+
       const { data: labs, error: labsError } = await supabase
         .from('lab_tests')
         .select('*, patients(name, age, gender)')
@@ -124,11 +142,11 @@ const DoctorDashboard = () => {
       // Set stats
       setStats({
         todayAppointments: todayAppts?.length || 0,
-        upcomingAppointments: upcomingAppts?.length || 0,
+        upcomingAppointments: upcomingAppointmentsCount || 0,
         totalPatients: uniquePatients,
-        prescriptionsThisWeek: weekPrescriptions?.length || 0,
-        pendingLabResults: labs?.length || 0,
-        completedToday: completedAppts?.length || 0
+        prescriptionsThisWeek: weeklyPrescriptionCount || 0,
+        pendingLabResults: pendingLabCount || 0,
+        completedToday: completedAppointmentsCount || 0
       })
 
     } catch (error) {
@@ -207,6 +225,85 @@ const DoctorDashboard = () => {
       'in_progress': 'bg-purple-100 text-purple-800'
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  const getSpecialtyActionTarget = (actionLabel) => {
+    const normalized = actionLabel.toLowerCase()
+
+    if (
+      normalized.includes('schedule') ||
+      normalized.includes('visit') ||
+      normalized.includes('consultation') ||
+      normalized.includes('follow-up') ||
+      normalized.includes('follow-ups') ||
+      normalized.includes('therapy sessions')
+    ) {
+      return { path: '/appointments', module: 'appointments' }
+    }
+
+    if (
+      normalized.includes('result') ||
+      normalized.includes('results') ||
+      normalized.includes('test') ||
+      normalized.includes('tests') ||
+      normalized.includes('scan') ||
+      normalized.includes('scans') ||
+      normalized.includes('viewer') ||
+      normalized.includes('imaging') ||
+      normalized.includes('queue') ||
+      normalized.includes('markers') ||
+      normalized.includes('analysis') ||
+      normalized.includes('function') ||
+      normalized.includes('exam') ||
+      normalized.includes('screening')
+    ) {
+      return { path: '/laboratory', module: 'laboratory' }
+    }
+
+    if (
+      normalized.includes('med') ||
+      normalized.includes('management') ||
+      normalized.includes('treatment') ||
+      normalized.includes('therapy') ||
+      normalized.includes('care') ||
+      normalized.includes('protocol') ||
+      normalized.includes('protocols') ||
+      normalized.includes('review') ||
+      normalized.includes('tracking') ||
+      normalized.includes('control') ||
+      normalized.includes('stewardship') ||
+      normalized.includes('vaccination') ||
+      normalized.includes('vaccinations')
+    ) {
+      return { path: '/prescriptions', module: 'prescriptions' }
+    }
+
+    if (
+      normalized.includes('refer') ||
+      normalized.includes('transfer')
+    ) {
+      return { path: '/referrals', module: 'referrals' }
+    }
+
+    return { path: '/patients', module: 'patients' }
+  }
+
+  const handleSpecialtyActionClick = (event) => {
+    const actionButton = event.target.closest('button')
+
+    if (!actionButton) return
+
+    const actionLabel = actionButton.textContent?.replace(/\s+/g, ' ').trim()
+    if (!actionLabel) return
+
+    const target = getSpecialtyActionTarget(actionLabel)
+    toast.info(`Opening ${target.module} for "${actionLabel}"`, { autoClose: 1800 })
+    navigate(target.path, {
+      state: {
+        specialty: doctorInfo?.specialty || 'General Practitioner',
+        specialtyAction: actionLabel,
+      },
+    })
   }
 
   if (loading) {
@@ -299,10 +396,17 @@ const DoctorDashboard = () => {
 
         {/* Specialty-Specific Dashboard Section */}
         {doctorInfo?.specialty && SpecialtyComponents[doctorInfo.specialty] && (
-          <div className="mb-6">
+          <div className="mb-6" onClickCapture={handleSpecialtyActionClick}>
             {(() => {
               const SpecialtyComponent = SpecialtyComponents[doctorInfo.specialty]
-              return <SpecialtyComponent stats={stats} doctorInfo={doctorInfo} />
+              return (
+                <>
+                  <SpecialtyComponent stats={stats} doctorInfo={doctorInfo} />
+                  <p className="mt-3 text-xs text-gray-500">
+                    Specialty shortcuts open the closest matching CareLink module for that workflow.
+                  </p>
+                </>
+              )
             })()}
           </div>
         )}

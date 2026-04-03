@@ -7,28 +7,45 @@ This document lists the private health insurance companies available in the Care
 
 The following private health insurance companies are integrated into the patient registration system:
 
-1. **Activa International Insurance**
-2. **Allianz Life Insurance Ghana**
-3. **Area Life Assurance**
-4. **Donewell Life Assurance**
-5. **Enterprise Life Assurance**
-6. **Express Life Insurance**
-7. **Glico Life Insurance**
-8. **GN Life Insurance**
-9. **Hollard Insurance Ghana**
-10. **Imperial General Assurance**
-11. **Libra Life Insurance**
-12. **Metropolitan Life Insurance**
-13. **Phoenix Life Assurance**
-14. **Premier Life Insurance**
-15. **Provident Life Assurance**
-16. **Prudential Life Insurance Ghana**
-17. **Quality Insurance Company**
-18. **Saham Life Insurance**
-19. **Star Life Assurance**
-20. **SIC Life Company**
-21. **Vanguard Life Assurance**
-22. **Other** (for companies not listed)
+1. **Acacia Health Insurance**
+2. **Ace Medical Insurance**
+3. **Activa International Insurance**
+4. **Allianz Life Insurance Ghana**
+5. **Apex Health Insurance**
+6. **Area Life Assurance**
+7. **Best Assurance Health Insurance**
+8. **Cosmopolitan Health Insurance**
+9. **Donewell Life Assurance**
+10. **Dosh Health Insurance**
+11. **Emple Health Insurance**
+12. **Enterprise Life Assurance**
+13. **Equity Health Insurance**
+14. **Express Life Insurance**
+15. **Glico Healthcare**
+16. **Glico Life Insurance**
+17. **GN Life Insurance**
+18. **Healthnet Insurance Ghana**
+19. **Hollard Insurance Ghana**
+20. **Imperial General Assurance**
+21. **International Health Insurance Ghana**
+22. **Libra Life Insurance**
+23. **Metropolitan Life Insurance**
+24. **Nationwide Medical Insurance**
+25. **Nova Health Insurance**
+26. **Petra Health Insurance**
+27. **Phoenix Life Assurance**
+28. **Premier Health Insurance**
+29. **Premier Life Insurance**
+30. **Provident Life Assurance**
+31. **Prudential Life Insurance Ghana**
+32. **Quality Insurance Company**
+33. **Saham Life Insurance**
+34. **SIC Life Company**
+35. **Star Life Assurance**
+36. **Ultimate Health Insurance**
+37. **UnitedHealthcare Ghana**
+38. **Vanguard Life Assurance**
+39. **Other** (for companies not listed)
 
 ## Insurance Types
 
@@ -101,6 +118,8 @@ If a new insurance company needs to be added:
 
 ```javascript
 const PRIVATE_INSURANCE_COMPANIES = [
+  'Acacia Health Insurance',
+  'Ace Medical Insurance',
   'Activa International Insurance',
   // ... existing companies ...
   'New Insurance Company Name',  // Add here
@@ -180,7 +199,7 @@ CREATE TABLE patients (
 ## Quality Assurance
 
 ### Testing Checklist
-- [ ] Dropdown displays all 22 options
+- [ ] Dropdown displays all 39 options
 - [ ] "Private Insurance" selection shows company dropdown
 - [ ] Company selection is required when private insurance chosen
 - [ ] Data saves correctly to database
