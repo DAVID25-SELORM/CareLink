@@ -35,6 +35,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Laboratory', path: '/laboratory', icon: 'LB', roles: ['admin', 'doctor'] },
     { name: 'Appointments', path: '/appointments', icon: 'AP', roles: ['admin', 'doctor'] },
     { name: 'Reports', path: '/reports', icon: 'RP', roles: ['admin'] },
+    { name: 'Users', path: '/users', icon: '👥', roles: ['admin'] },
   ]
 
   const filteredMenuItems = menuItems.filter((item) => {

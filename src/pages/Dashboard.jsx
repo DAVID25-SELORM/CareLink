@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { getSupabaseCount, getSupabaseData, isSupabaseFailure, withTimeout } from '../services/queryTimeout'
+import { useAuth } from '../hooks/useAuth'
 
 /**
  * Dashboard Page
  * Overview and statistics for CareLink HMS
+ * Redirects doctors to their specialized dashboard
  */
 
 const Dashboard = () => {
+  const navigate = useNavigate()
+  const { user, userRole } = useAuth()
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalPrescriptions: 0,
@@ -19,6 +24,13 @@ const Dashboard = () => {
   })
   const [loading, setLoading] = useState(true)
   const [loadWarning, setLoadWarning] = useState('')
+
+  // Redirect doctors to their specialized dashboard
+  useEffect(() => {
+    if (userRole === 'doctor') {
+      navigate('/doctor-dashboard', { replace: true })
+    }
+  }, [userRole, navigate])
 
   useEffect(() => {
     fetchDashboardStats()
