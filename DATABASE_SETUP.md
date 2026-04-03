@@ -1,6 +1,8 @@
 # 📊 CareLink HMS - Database Setup Guide
 
-This guide will help you set up the complete database schema for CareLink HMS in Supabase.
+This guide explains the CareLink database schema.
+
+For Supabase SQL Editor, use the runnable script in [`database-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/database-setup.sql) instead of pasting this Markdown file.
 
 ---
 
@@ -8,9 +10,12 @@ This guide will help you set up the complete database schema for CareLink HMS in
 
 1. Go to your Supabase project
 2. Navigate to **SQL Editor**
-3. Run the core schema below first
-4. Then run any module setup scripts your hospital needs
-5. Enable Row Level Security (RLS) policies
+3. Run [`database-setup.sql`](c:/Users/RealTimeIT/Desktop/CareLink/database-setup.sql) first
+4. Create your owner/admin account in **Authentication -> Users**
+5. Create any optional demo/test role accounts you want to use for system checks
+6. Run [`setup-users.sql`](c:/Users/RealTimeIT/Desktop/CareLink/setup-users.sql) to sync the owner account and any test users
+7. Then run any module setup scripts your hospital needs
+8. Enable Row Level Security (RLS) policies
 
 ---
 
@@ -453,10 +458,11 @@ CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments
 ## 📧 Next Steps
 
 1. ✅ Run all SQL commands above in Supabase SQL Editor
-2. ✅ Create admin user in Supabase Auth
-3. ✅ Add user record to `users` table
-4. ✅ Test connection from your React app
-5. ✅ Insert sample data for testing
+2. ✅ Create your owner/admin Auth user
+3. ✅ Create optional test role Auth users if needed
+4. ✅ Run [`setup-users.sql`](c:/Users/RealTimeIT/Desktop/CareLink/setup-users.sql)
+5. ✅ Test connection from your React app
+6. ✅ Insert sample data for testing
 
 ---
 

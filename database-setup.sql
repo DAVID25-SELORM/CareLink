@@ -223,6 +223,13 @@ COMMENT ON TABLE audit_log IS 'Stores audit events for key application actions';
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS specialty TEXT;
 
+ALTER TABLE users
+  DROP CONSTRAINT IF EXISTS users_role_check;
+
+ALTER TABLE users
+  ADD CONSTRAINT users_role_check
+  CHECK (role IN ('admin', 'doctor', 'pharmacist', 'nurse', 'cashier', 'records_officer'));
+
 -- Add patient_id column if it doesn't exist
 DO $$ 
 BEGIN
