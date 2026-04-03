@@ -91,16 +91,27 @@ const UserManagement = () => {
     setIsSubmitting(true)
 
     try {
-      // Step 1: Create authentication user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Step 1: Create authentication user using regular signup
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        email_confirm: true
+        options: {
+          data: {
+            role: formData.role,
+            full_name: formData.full_name,
+            phone: formData.phone,
+            specialty: formData.role === 'doctor' ? formData.specialty : null
+          }
+        }
       })
 
       if (authError) throw authError
 
-      // Step 2: Insert user record with role and specialty
+      if (!authData.user) {
+        throw new Error('User creation failed - no user data returned')
+      }
+
+      // Step 2: Insert/Update user record with role and specialty
       const userData = {
         id: authData.user.id,
         email: formData.email,
@@ -116,11 +127,11 @@ const UserManagement = () => {
 
       const { error: insertError } = await supabase
         .from('users')
-        .insert([userData])
+        .upsert([userData], { onConflict: 'id' })
 
       if (insertError) throw insertError
 
-      toast.success(`User ${formData.full_name} created successfully!`)
+      toast.success(`User ${formData.full_name || formData.email} created successfully! They can now login.`)
       setShowModal(false)
       resetForm()
       fetchUsers()
