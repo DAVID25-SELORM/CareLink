@@ -100,7 +100,7 @@ const Patients = () => {
           <p className="text-slate-600">Fetching registered patient records.</p>
         </div>
       </DashboardLayout>
-    )handleSearchChange
+    );
   }
 
   return (
