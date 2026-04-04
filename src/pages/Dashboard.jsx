@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 import { getSupabaseCount, getSupabaseData, isSupabaseFailure, withTimeout } from '../services/queryTimeout'
 import { useAuth } from '../hooks/useAuth'
 import { canAccessPlatformOnboarding } from '../constants/platformAccess'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 
 /**
  * Dashboard Page
@@ -12,9 +13,28 @@ import { canAccessPlatformOnboarding } from '../constants/platformAccess'
  * Redirects doctors to their specialized dashboard
  */
 
+// Helper function to get time-based greeting
+const getTimeGreeting = () => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'morning'
+  if (hour < 18) return 'afternoon'
+  return 'evening'
+}
+
+// Role-based welcome messages
+const roleMessages = {
+  admin: 'Manage your hospital operations and oversee all departments',
+  owner: 'Monitor your hospital performance and growth metrics',
+  pharmacist: 'Track prescriptions and manage pharmacy inventory',
+  cashier: 'Process payments and manage billing operations',
+  lab_tech: 'View laboratory requests and upload test results',
+  default: 'Access your healthcare management tools'
+}
+
 const Dashboard = () => {
   const navigate = useNavigate()
   const { user, userRole } = useAuth()
+  const { branding, hospitalDisplayName } = useHospitalBranding()
   const showPlatformOnboarding = canAccessPlatformOnboarding(user, userRole)
   const [stats, setStats] = useState({
     totalPatients: 0,
@@ -26,6 +46,12 @@ const Dashboard = () => {
   })
   const [loading, setLoading] = useState(true)
   const [loadWarning, setLoadWarning] = useState('')
+  const [recentActivities] = useState([
+    { icon: '🏥', title: 'New patient registered', time: '5 minutes ago', color: 'bg-blue-100' },
+    { icon: '💊', title: 'Prescription dispensed', time: '12 minutes ago', color: 'bg-green-100' },
+    { icon: '💰', title: 'Payment processed', time: '28 minutes ago', color: 'bg-yellow-100' },
+    { icon: '📋', title: 'Lab results uploaded', time: '1 hour ago', color: 'bg-purple-100' }
+  ])
 
   // Redirect doctors and nurses to their specialized dashboards
   useEffect(() => {
@@ -105,15 +131,16 @@ const Dashboard = () => {
     }
   }
 
-  const StatCard = ({ title, value, icon, color, subtitle }) => (
-    <div className={`bg-white rounded-lg shadow p-4 sm:p-6 border-l-4 ${color}`}>
-      <div className="flex items-center justify-between">
+  const StatCard = ({ title, value, icon, gradient, subtitle }) => (
+    <div className="card group cursor-pointer relative overflow-hidden">
+      <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${gradient}`}></div>
+      <div className="flex items-center justify-between pt-2">
         <div className="min-w-0 flex-1 pr-2">
-          <p className="text-gray-600 text-xs sm:text-sm font-medium truncate">{title}</p>
-          <h3 className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 truncate">{value}</h3>
+          <h4 className="text-sm text-gray-600 font-medium truncate">{title}</h4>
+          <h2 className="text-3xl font-bold text-slate-800 mt-2 truncate">{value}</h2>
           {subtitle && <p className="text-xs text-gray-500 mt-1 truncate">{subtitle}</p>}
         </div>
-        <div className="text-3xl sm:text-4xl shrink-0">{icon}</div>
+        <div className="text-4xl opacity-80 group-hover:scale-110 transition-transform duration-200 shrink-0">{icon}</div>
       </div>
     </div>
   )
@@ -139,9 +166,25 @@ const Dashboard = () => {
           </div>
         ) : null}
 
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-dark mb-2">Welcome to CareLink HMS</h2>
-          <p className="text-sm sm:text-base text-gray-600">Your comprehensive hospital management solution</p>
+        {/* Enhanced Personalized Greeting */}
+        <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50 rounded-xl shadow p-4 sm:p-5 border border-purple-100">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+                {branding.platformName}
+              </p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className="text-xs text-gray-600">Good {getTimeGreeting()},</p>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-800">
+                  {user?.user_metadata?.full_name || 'Admin'}
+                </h2>
+              </div>
+              <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                {roleMessages[userRole] || roleMessages.default} • {branding.hospitalName || hospitalDisplayName}
+              </p>
+            </div>
+            <div className="text-3xl ml-3">👋</div>
+          </div>
         </div>
 
         {showPlatformOnboarding ? (
@@ -153,45 +196,89 @@ const Dashboard = () => {
           </div>
         ) : null}
 
+        {/* Featured Critical Alerts Card */}
+        <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+          {/* Diagonal pattern background */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute inset-0" 
+              style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, white 10px, white 20px)'
+              }}>
+            </div>
+          </div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">Today's Priority</h3>
+              <span className="text-sm bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-3 hover:bg-white/20 transition">
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                  <span className="text-sm sm:text-base">Pending Claims</span>
+                </div>
+                <span className="font-bold text-2xl">{stats.pendingClaims}</span>
+              </div>
+              <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-3 hover:bg-white/20 transition">
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>
+                  <span className="text-sm sm:text-base">Low Stock Items</span>
+                </div>
+                <span className="font-bold text-2xl">{stats.lowStockDrugs}</span>
+              </div>
+              <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-3 hover:bg-white/20 transition">
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                  <span className="text-sm sm:text-base">Total Patients</span>
+                </div>
+                <span className="font-bold text-2xl">{stats.totalPatients}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Statistics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <StatCard
             title="Total Patients"
             value={stats.totalPatients}
             icon="👥"
-            color="border-blue-500"
+            gradient="from-blue-500 to-blue-600"
           />
           <StatCard
             title="Prescriptions"
             value={stats.totalPrescriptions}
             icon="📋"
-            color="border-green-500"
+            gradient="from-green-500 to-green-600"
           />
           <StatCard
             title="Total Revenue"
             value={`GH₵ ${stats.totalRevenue.toFixed(2)}`}
             icon="💰"
-            color="border-yellow-500"
+            gradient="from-yellow-500 to-yellow-600"
           />
           <StatCard
             title="Total Claims"
             value={stats.totalClaims}
             icon="🧾"
-            color="border-purple-500"
+            gradient="from-purple-500 to-purple-600"
             subtitle={`${stats.pendingClaims} pending`}
           />
           <StatCard
             title="Low Stock Drugs"
             value={stats.lowStockDrugs}
             icon="⚠️"
-            color="border-red-500"
+            gradient="from-red-500 to-red-600"
             subtitle="Below 10 units"
           />
           <StatCard
             title="System Status"
             value="Active"
             icon="✅"
-            color="border-green-500"
+            gradient="from-green-500 to-emerald-600"
           />
         </div>
 
@@ -199,6 +286,15 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold mb-4">Quick Actions</h3>
           <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${showPlatformOnboarding ? 'xl:grid-cols-4' : 'lg:grid-cols-3'}`}>
+            {userRole === 'admin' ? (
+              <Link
+                to="/hospital-profile"
+                className="flex items-center min-h-[44px] p-3 sm:p-4 bg-slate-800 text-white rounded-lg hover:bg-slate-900 active:bg-black transition"
+              >
+                <span className="mr-3 text-xl sm:text-2xl">HP</span>
+                <span className="text-sm sm:text-base font-medium">Update Hospital Name</span>
+              </Link>
+            ) : null}
             <Link
               to="/patients/register"
               className="flex items-center min-h-[44px] p-3 sm:p-4 bg-primary text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition"
@@ -229,6 +325,35 @@ const Dashboard = () => {
                 <span className="text-sm sm:text-base font-medium">Onboard Hospitals</span>
               </Link>
             ) : null}
+          </div>
+        </div>
+
+        {/* Recent Activity Feed */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-lg font-semibold text-slate-800">Recent Activity</h3>
+            <button className="text-blue-600 text-sm hover:text-blue-700 font-medium transition">
+              View All
+            </button>
+          </div>
+          <div className="space-y-3">
+            {recentActivities.map((activity, idx) => (
+              <div 
+                key={idx} 
+                className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer group"
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.color} group-hover:scale-110 transition-transform`}>
+                  <span className="text-xl">{activity.icon}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
+                  <p className="text-xs text-gray-500">{activity.time}</p>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            ))}
           </div>
         </div>
       </div>

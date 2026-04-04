@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import carelinkLogo from '../assets/carelink-logo.svg'
 
 /**
@@ -13,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
+  const { branding, hospitalDisplayName } = useHospitalBranding()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -37,7 +39,18 @@ const Login = () => {
             alt="CareLink HMS logo"
             className="mx-auto h-20 sm:h-28 w-auto"
           />
-          <p className="text-slate-600 text-xs sm:text-sm mt-4 sm:mt-5">Secure staff access to the CareLink hospital management system.</p>
+          <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">
+            {branding.platformName}
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+            {hospitalDisplayName}
+          </h1>
+          <p className="text-slate-600 text-xs sm:text-sm mt-3 sm:mt-4">
+            Secure staff access for {branding.hospitalName || 'your hospital'} on the CareLink platform.
+          </p>
+          <p className="text-slate-500 text-xs mt-2">
+            {branding.tagline || 'Powered by CareLink'}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
@@ -79,8 +92,8 @@ const Login = () => {
         </form>
 
         <div className="mt-8 text-center text-xs text-slate-500">
-          <p>CareLink v1.0</p>
-          <p className="mt-1.5">Support: gabiondavidselorm@gmail.com</p>
+          <p>{branding.platformName} v1.0</p>
+          <p className="mt-1.5">Support: {branding.contactEmail || 'gabiondavidselorm@gmail.com'}</p>
         </div>
       </div>
     </div>

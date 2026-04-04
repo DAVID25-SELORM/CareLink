@@ -41,7 +41,8 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 2. Run `database-setup.sql`
 3. Create your owner/admin Auth user
 4. Run `setup-users.sql`
-5. Verify tables and owner user are ready
+5. Run `hospital-profile-setup.sql`
+6. Verify tables, owner user, and hospital profile are ready
 
 ### Step 5: Start the App (1 min)
 
@@ -158,6 +159,15 @@ VALUES
 ---
 
 ## 🎨 Customize Branding
+
+### Set Hospital Name Inside CareLink
+
+1. Run `hospital-profile-setup.sql`
+2. Log in as an admin
+3. Open `/hospital-profile`
+4. Set the hospital name, dashboard label, branch name, and tagline
+
+CareLink HMS remains the parent product name, while each deployment shows its own hospital identity in the login page, sidebar, and dashboard.
 
 ### Update App Name
 

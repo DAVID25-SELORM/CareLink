@@ -4,6 +4,9 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
 import { supabase } from '../supabaseClient'
+import { generateBillingReceiptPDF, downloadPDF, printPDF } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import PDFButton from '../components/PDFButton'
 
 /**
  * Billing Page
@@ -12,11 +15,13 @@ import { supabase } from '../supabaseClient'
 
 const Billing = () => {
   const { user } = useAuth()
+  const { branding } = useHospitalBranding()
   const [prescriptions, setPrescriptions] = useState([])
   const [selectedPrescription, setSelectedPrescription] = useState(null)
   const [prescriptionItems, setPrescriptionItems] = useState([])
   const [paymentMethod, setPaymentMethod] = useState('')
   const [loading, setLoading] = useState(true)
+  const [lastPayment, setLastPayment] = useState(null)
 
   useEffect(() => {
     fetchDispensedPrescriptions()
@@ -87,6 +92,30 @@ const Billing = () => {
       (sum, item) => sum + (Number(item.drugs?.price || 0) * Number(item.quantity || 0)),
       0,
     )
+
+  const handlePrintReceipt = () => {
+    if (!lastPayment) return
+    const pdf = generateBillingReceiptPDF(
+      lastPayment.prescription,
+      lastPayment.items,
+      lastPayment,
+      branding
+    )
+    printPDF(pdf)
+    toast.success('Receipt sent to printer')
+  }
+
+  const handleDownloadReceipt = () => {
+    if (!lastPayment) return
+    const pdf = generateBillingReceiptPDF(
+      lastPayment.prescription,
+      lastPayment.items,
+      lastPayment,
+      branding
+    )
+    downloadPDF(pdf, `Receipt_${lastPayment.id}_${lastPayment.prescription.patients?.name || 'Patient'}.pdf`)
+    toast.success('Receipt downloaded successfully')
+  }
 
   const handleProcessPayment = async () => {
     if (!selectedPrescription || !paymentMethod) {
@@ -166,6 +195,14 @@ const Billing = () => {
       }
 
       toast.success('Payment processed successfully!')
+
+      // Store payment data for PDF receipt
+      setLastPayment({
+        ...paymentRecord,
+        prescription: selectedPrescription,
+        items: prescriptionItems
+      })
+
       setSelectedPrescription(null)
       setPrescriptionItems([])
       setPaymentMethod('')
@@ -190,7 +227,29 @@ const Billing = () => {
 
   return (
     <DashboardLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        {/* Receipt print option after successful payment */}
+        {lastPayment && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-medium text-green-800">Payment processed successfully!</p>
+                <p className="text-sm text-green-600">Receipt #RCP-{lastPayment.id.toString().padStart(6, '0')}</p>
+              </div>
+            </div>
+            <PDFButton
+              onDownload={handleDownloadReceipt}
+              onPrint={handlePrintReceipt}
+              label="Receipt"
+              variant="success"
+            />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h3 className="text-lg font-semibold">Pending Payments</h3>
@@ -310,6 +369,7 @@ const Billing = () => {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </DashboardLayout>

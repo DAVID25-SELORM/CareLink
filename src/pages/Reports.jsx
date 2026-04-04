@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { getSupabaseCount, getSupabaseData, isSupabaseFailure, withTimeout } from '../services/queryTimeout'
+import { generateAnalyticsReportPDF, downloadPDF, printPDF } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import PDFButton from '../components/PDFButton'
+import { toast } from 'react-toastify'
 import {
   LineChart,
   Line,
@@ -26,6 +30,7 @@ import {
  */
 
 const Reports = () => {
+  const { branding } = useHospitalBranding()
   const [loading, setLoading] = useState(true)
   const [loadWarning, setLoadWarning] = useState('')
   const [analytics, setAnalytics] = useState({
@@ -184,6 +189,19 @@ const Reports = () => {
     }
   }
 
+  const handlePrintReport = () => {
+    const pdf = generateAnalyticsReportPDF(analytics, branding)
+    printPDF(pdf)
+    toast.success('Report sent to printer')
+  }
+
+  const handleDownloadReport = () => {
+    const pdf = generateAnalyticsReportPDF(analytics, branding)
+    const date = new Date().toISOString().split('T')[0]
+    downloadPDF(pdf, `Analytics_Report_${date}.pdf`)
+    toast.success('Report downloaded successfully')
+  }
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -207,8 +225,18 @@ const Reports = () => {
 
         {/* Header */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-gray-800">Reports & Analytics</h2>
-          <p className="text-gray-600 mt-1">Comprehensive insights into hospital operations</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Reports & Analytics</h2>
+              <p className="text-gray-600 mt-1">Comprehensive insights into hospital operations</p>
+            </div>
+            <PDFButton
+              onDownload={handleDownloadReport}
+              onPrint={handlePrintReport}
+              label="Export Report"
+              variant="primary"
+            />
+          </div>
         </div>
 
         {/* Key Metrics */}

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import carelinkLogo from '../assets/carelink-logo.svg'
 import { canAccessPlatformOnboarding } from '../constants/platformAccess'
+import NotificationCenter from '../components/NotificationCenter'
 
 /**
  * Dashboard Layout Component
@@ -11,6 +13,7 @@ import { canAccessPlatformOnboarding } from '../constants/platformAccess'
 
 const DashboardLayout = ({ children }) => {
   const { user, userRole, signOut } = useAuth()
+  const { branding, hospitalDisplayName } = useHospitalBranding()
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -28,7 +31,10 @@ const DashboardLayout = ({ children }) => {
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'DB', roles: ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse', 'records_officer'] },
     { name: 'Hospitals', path: '/hospital-onboarding', icon: 'HM', roles: ['admin'], ownerOnly: true },
+    { name: 'Hospital Profile', path: '/hospital-profile', icon: 'HP', roles: ['admin'] },
     { name: 'Patients', path: '/patients', icon: 'PT', roles: ['admin', 'doctor', 'pharmacist', 'nurse', 'records_officer'] },
+    { name: 'Queue Management', path: '/queue-management', icon: '🎫', roles: ['admin', 'doctor', 'nurse', 'pharmacist', 'cashier', 'records_officer'] },
+    { name: 'Triage', path: '/triage', icon: '🚨', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'Prescriptions', path: '/prescriptions', icon: 'Rx', roles: ['admin', 'doctor'] },
     { name: 'Cashier', path: '/cashier', icon: '💰', roles: ['admin', 'cashier'] },
     { name: 'Pharmacy', path: '/pharmacy', icon: 'PH', roles: ['admin', 'pharmacist'] },
@@ -37,8 +43,12 @@ const DashboardLayout = ({ children }) => {
     { name: 'Claims', path: '/claims', icon: 'CL', roles: ['admin'] },
     { name: 'Laboratory', path: '/laboratory', icon: 'LB', roles: ['admin', 'doctor'] },
     { name: 'Appointments', path: '/appointments', icon: 'AP', roles: ['admin', 'doctor'] },
+    { name: 'Telemedicine', path: '/telemedicine', icon: '📹', roles: ['admin', 'doctor'] },
+    { name: 'Bed Management', path: '/bed-management', icon: '🛏️', roles: ['admin', 'nurse'] },
     { name: 'Referrals', path: '/referrals', icon: '🔄', roles: ['admin', 'doctor'] },
     { name: 'Records', path: '/records', icon: 'RC', roles: ['admin', 'records_officer'] },
+    { name: 'Inventory', path: '/inventory', icon: '📦', roles: ['admin'] },
+    { name: 'Blood Bank', path: '/blood-bank', icon: '🩸', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'Reports', path: '/reports', icon: 'RP', roles: ['admin'] },
     { name: 'Users', path: '/users', icon: '👥', roles: ['admin'] },
   ]
@@ -88,9 +98,17 @@ const DashboardLayout = ({ children }) => {
               className="mx-auto h-16 w-auto"
             />
           </div>
-          <p className="mt-3 text-center text-[11px] uppercase tracking-[0.18em] text-blue-100">
-            Connecting Care, Simplifying Healthcare
-          </p>
+          <div className="mt-3 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-100">
+              {branding.platformName}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-white">
+              {branding.hospitalName || hospitalDisplayName}
+            </p>
+            <p className="mt-1 text-[11px] text-blue-100">
+              {branding.tagline || 'Powered by CareLink'}
+            </p>
+          </div>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-3">
@@ -143,6 +161,7 @@ const DashboardLayout = ({ children }) => {
                   {menuItems.find((item) => item.path === location.pathname)?.name || 'Dashboard'}
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-500">
+                  {hospitalDisplayName} |{' '}
                   {new Date().toLocaleDateString('en-GB', {
                     weekday: 'long',
                     month: 'short',
@@ -152,6 +171,9 @@ const DashboardLayout = ({ children }) => {
                 </p>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <NotificationCenter />
+            </div>
           </div>
         </header>
 
@@ -160,7 +182,7 @@ const DashboardLayout = ({ children }) => {
         </main>
 
         <footer className="border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 sm:px-6">
-          <p>(c) {new Date().getFullYear()} CareLink | Built by David Gabion Selorm</p>
+          <p>(c) {new Date().getFullYear()} {branding.platformName} | {branding.hospitalName || 'Hospital deployment'}</p>
         </footer>
       </div>
     </div>

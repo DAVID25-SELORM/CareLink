@@ -13,11 +13,16 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-dropzone": "^15.0.0",
     "react-router-dom": "^6.22.0",
     "react-toastify": "^10.0.4",
-    "recharts": "^2.12.0"
+    "recharts": "^2.12.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",

@@ -25,6 +25,13 @@ import Referrals from './pages/Referrals'
 import Reports from './pages/Reports'
 import RecordsDashboard from './pages/RecordsDashboard'
 import HospitalOnboarding from './pages/HospitalOnboarding'
+import HospitalProfile from './pages/HospitalProfile'
+import QueueManagement from './pages/QueueManagement'
+import Telemedicine from './pages/Telemedicine'
+import BedManagement from './pages/BedManagement'
+import InventoryManagement from './pages/InventoryManagement'
+import EmergencyTriage from './pages/EmergencyTriage'
+import BloodBank from './pages/BloodBank'
 
 /**
  * CareLink HMS - Main Application Component
@@ -190,10 +197,66 @@ function App() {
                 }
               />
               <Route
+                path="/hospital-profile"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <HospitalProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/hospital-onboarding"
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <HospitalOnboarding />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/queue-management"
+                element={
+                  <ProtectedRoute>
+                    <QueueManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/telemedicine"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor']}>
+                    <Telemedicine />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bed-management"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'nurse']}>
+                    <BedManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/inventory"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <InventoryManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/triage"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'nurse', 'doctor']}>
+                    <EmergencyTriage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/blood-bank"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <BloodBank />
                   </ProtectedRoute>
                 }
               />

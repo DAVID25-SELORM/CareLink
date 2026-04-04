@@ -72,6 +72,7 @@ This is the safest onboarding model for now because the app is not yet built as 
 - [ ] Create the owner/admin Auth user in Supabase Authentication
 - [ ] Run [setup-users.sql](./setup-users.sql)
 - [ ] Confirm `ids_match = true` for the owner account
+- [ ] Run [hospital-profile-setup.sql](./hospital-profile-setup.sql)
 - [ ] Run optional module scripts only if the hospital needs them:
   - [nurse-system-setup.sql](./nurse-system-setup.sql)
   - [records-system-setup.sql](./records-system-setup.sql)
@@ -106,6 +107,8 @@ Checklist:
 
 ## Phase 5: Branding and Configuration
 
+- [ ] Open `/hospital-profile` as the hospital admin and set the hospital name
+- [ ] Confirm login, sidebar, and dashboard show the hospital name under the CareLink parent brand
 - [ ] Update site title
 - [ ] Update logo and favicon
 - [ ] Confirm CareLink branding vs hospital branding approach

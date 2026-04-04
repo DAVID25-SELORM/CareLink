@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { withTimeout } from '../services/queryTimeout'
+import { generatePatientRecordPDF, downloadPDF, printPDF } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import PDFButton from '../components/PDFButton'
+import FileUpload from '../components/FileUpload'
+import { toast } from 'react-toastify'
 
 /**
  * Patients List Page
@@ -10,10 +15,13 @@ import { withTimeout } from '../services/queryTimeout'
  */
 
 const Patients = () => {
+  const { branding } = useHospitalBranding()
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [loadWarning, setLoadWarning] = useState('')
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [selectedPatient, setSelectedPatient] = useState(null)
 
   useEffect(() => {
     fetchPatients()
@@ -43,6 +51,23 @@ const Patients = () => {
     patient.phone?.includes(searchTerm) ||
     patient.nhis_number?.includes(searchTerm)
   )
+
+  const handlePrintPatientRecord = (patient) => {
+    const pdf = generatePatientRecordPDF(patient, branding)
+    printPDF(pdf)
+    toast.success('Patient record sent to printer')
+  }
+
+  const handleDownloadPatientRecord = (patient) => {
+    const pdf = generatePatientRecordPDF(patient, branding)
+    downloadPDF(pdf, `Patient_Record_${patient.name.replace(/\s+/g, '_')}.pdf`)
+    toast.success('Patient record downloaded successfully')
+  }
+
+  const handleFileUpload = (file) => {
+    toast.success(`Medical document "${file.name}" uploaded for ${selectedPatient?.name}. (Note: File storage integration pending)`)
+    setShowUploadModal(false)
+  }
 
   if (loading) {
     return (
@@ -112,12 +137,15 @@ const Patients = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Registered
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPatients.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                     {searchTerm ? 'No patients found matching your search' : 'No patients registered yet'}
                   </td>
                 </tr>
@@ -151,6 +179,25 @@ const Patients = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(patient.created_at).toLocaleDateString()}
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-2">
+                        <PDFButton
+                          onDownload={() => handleDownloadPatientRecord(patient)}
+                          onPrint={() => handlePrintPatientRecord(patient)}
+                          label="Record"
+                          variant="outline"
+                        />
+                        <button
+                          onClick={() => {
+                            setSelectedPatient(patient)
+                            setShowUploadModal(true)
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Upload Documents
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -165,6 +212,32 @@ const Patients = () => {
             Showing <span className="font-semibold">{filteredPatients.length}</span> of <span className="font-semibold">{patients.length}</span> patients
           </p>
         </div>
+
+        {/* Upload Modal */}
+        {showUploadModal && selectedPatient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h3 className="text-lg font-semibold mb-4">
+                Upload Medical Documents
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                For patient: {selectedPatient.name}
+              </p>
+              <FileUpload onFileSelect={handleFileUpload} multiple={true} />
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowUploadModal(false)
+                    setSelectedPatient(null)
+                  }}
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

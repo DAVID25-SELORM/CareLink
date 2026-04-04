@@ -5,6 +5,9 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
 import { getSupabaseData, isSupabaseFailure, withTimeout } from '../services/queryTimeout'
 import { supabase } from '../supabaseClient'
+import { generatePrescriptionPDF, downloadPDF, printPDF } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import PDFButton from '../components/PDFButton'
 
 const createEmptyItem = () => ({
   drug_id: '',
@@ -35,6 +38,7 @@ const getStatusClasses = (status) => {
 
 const Prescriptions = () => {
   const { user, userRole } = useAuth()
+  const { branding } = useHospitalBranding()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [loadWarning, setLoadWarning] = useState('')
@@ -286,6 +290,42 @@ const Prescriptions = () => {
     const today = new Date().toISOString().split('T')[0]
     return createdDate === today
   }).length
+
+  const handlePrintPrescription = async (prescription) => {
+    try {
+      const { data: items, error } = await supabase
+        .from('prescription_items')
+        .select('*')
+        .eq('prescription_id', prescription.id)
+      
+      if (error) throw error
+      
+      const pdf = generatePrescriptionPDF(prescription, items || [], branding)
+      printPDF(pdf)
+      toast.success('Prescription sent to printer')
+    } catch (error) {
+      console.error('Error printing prescription:', error)
+      toast.error('Failed to print prescription')
+    }
+  }
+
+  const handleDownloadPrescription = async (prescription) => {
+    try {
+      const { data: items, error } = await supabase
+        .from('prescription_items')
+        .select('*')
+        .eq('prescription_id', prescription.id)
+      
+      if (error) throw error
+      
+      const pdf = generatePrescriptionPDF(prescription, items || [], branding)
+      downloadPDF(pdf, `Prescription_${prescription.id}_${prescription.patients?.name || 'Patient'}.pdf`)
+      toast.success('Prescription downloaded successfully')
+    } catch (error) {
+      console.error('Error downloading prescription:', error)
+      toast.error('Failed to download prescription')
+    }
+  }
 
   if (loading) {
     return (
@@ -579,12 +619,15 @@ const Prescriptions = () => {
                 <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Date
                 </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
               {prescriptions.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-16 text-center text-slate-500 text-sm">
+                  <td colSpan="7" className="px-6 py-16 text-center text-slate-500 text-sm">
                     No prescriptions created yet
                   </td>
                 </tr>
@@ -617,6 +660,14 @@ const Prescriptions = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {new Date(prescription.created_at).toLocaleDateString('en-GB')}
+                    </td>
+                    <td className="px-6 py-4">
+                      <PDFButton
+                        onDownload={() => handleDownloadPrescription(prescription)}
+                        onPrint={() => handlePrintPrescription(prescription)}
+                        label="Export"
+                        variant="outline"
+                      />
                     </td>
                   </tr>
                 ))

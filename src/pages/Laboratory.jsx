@@ -4,6 +4,10 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
 import { supabase } from '../supabaseClient'
+import { generateLabResultPDF, downloadPDF, printPDF } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import PDFButton from '../components/PDFButton'
+import FileUpload from '../components/FileUpload'
 
 /**
  * Laboratory Management Page
@@ -12,6 +16,7 @@ import { supabase } from '../supabaseClient'
 
 const Laboratory = () => {
   const { user } = useAuth()
+  const { branding } = useHospitalBranding()
   const [labTests, setLabTests] = useState([])
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -24,6 +29,7 @@ const Laboratory = () => {
   })
   const [selectedTest, setSelectedTest] = useState(null)
   const [testResult, setTestResult] = useState('')
+  const [uploadedFile, setUploadedFile] = useState(null)
 
   useEffect(() => {
     fetchLabTests()
@@ -137,11 +143,29 @@ const Laboratory = () => {
       toast.success('Test result added successfully!')
       setSelectedTest(null)
       setTestResult('')
+      setUploadedFile(null)
       fetchLabTests()
     } catch (error) {
       console.error('Error adding result:', error)
       toast.error('Failed to add result')
     }
+  }
+
+  const handleFileUpload = (file) => {
+    setUploadedFile(file)
+    toast.success(`File "${file.name}" uploaded. (Note: File storage integration pending)`)
+  }
+
+  const handlePrintLabResult = (test) => {
+    const pdf = generateLabResultPDF(test, branding)
+    printPDF(pdf)
+    toast.success('Lab result sent to printer')
+  }
+
+  const handleDownloadLabResult = (test) => {
+    const pdf = generateLabResultPDF(test, branding)
+    downloadPDF(pdf, `LabResult_${test.id}_${test.patients?.name || 'Patient'}.pdf`)
+    toast.success('Lab result downloaded successfully')
   }
 
   if (loading) {
@@ -272,12 +296,15 @@ const Laboratory = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Actions
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Export
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {labTests.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                     No lab tests requested
                   </td>
                 </tr>
@@ -333,6 +360,18 @@ const Laboratory = () => {
                         </button>
                       )}
                     </td>
+                    <td className="px-6 py-4">
+                      {test.status === 'completed' ? (
+                        <PDFButton
+                          onDownload={() => handleDownloadLabResult(test)}
+                          onPrint={() => handlePrintLabResult(test)}
+                          label="Print"
+                          variant="outline"
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-400">Pending</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -359,6 +398,19 @@ const Laboratory = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary mb-4"
                 placeholder="Enter test result details..."
               />
+              
+              {selectedTest.status === 'pending' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Test Image/Document (Optional)
+                  </label>
+                  <FileUpload onFileSelect={handleFileUpload} />
+                  {uploadedFile && (
+                    <p className="mt-2 text-sm text-green-600">File ready: {uploadedFile.name}</p>
+                  )}
+                </div>
+              )}
+              
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   onClick={() => {

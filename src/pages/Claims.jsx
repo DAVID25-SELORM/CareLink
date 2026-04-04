@@ -4,6 +4,10 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
 import { supabase } from '../supabaseClient'
+import { generateClaimPDF, downloadPDF, printPDF } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import PDFButton from '../components/PDFButton'
+import FileUpload from '../components/FileUpload'
 
 /**
  * Claims Management Page
@@ -12,9 +16,12 @@ import { supabase } from '../supabaseClient'
 
 const Claims = () => {
   const { user } = useAuth()
+  const { branding } = useHospitalBranding()
   const [claims, setClaims] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [selectedClaim, setSelectedClaim] = useState(null)
 
   useEffect(() => {
     fetchClaims()
@@ -105,6 +112,23 @@ const Claims = () => {
     }
 
     return claim.insurance_name || claim.claim_number || 'Private Insurance'
+  }
+
+  const handlePrintClaim = (claim) => {
+    const pdf = generateClaimPDF(claim, branding)
+    printPDF(pdf)
+    toast.success('Claim form sent to printer')
+  }
+
+  const handleDownloadClaim = (claim) => {
+    const pdf = generateClaimPDF(claim, branding)
+    downloadPDF(pdf, `Claim_${claim.id}_${claim.patients?.name || 'Patient'}.pdf`)
+    toast.success('Claim form downloaded successfully')
+  }
+
+  const handleFileUpload = (file) => {
+    toast.success(`File "${file.name}" uploaded. (Note: File storage integration pending)`)
+    setShowUploadModal(false)
   }
 
   if (loading) {
@@ -201,12 +225,15 @@ const Claims = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Actions
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Export/Upload
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredClaims.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                     No claims found
                   </td>
                 </tr>
@@ -254,6 +281,25 @@ const Claims = () => {
                         )}
                       </div>
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-2">
+                        <PDFButton
+                          onDownload={() => handleDownloadClaim(claim)}
+                          onPrint={() => handlePrintClaim(claim)}
+                          label="Form"
+                          variant="outline"
+                        />
+                        <button
+                          onClick={() => {
+                            setSelectedClaim(claim)
+                            setShowUploadModal(true)
+                          }}
+                          className="text-xs text-gray-600 hover:text-gray-800 underline"
+                        >
+                          Upload Docs
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -261,6 +307,32 @@ const Claims = () => {
             </table>
           </div>
         </div>
+
+        {/* Upload Modal */}
+        {showUploadModal && selectedClaim && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h3 className="text-lg font-semibold mb-4">
+                Upload Supporting Documents
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Claim for {selectedClaim.patients?.name}
+              </p>
+              <FileUpload onFileSelect={handleFileUpload} multiple={true} />
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowUploadModal(false)
+                    setSelectedClaim(null)
+                  }}
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )
