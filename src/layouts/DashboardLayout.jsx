@@ -18,11 +18,21 @@ const DashboardLayout = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [currentTime, setCurrentTime] = useState(new Date())
   const showPlatformOnboarding = canAccessPlatformOnboarding(user, userRole)
 
   useEffect(() => {
     setMobileNavOpen(false)
   }, [location.pathname])
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60000) // Update every minute
+
+    return () => clearInterval(timer)
+  }, [])
 
   const handleLogout = async () => {
     await signOut()
@@ -163,11 +173,15 @@ const DashboardLayout = ({ children }) => {
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-500">
                   {hospitalDisplayName} |{' '}
-                  {new Date().toLocaleDateString('en-GB', {
+                  {currentTime.toLocaleDateString('en-GB', {
                     weekday: 'long',
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
+                  })}{' '}
+                  • {currentTime.toLocaleTimeString('en-GB', {
+                    hour: '2-digit',
+                    minute: '2-digit',
                   })}
                 </p>
               </div>
