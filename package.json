@@ -12,6 +12,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@sentry/react": "^10.47.0",
+    "@sentry/tracing": "^7.120.4",
     "@supabase/supabase-js": "^2.39.7",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
