@@ -1,0 +1,185 @@
+# CareLink HMS - CI/CD Pipeline
+# Automated testing, building, and deployment
+# Author: David Gabion Selorm
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Job 1: Lint and Code Quality
+  lint:
+    name: Lint & Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: true
+      
+      - name: Check for console logs
+        run: |
+          if grep -r "console.log" src/ --exclude-dir=node_modules; then
+            echo "⚠️  Warning: console.log statements found in source code"
+          fi
+        continue-on-error: true
+
+  # Job 2: Build
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+        env:
+          # Add your build-time environment variables here
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      
+      - name: Check build output
+        run: |
+          ls -la dist/
+          du -sh dist/
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dist
+          path: dist/
+          retention-days: 7
+
+  # Job 3: Security Scan
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+      
+      - name: Check for sensitive data
+        run: |
+          echo "Checking for potential sensitive data leaks..."
+          if grep -rE "(password|secret|api_key|token)" src/ --exclude-dir=node_modules --exclude="*.md"; then
+            echo "⚠️  Warning: Potential sensitive data found"
+          fi
+        continue-on-error: true
+
+  # Job 4: Deploy to Vercel (Production)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [lint, build, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://carelink-hms.vercel.app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+      
+      - name: Deployment success notification
+        run: |
+          echo "✅ Production deployment successful!"
+          echo "🌐 Visit: https://carelink-hms.vercel.app"
+
+  # Job 5: Deploy to Vercel (Staging)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [lint, build, security]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://carelink-hms-staging.vercel.app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+      
+      - name: Staging deployment success
+        run: echo "✅ Staging deployment successful!"
+
+  # Job 6: Health Check (Post-Deploy)
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Wait for deployment
+        run: sleep 30
+      
+      - name: Check production health
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://carelink-hms.vercel.app)
+          if [ $STATUS -eq 200 ]; then
+            echo "✅ Production site is healthy (HTTP $STATUS)"
+          else
+            echo "❌ Production site returned HTTP $STATUS"
+            exit 1
+          fi

@@ -22,29 +22,57 @@ const Claims = () => {
   const [filter, setFilter] = useState('all')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedClaim, setSelectedClaim] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const itemsPerPage = 20
 
   useEffect(() => {
     fetchClaims()
-  }, [])
+  }, [currentPage, filter])
 
   const fetchClaims = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true)
+      const start = (currentPage - 1) * itemsPerPage
+      const end = start + itemsPerPage - 1
+
+      let query = supabase
         .from('claims')
         .select(`
           *,
           patients (name, phone)
-        `)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false })
+        .range(start, end)
+
+      // Apply filter if not 'all'
+      if (filter !== 'all') {
+        query = query.eq('status', filter)
+      }
+
+      const { data, error, count } = await query
 
       if (error) throw error
       setClaims(data || [])
+      setTotalCount(count || 0)
     } catch (error) {
       console.error('Error fetching claims:', error)
       toast.error('Failed to load claims')
     } finally {
       setLoading(false)
     }
+  }
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter)
+    setCurrentPage(1) // Reset to page 1 on filter change
   }
 
   const updateClaimStatus = async (claimId, newStatus) => {
@@ -86,10 +114,8 @@ const Claims = () => {
     }
   }
 
-  const filteredClaims = claims.filter((claim) => {
-    if (filter === 'all') return true
-    return claim.status === filter
-  })
+  // Remove client-side filtering since we're doing it server-side now
+  const filteredClaims = claims
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -173,25 +199,25 @@ const Claims = () => {
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => setFilter('all')}
+              onClick={() => handleFilterChange('all')}
               className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-primary text-white' : 'bg-gray-100'}`}
             >
               All Claims
             </button>
             <button
-              onClick={() => setFilter('pending')}
+              onClick={() => handleFilterChange('pending')}
               className={`px-4 py-2 rounded-lg ${filter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-gray-100'}`}
             >
               Pending
             </button>
             <button
-              onClick={() => setFilter('submitted')}
+              onClick={() => handleFilterChange('submitted')}
               className={`px-4 py-2 rounded-lg ${filter === 'submitted' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
             >
               Submitted
             </button>
             <button
-              onClick={() => setFilter('approved')}
+              onClick={() => handleFilterChange('approved')}
               className={`px-4 py-2 rounded-lg ${filter === 'approved' ? 'bg-green-500 text-white' : 'bg-gray-100'}`}
             >
               Approved
@@ -306,6 +332,64 @@ const Claims = () => {
             </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <p className="text-sm text-gray-600">
+                  Showing <span className="font-semibold">{claims.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to <span className="font-semibold">{Math.min(currentPage * itemsPerPage, totalCount)}</span> of <span className="font-semibold">{totalCount}</span> claims
+                </p>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let pageNum
+                      if (totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-1.5 border rounded-lg ${
+                            currentPage === pageNum
+                              ? 'bg-primary text-white border-primary'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Upload Modal */}

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { supabase } from '../supabaseClient'
 import { logAuditEvent } from '../services/auditLog'
+import { setSentryUser } from '../services/sentry'
 
 /**
  * Authentication Hook
@@ -81,10 +82,12 @@ export const AuthProvider = ({ children }) => {
         setUserRole(getFallbackRole(session.user))
         setLoading(false)
         fetchUserRole(session.user)
+        setSentryUser(session.user) // Track user in Sentry
       } else {
         setUser(null)
         setUserRole(null)
         setLoading(false)
+        setSentryUser(null) // Clear Sentry user on logout
       }
     })
 
@@ -103,6 +106,7 @@ export const AuthProvider = ({ children }) => {
         setUser(session.user)
         setUserRole(getFallbackRole(session.user))
         fetchUserRole(session.user)
+        setSentryUser(session.user) // Track user in Sentry
       }
     } catch (error) {
       console.error('Error checking user:', error)

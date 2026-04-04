@@ -5,6 +5,7 @@ import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import carelinkLogo from '../assets/carelink-logo.svg'
 import { canAccessPlatformOnboarding } from '../constants/platformAccess'
 import NotificationCenter from '../components/NotificationCenter'
+import GlobalSearch from '../components/GlobalSearch'
 
 /**
  * Dashboard Layout Component
@@ -172,6 +173,7 @@ const DashboardLayout = ({ children }) => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <GlobalSearch />
               <NotificationCenter />
             </div>
           </div>

@@ -48,6 +48,9 @@ const Prescriptions = () => {
   const [doctors, setDoctors] = useState([])
   const [prescriptions, setPrescriptions] = useState([])
   const [currentDoctorRecord, setCurrentDoctorRecord] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const itemsPerPage = 20
   const [formData, setFormData] = useState({
     patient_id: '',
     doctor_id: '',
@@ -58,12 +61,15 @@ const Prescriptions = () => {
 
   useEffect(() => {
     fetchPageData()
-  }, [user?.email, userRole])
+  }, [user?.email, userRole, currentPage])
 
   const fetchPageData = async () => {
     setLoading(true)
 
     try {
+      const start = (currentPage - 1) * itemsPerPage
+      const end = start + itemsPerPage - 1
+
       const results = await Promise.allSettled([
         withTimeout(
           supabase
@@ -95,8 +101,9 @@ const Prescriptions = () => {
               patients (name, phone),
               users (email, full_name),
               prescription_items (id, drug_name, quantity)
-            `)
-            .order('created_at', { ascending: false }),
+            `, { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(start, end),
           'Prescriptions list',
         ),
       ])
@@ -106,11 +113,13 @@ const Prescriptions = () => {
       const drugData = getSupabaseData(drugsResult)
       const doctorData = getSupabaseData(doctorsResult)
       const prescriptionData = getSupabaseData(prescriptionsResult)
+      const prescriptionCount = prescriptionsResult.value?.count || 0
 
       setPatients(patientData)
       setDrugs(drugData)
       setDoctors(doctorData)
       setPrescriptions(prescriptionData)
+      setTotalCount(prescriptionCount)
 
       const matchedDoctor =
         doctorData.find((doctor) => doctor.email?.toLowerCase() === user?.email?.toLowerCase()) || null
@@ -137,6 +146,13 @@ const Prescriptions = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const resetForm = () => {
@@ -662,6 +678,64 @@ const Prescriptions = () => {
                       {new Date(prescription.created_at).toLocaleDateString('en-GB')}
                     </td>
                     <td className="px-6 py-4">
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <p className="text-sm text-gray-600">
+                  Showing <span className="font-semibold">{prescriptions.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to <span className="font-semibold">{Math.min(currentPage * itemsPerPage, totalCount)}</span> of <span className="font-semibold">{totalCount}</span> prescriptions
+                </p>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let pageNum
+                      if (totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-1.5 border rounded-lg ${
+                            currentPage === pageNum
+                              ? 'bg-primary text-white border-primary'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
                       <PDFButton
                         onDownload={() => handleDownloadPrescription(prescription)}
                         onPrint={() => handlePrintPrescription(prescription)}

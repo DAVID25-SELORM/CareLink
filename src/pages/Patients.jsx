@@ -22,20 +22,36 @@ const Patients = () => {
   const [loadWarning, setLoadWarning] = useState('')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const itemsPerPage = 20
 
   useEffect(() => {
     fetchPatients()
-  }, [])
+  }, [currentPage, searchTerm])
 
   const fetchPatients = async () => {
     try {
-      const { data, error } = await withTimeout(
-        supabase.from('patients').select('*').order('created_at', { ascending: false }),
-        'Patients list',
-      )
+      setLoading(true)
+      const start = (currentPage - 1) * itemsPerPage
+      const end = start + itemsPerPage - 1
+
+      let query = supabase
+        .from('patients')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(start, end)
+
+      // Apply search filter if present
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,nhis_number.ilike.%${searchTerm}%`)
+      }
+
+      const { data, error, count } = await withTimeout(query, 'Patients list')
 
       if (error) throw error
       setPatients(data || [])
+      setTotalCount(count || 0)
       setLoadWarning('')
     } catch (error) {
       console.error('Error fetching patients:', error)
@@ -46,11 +62,17 @@ const Patients = () => {
     }
   }
 
-  const filteredPatients = patients.filter(patient =>
-    patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.phone?.includes(searchTerm) ||
-    patient.nhis_number?.includes(searchTerm)
-  )
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value)
+    setCurrentPage(1) // Reset to page 1 on new search
+  }
 
   const handlePrintPatientRecord = (patient) => {
     const pdf = generatePatientRecordPDF(patient, branding)
@@ -78,7 +100,7 @@ const Patients = () => {
           <p className="text-slate-600">Fetching registered patient records.</p>
         </div>
       </DashboardLayout>
-    )
+    )handleSearchChange
   }
 
   return (
@@ -143,14 +165,14 @@ const Patients = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPatients.length === 0 ? (
+              {patients.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                     {searchTerm ? 'No patients found matching your search' : 'No patients registered yet'}
                   </td>
                 </tr>
               ) : (
-                filteredPatients.map((patient) => (
+                patients.map((patient) => (
                   <tr key={patient.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-gray-900">{patient.name}</div>
@@ -206,11 +228,62 @@ const Patients = () => {
           </div>
         </div>
 
-        {/* Summary */}
+        {/* Summary and Pagination */}
         <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600">
-            Showing <span className="font-semibold">{filteredPatients.length}</span> of <span className="font-semibold">{patients.length}</span> patients
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p className="text-gray-600">
+              Showing <span className="font-semibold">{patients.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to <span className="font-semibold">{Math.min(currentPage * itemsPerPage, totalCount)}</span> of <span className="font-semibold">{totalCount}</span> patients
+            </p>
+            
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum
+                    if (totalPages <= 5) {
+                      pageNum = i + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i
+                    } else {
+                      pageNum = currentPage - 2 + i
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-1.5 border rounded-lg ${
+                          currentPage === pageNum
+                            ? 'bg-primary text-white border-primary'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Upload Modal */}

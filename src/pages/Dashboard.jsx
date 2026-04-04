@@ -46,12 +46,8 @@ const Dashboard = () => {
   })
   const [loading, setLoading] = useState(true)
   const [loadWarning, setLoadWarning] = useState('')
-  const [recentActivities] = useState([
-    { icon: '🏥', title: 'New patient registered', time: '5 minutes ago', color: 'bg-blue-100' },
-    { icon: '💊', title: 'Prescription dispensed', time: '12 minutes ago', color: 'bg-green-100' },
-    { icon: '💰', title: 'Payment processed', time: '28 minutes ago', color: 'bg-yellow-100' },
-    { icon: '📋', title: 'Lab results uploaded', time: '1 hour ago', color: 'bg-purple-100' }
-  ])
+  const [recentActivities, setRecentActivities] = useState([])
+  const [activitiesLoading, setActivitiesLoading] = useState(true)
 
   // Redirect doctors and nurses to their specialized dashboards
   useEffect(() => {
@@ -66,6 +62,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats()
+    fetchRecentActivities()
   }, [])
 
   const fetchDashboardStats = async () => {
@@ -129,6 +126,72 @@ const Dashboard = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchRecentActivities = async () => {
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('audit_log')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5),
+        'Recent activities'
+      )
+
+      if (error) throw error
+
+      // Map audit log entries to activity format with icons
+      const activityIconMap = {
+        'patient_registered': { icon: '🏥', color: 'bg-blue-100' },
+        'prescription_created': { icon: '💊', color: 'bg-green-100' },
+        'prescription_dispensed': { icon: '💊', color: 'bg-green-100' },
+        'payment_created': { icon: '💰', color: 'bg-yellow-100' },
+        'payment_processed': { icon: '💰', color: 'bg-yellow-100' },
+        'lab_test_created': { icon: '📋', color: 'bg-purple-100' },
+        'lab_result_uploaded': { icon: '📋', color: 'bg-purple-100' },
+        'appointment_created': { icon: '📅', color: 'bg-indigo-100' },
+        'claim_submitted': { icon: '🧾', color: 'bg-pink-100' },
+        'user_created': { icon: '👤', color: 'bg-slate-100' },
+        'default': { icon: '📝', color: 'bg-gray-100' }
+      }
+
+      const formattedActivities = (data || []).map(entry => {
+        const config = activityIconMap[entry.action] || activityIconMap.default
+        return {
+          icon: config.icon,
+          title: entry.description || formatActionName(entry.action),
+          time: formatTimeAgo(entry.created_at),
+          color: config.color
+        }
+      })
+
+      setRecentActivities(formattedActivities)
+    } catch (error) {
+      console.error('Error fetching recent activities:', error)
+      // Fallback to empty array instead of hardcoded data
+      setRecentActivities([])
+    }
+  }
+
+  // Helper to format action names
+  const formatActionName = (action) => {
+    return action
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  // Helper to format time ago
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date()
+    const past = new Date(timestamp)
+    const diffInSeconds = Math.floor((now - past) / 1000)
+
+    if (diffInSeconds < 60) return 'Just now'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
+    return `${Math.floor(diffInSeconds / 86400)} days ago`
   }
 
   const StatCard = ({ title, value, icon, gradient, subtitle }) => (
@@ -337,23 +400,30 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {recentActivities.map((activity, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer group"
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.color} group-hover:scale-110 transition-transform`}>
-                  <span className="text-xl">{activity.icon}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
-                </div>
-                <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+            {recentActivities.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-sm">No recent activity to display</p>
+                <p className="text-xs mt-1">Activity will appear here as staff use the system</p>
               </div>
-            ))}
+            ) : (
+              recentActivities.map((activity, idx) => (
+                <div 
+                  key={idx} 
+                  className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer group"
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.color} group-hover:scale-110 transition-transform`}>
+                    <span className="text-xl">{activity.icon}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
