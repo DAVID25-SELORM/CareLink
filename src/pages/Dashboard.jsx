@@ -57,6 +57,8 @@ const Dashboard = () => {
       navigate('/nurse-dashboard', { replace: true })
     } else if (userRole === 'records_officer') {
       navigate('/records', { replace: true })
+    } else if (userRole === 'lab_tech') {
+      navigate('/laboratory', { replace: true })
     }
   }, [userRole, navigate])
 

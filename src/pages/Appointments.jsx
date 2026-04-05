@@ -70,8 +70,9 @@ const Appointments = () => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, email')
+        .select('id, email, full_name')
         .eq('role', 'doctor')
+        .order('full_name')
 
       if (error) throw error
       setDoctors(data || [])
@@ -215,7 +216,7 @@ const Appointments = () => {
               >
                 <option value="">Select Doctor</option>
                 {doctors.map(doctor => (
-                  <option key={doctor.id} value={doctor.id}>{doctor.email}</option>
+                  <option key={doctor.id} value={doctor.id}>{doctor.full_name || doctor.email}</option>
                 ))}
               </select>
               <input

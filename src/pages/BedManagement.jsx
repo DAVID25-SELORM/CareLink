@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
+import { logAuditEvent } from '../services/auditLog'
 
 /**
  * Bed and Ward Management System
@@ -143,6 +144,14 @@ const BedManagement = () => {
         .single()
 
       if (admissionError) throw admissionError
+
+      await logAuditEvent({
+        user,
+        action: 'admit_patient',
+        tableName: 'admissions',
+        recordId: admission.id,
+        newValues: { ...formData, admitted_by: user.id, status: 'admitted' },
+      })
 
       // Update bed status
       const { error: bedError } = await supabase

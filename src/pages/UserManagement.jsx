@@ -53,7 +53,7 @@ const NURSE_TYPES = [
   'Midwife'
 ]
 
-const ROLES = ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse', 'records_officer']
+const ROLES = ['admin', 'doctor', 'pharmacist', 'cashier', 'nurse', 'records_officer', 'lab_tech']
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])

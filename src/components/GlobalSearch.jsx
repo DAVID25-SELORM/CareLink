@@ -16,7 +16,9 @@ const GlobalSearch = () => {
     prescriptions: [],
     drugs: [],
     appointments: [],
-    claims: []
+    claims: [],
+    labTests: [],
+    referrals: []
   })
   const [loading, setLoading] = useState(false)
   const [showResults, setShowResults] = useState(false)
@@ -45,7 +47,9 @@ const GlobalSearch = () => {
           prescriptions: [],
           drugs: [],
           appointments: [],
-          claims: []
+          claims: [],
+          labTests: [],
+          referrals: []
         })
       }
     }, 300)
@@ -58,7 +62,7 @@ const GlobalSearch = () => {
       setLoading(true)
       const searchPattern = `%${searchTerm}%`
 
-      const [patientsRes, prescriptionsRes, drugsRes, appointmentsRes, claimsRes] = await Promise.allSettled([
+      const [patientsRes, prescriptionsRes, drugsRes, appointmentsRes, claimsRes, labTestsRes, referralsRes] = await Promise.allSettled([
         supabase
           .from('patients')
           .select('id, name, phone, nhis_number, insurance_type')
@@ -81,6 +85,16 @@ const GlobalSearch = () => {
         supabase
           .from('claims')
           .select('id, amount, status, insurance_type, patients(name)')
+          .limit(5),
+        supabase
+          .from('lab_tests')
+          .select('id, test_name, test_type, status, patients(name)')
+          .or(`test_name.ilike.${searchPattern},test_type.ilike.${searchPattern}`)
+          .limit(5),
+        supabase
+          .from('referrals')
+          .select('id, referral_reason, status, referred_to, patients(name)')
+          .or(`referral_reason.ilike.${searchPattern},referred_to.ilike.${searchPattern}`)
           .limit(5)
       ])
 
@@ -89,7 +103,9 @@ const GlobalSearch = () => {
         prescriptions: prescriptionsRes.status === 'fulfilled' ? prescriptionsRes.value.data || [] : [],
         drugs: drugsRes.status === 'fulfilled' ? drugsRes.value.data || [] : [],
         appointments: appointmentsRes.status === 'fulfilled' ? appointmentsRes.value.data || [] : [],
-        claims: claimsRes.status === 'fulfilled' ? claimsRes.value.data || [] : []
+        claims: claimsRes.status === 'fulfilled' ? claimsRes.value.data || [] : [],
+        labTests: labTestsRes.status === 'fulfilled' ? labTestsRes.value.data || [] : [],
+        referrals: referralsRes.status === 'fulfilled' ? referralsRes.value.data || [] : []
       })
 
       setShowResults(true)
@@ -106,7 +122,9 @@ const GlobalSearch = () => {
     results.prescriptions.length + 
     results.drugs.length + 
     results.appointments.length +
-    results.claims.length
+    results.claims.length +
+    results.labTests.length +
+    results.referrals.length
 
   return (
     <div className="relative w-full max-w-xl" ref={searchRef}>
@@ -269,6 +287,60 @@ const GlobalSearch = () => {
                         </p>
                         <p className="text-xs text-gray-500">
                           GH₵{claim.amount} • {claim.status} • {claim.insurance_type}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Lab Tests */}
+              {results.labTests.length > 0 && (
+                <div className="p-2">
+                  <p className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Lab Tests</p>
+                  {results.labTests.map((test) => (
+                    <Link
+                      key={test.id}
+                      to="/laboratory"
+                      onClick={() => setShowResults(false)}
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                        <span className="text-teal-600 font-semibold text-sm">🔬</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {test.patients?.name || 'Unknown Patient'}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {test.test_name} • {test.test_type} • {test.status}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Referrals */}
+              {results.referrals.length > 0 && (
+                <div className="p-2">
+                  <p className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Referrals</p>
+                  {results.referrals.map((referral) => (
+                    <Link
+                      key={referral.id}
+                      to="/referrals"
+                      onClick={() => setShowResults(false)}
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center">
+                        <span className="text-pink-600 font-semibold text-sm">↗️</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {referral.patients?.name || 'Unknown Patient'}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {referral.referral_reason} • {referral.referred_to} • {referral.status}
                         </p>
                       </div>
                     </Link>

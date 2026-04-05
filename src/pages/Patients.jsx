@@ -175,7 +175,9 @@ const Patients = () => {
                 patients.map((patient) => (
                   <tr key={patient.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{patient.name}</div>
+                      <Link to={`/patients/${patient.id}`} className="font-medium text-blue-600 hover:underline">
+                        {patient.name}
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                       {patient.age}

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
+import { logAuditEvent } from '../services/auditLog'
 
 /**
  * Emergency & Triage System
@@ -58,6 +59,13 @@ const EmergencyTriage = () => {
       }])
 
       if (error) throw error
+
+      await logAuditEvent({
+        user,
+        action: 'create_triage_assessment',
+        tableName: 'triage_assessments',
+        newValues: { ...formData, assessed_by: user.id },
+      })
 
       // Create notification for high-severity cases
       if (formData.severity === 'red') {

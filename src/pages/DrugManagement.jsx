@@ -18,8 +18,13 @@ const DrugManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    description: '',
     price: '',
-    stock: ''
+    stock: '',
+    unit: 'tablets',
+    reorder_level: '10',
+    manufacturer: '',
+    expiry_date: ''
   })
 
   useEffect(() => {
@@ -50,8 +55,13 @@ const DrugManagement = () => {
       const drugPayload = {
         name: formData.name,
         category: formData.category,
+        description: formData.description || null,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
+        unit: formData.unit || 'tablets',
+        reorder_level: parseInt(formData.reorder_level) || 10,
+        manufacturer: formData.manufacturer || null,
+        expiry_date: formData.expiry_date || null,
       }
 
       const { data, error } = await supabase
@@ -71,7 +81,7 @@ const DrugManagement = () => {
       })
 
       toast.success('Drug added successfully!')
-      setFormData({ name: '', category: '', price: '', stock: '' })
+      setFormData({ name: '', category: '', description: '', price: '', stock: '', unit: 'tablets', reorder_level: '10', manufacturer: '', expiry_date: '' })
       setShowAddForm(false)
       fetchDrugs()
     } catch (error) {
@@ -109,10 +119,10 @@ const DrugManagement = () => {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold mb-4">Add New Drug</h3>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="text"
-                placeholder="Drug Name"
+                placeholder="Drug Name *"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 required
@@ -124,17 +134,24 @@ const DrugManagement = () => {
                 required
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="">Select Category</option>
+                <option value="">Select Category *</option>
                 <option value="antibiotic">Antibiotic</option>
                 <option value="painkiller">Painkiller</option>
                 <option value="antimalaria">Anti-malaria</option>
+                <option value="antifungal">Antifungal</option>
+                <option value="antiviral">Antiviral</option>
+                <option value="cardiovascular">Cardiovascular</option>
+                <option value="diabetes">Diabetes</option>
                 <option value="vitamin">Vitamin/Supplement</option>
+                <option value="syrup">Syrup</option>
+                <option value="injectable">Injectable</option>
+                <option value="topical">Topical/Cream</option>
                 <option value="other">Other</option>
               </select>
               <input
                 type="number"
                 step="0.01"
-                placeholder="Price (GH₵)"
+                placeholder="Price (GH₵) *"
                 value={formData.price}
                 onChange={(e) => setFormData({...formData, price: e.target.value})}
                 required
@@ -143,16 +160,58 @@ const DrugManagement = () => {
               />
               <input
                 type="number"
-                placeholder="Stock Quantity"
+                placeholder="Stock Quantity *"
                 value={formData.stock}
                 onChange={(e) => setFormData({...formData, stock: e.target.value})}
                 required
                 min="0"
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              <select
+                value={formData.unit}
+                onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="tablets">Tablets</option>
+                <option value="capsules">Capsules</option>
+                <option value="ml">ml (Liquid)</option>
+                <option value="vials">Vials</option>
+                <option value="sachets">Sachets</option>
+                <option value="tubes">Tubes</option>
+                <option value="pieces">Pieces</option>
+              </select>
+              <input
+                type="number"
+                placeholder="Reorder Level (default: 10)"
+                value={formData.reorder_level}
+                onChange={(e) => setFormData({...formData, reorder_level: e.target.value})}
+                min="0"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <input
+                type="text"
+                placeholder="Manufacturer / Brand"
+                value={formData.manufacturer}
+                onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <input
+                type="date"
+                placeholder="Expiry Date"
+                value={formData.expiry_date}
+                onChange={(e) => setFormData({...formData, expiry_date: e.target.value})}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <textarea
+                placeholder="Description / Notes (optional)"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows="2"
+                className="md:col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
               <button
                 type="submit"
-                className="md:col-span-4 bg-medical hover:bg-green-600 text-white py-2 rounded-lg transition font-semibold"
+                className="md:col-span-2 bg-medical hover:bg-green-600 text-white py-2 rounded-lg transition font-semibold"
               >
                 Add Drug
               </button>

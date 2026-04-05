@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
+import { logAuditEvent } from '../services/auditLog'
 
 /**
  * Inventory Management (Non-Drug Supplies)
@@ -84,10 +85,12 @@ const InventoryManagement = () => {
       if (editingItem) {
         const { error } = await supabase.from('inventory_items').update(payload).eq('id', editingItem.id)
         if (error) throw error
+        await logAuditEvent({ user, action: 'update_inventory_item', tableName: 'inventory_items', recordId: editingItem.id, oldValues: editingItem, newValues: payload })
         toast.success('Item updated!')
       } else {
-        const { error } = await supabase.from('inventory_items').insert([payload])
+        const { data: newItem, error } = await supabase.from('inventory_items').insert([payload]).select().single()
         if (error) throw error
+        await logAuditEvent({ user, action: 'create_inventory_item', tableName: 'inventory_items', recordId: newItem?.id, newValues: payload })
         toast.success('Item added!')
       }
 

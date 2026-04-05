@@ -1,16 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import carelinkLogo from '../assets/carelink-logo.svg'
 import { canAccessPlatformOnboarding } from '../constants/platformAccess'
 import NotificationCenter from '../components/NotificationCenter'
 import GlobalSearch from '../components/GlobalSearch'
+import { initDarkMode, toggleDarkMode, getCurrentTheme } from '../utils/darkMode'
 
 /**
  * Dashboard Layout Component
  * Provides consistent sidebar navigation and header across all pages
  */
+
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 
 const DashboardLayout = ({ children }) => {
   const { user, userRole, signOut } = useAuth()
@@ -19,7 +23,20 @@ const DashboardLayout = ({ children }) => {
   const navigate = useNavigate()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const inactivityTimer = useRef(null)
   const showPlatformOnboarding = canAccessPlatformOnboarding(user, userRole)
+
+  // Initialize dark mode on mount
+  useEffect(() => {
+    initDarkMode()
+    setIsDarkMode(getCurrentTheme() === 'dark')
+  }, [])
+
+  const handleDarkModeToggle = () => {
+    const isDark = toggleDarkMode()
+    setIsDarkMode(isDark)
+  }
 
   useEffect(() => {
     setMobileNavOpen(false)
@@ -29,10 +46,29 @@ const DashboardLayout = ({ children }) => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date())
-    }, 60000) // Update every minute
-
+    }, 60000)
     return () => clearInterval(timer)
   }, [])
+
+  // Session inactivity timeout
+  const resetInactivityTimer = useCallback(() => {
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current)
+    inactivityTimer.current = setTimeout(async () => {
+      toast.warning('Session expired due to inactivity. Please sign in again.')
+      await signOut()
+      navigate('/login')
+    }, INACTIVITY_TIMEOUT_MS)
+  }, [signOut, navigate])
+
+  useEffect(() => {
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll']
+    events.forEach(e => window.addEventListener(e, resetInactivityTimer))
+    resetInactivityTimer() // Start timer on mount
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetInactivityTimer))
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current)
+    }
+  }, [resetInactivityTimer])
 
   const handleLogout = async () => {
     await signOut()
@@ -52,7 +88,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Drugs', path: '/drugs', icon: 'DR', roles: ['admin', 'pharmacist'] },
     { name: 'Billing', path: '/billing', icon: 'BL', roles: ['admin'] },
     { name: 'Claims', path: '/claims', icon: 'CL', roles: ['admin'] },
-    { name: 'Laboratory', path: '/laboratory', icon: 'LB', roles: ['admin', 'doctor'] },
+    { name: 'Laboratory', path: '/laboratory', icon: 'LB', roles: ['admin', 'doctor', 'lab_tech'] },
     { name: 'Appointments', path: '/appointments', icon: 'AP', roles: ['admin', 'doctor'] },
     { name: 'Telemedicine', path: '/telemedicine', icon: '📹', roles: ['admin', 'doctor'] },
     { name: 'Bed Management', path: '/bed-management', icon: '🛏️', roles: ['admin', 'nurse'] },
@@ -146,6 +182,15 @@ const DashboardLayout = ({ children }) => {
           <div className="mb-3 text-sm">
             <div className="truncate font-medium text-slate-800">{user?.email}</div>
             <div className="mt-0.5 text-xs capitalize text-slate-500">{userRole}</div>
+          </div>
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={handleDarkModeToggle}
+              title="Toggle dark mode"
+              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 transition"
+            >
+              {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
           </div>
           <button
             onClick={handleLogout}

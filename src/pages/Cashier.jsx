@@ -44,7 +44,8 @@ const Cashier = () => {
             drug_name,
             quantity,
             dosage,
-            frequency
+            frequency,
+            drugs (price)
           )
         `)
         .eq('status', 'pending')
@@ -52,26 +53,16 @@ const Cashier = () => {
 
       if (error) throw error
 
-      // Calculate total for each prescription
-      const billsWithTotals = await Promise.all(
-        data.map(async (prescription) => {
-          let total = 0
-          for (const item of prescription.prescription_items) {
-            const { data: drug } = await supabase
-              .from('drugs')
-              .select('price')
-              .eq('name', item.drug_name)
-              .single()
-            
-            if (drug) {
-              total += drug.price * item.quantity
-            }
-          }
-          return { ...prescription, total_amount: total }
-        })
-      )
+      // Calculate total from the joined drug prices — no extra queries needed
+      const billsWithTotals = (data || []).map((prescription) => {
+        const total = (prescription.prescription_items || []).reduce((sum, item) => {
+          const price = item.drugs?.price || 0
+          return sum + (parseFloat(price) * parseInt(item.quantity || 0))
+        }, 0)
+        return { ...prescription, total_amount: total }
+      })
 
-      setPendingBills(billsWithTotals || [])
+      setPendingBills(billsWithTotals)
     } catch (error) {
       console.error('Error fetching pending bills:', error)
       toast.error('Failed to load pending bills')

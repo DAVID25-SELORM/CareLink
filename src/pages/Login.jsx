@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import { supabase } from '../supabaseClient'
 import carelinkLogo from '../assets/carelink-logo.svg'
 
 /**
@@ -13,6 +15,9 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
   const { signIn } = useAuth()
   const { branding, hospitalDisplayName } = useHospitalBranding()
   const navigate = useNavigate()
@@ -27,6 +32,25 @@ const Login = () => {
 
     if (data && !error) {
       navigate('/dashboard')
+    }
+  }
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    if (!resetEmail.trim()) return
+    setResetLoading(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: `${window.location.origin}/dashboard`,
+      })
+      if (error) throw error
+      toast.success('Password reset link sent! Check your email.')
+      setShowForgotPassword(false)
+      setResetEmail('')
+    } catch (error) {
+      toast.error(error.message || 'Failed to send reset email')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -89,7 +113,40 @@ const Login = () => {
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(!showForgotPassword)}
+              className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              Forgot your password?
+            </button>
+          </div>
         </form>
+
+        {showForgotPassword && (
+          <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">Reset Password</h3>
+            <form onSubmit={handleForgotPassword} className="space-y-3">
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="Enter your email address"
+              />
+              <button
+                type="submit"
+                disabled={resetLoading}
+                className="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-lg transition-all-smooth disabled:opacity-50 text-sm"
+              >
+                {resetLoading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="mt-8 text-center text-xs text-slate-500">
           <p>{branding.platformName} v1.0</p>

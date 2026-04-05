@@ -86,7 +86,6 @@ const QueueManagement = () => {
         .from('patients')
         .select('id, name, patient_id, phone')
         .order('name')
-        .limit(100)
       
       if (error) throw error
       setPatients(data || [])

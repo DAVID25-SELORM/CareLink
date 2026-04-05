@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
+import { logAuditEvent } from '../services/auditLog'
 
 /**
  * Blood Bank Management System
@@ -24,7 +25,8 @@ const BloodBank = () => {
     donor_phone: '',
     blood_type: 'o_positive',
     units: '1',
-    screening_results: 'safe'
+    screening_results: 'safe',
+    expiry_date: ''
   })
   const [requestFormData, setRequestFormData] = useState({
     patient_id: '',
@@ -64,6 +66,8 @@ const BloodBank = () => {
 
       if (donError) throw donError
 
+      await logAuditEvent({ user, action: 'record_blood_donation', tableName: 'blood_donations', newValues: { ...donationFormData, units, collected_by: user.id } })
+
       // Update inventory
       const existing = inventory.find(i => i.blood_type === donationFormData.blood_type)
       if (existing) {
@@ -74,7 +78,7 @@ const BloodBank = () => {
 
       toast.success('Donation recorded!')
       setShowDonationForm(false)
-      setDonationFormData({ donor_name: '', donor_phone: '', blood_type: 'o_positive', units: '1', screening_results: 'safe' })
+      setDonationFormData({ donor_name: '', donor_phone: '', blood_type: 'o_positive', units: '1', screening_results: 'safe', expiry_date: '' })
       fetchAll()
     } catch (error) {
       toast.error('Failed to record donation')
@@ -92,6 +96,8 @@ const BloodBank = () => {
       }])
 
       if (error) throw error
+
+      await logAuditEvent({ user, action: 'submit_blood_request', tableName: 'blood_requests', newValues: { ...requestFormData, units_requested: parseInt(requestFormData.units_requested), requested_by: user.id, status: 'pending' } })
 
       toast.success('Blood request submitted!')
       setShowRequestForm(false)
@@ -201,11 +207,18 @@ const BloodBank = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blood Type</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Units</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Screening</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry Date</th>
                 </tr>
               </thead>
               <tbody>
-                {donations.map(donation => (
-                  <tr key={donation.id} className="border-t">
+                {donations.map(donation => {
+                  const isExpiringSoon = donation.expiry_date && (() => {
+                    const daysLeft = Math.ceil((new Date(donation.expiry_date) - new Date()) / (1000 * 60 * 60 * 24))
+                    return daysLeft <= 7
+                  })()
+                  const isExpired = donation.expiry_date && new Date(donation.expiry_date) < new Date()
+                  return (
+                  <tr key={donation.id} className={`border-t ${isExpired ? 'bg-red-50' : isExpiringSoon ? 'bg-yellow-50' : ''}`}>
                     <td className="px-4 py-3 text-sm">{new Date(donation.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
                       <div className="font-medium">{donation.donor_name}</div>
@@ -218,8 +231,22 @@ const BloodBank = () => {
                         {donation.screening_results}
                       </span>
                     </td>
+                    <td className="px-4 py-3">
+                      {donation.expiry_date ? (
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          isExpired ? 'bg-red-100 text-red-800 font-semibold' :
+                          isExpiringSoon ? 'bg-yellow-100 text-yellow-800 font-semibold' :
+                          'text-gray-600'
+                        }`}>
+                          {new Date(donation.expiry_date).toLocaleDateString()}
+                          {isExpired && ' ⚠ EXPIRED'}
+                          {!isExpired && isExpiringSoon && ' ⚠ Soon'}
+                        </span>
+                      ) : <span className="text-gray-400 text-xs">—</span>}
+                    </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -286,6 +313,10 @@ const BloodBank = () => {
                   <option value="safe">Safe</option>
                   <option value="rejected">Rejected</option>
                 </select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                  <input type="date" value={donationFormData.expiry_date} onChange={(e) => setDonationFormData({...donationFormData, expiry_date: e.target.value})} className="w-full px-4 py-2 border rounded-lg" min={new Date().toISOString().split('T')[0]} />
+                </div>
                 <div className="flex gap-2">
                   <button type="submit" className="flex-1 bg-red-600 text-white py-2 rounded-lg">Save</button>
                   <button type="button" onClick={() => setShowDonationForm(false)} className="flex-1 bg-gray-200 py-2 rounded-lg">Cancel</button>

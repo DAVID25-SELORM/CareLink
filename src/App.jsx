@@ -32,6 +32,7 @@ import BedManagement from './pages/BedManagement'
 import InventoryManagement from './pages/InventoryManagement'
 import EmergencyTriage from './pages/EmergencyTriage'
 import BloodBank from './pages/BloodBank'
+import PatientDetail from './pages/PatientDetail'
 
 /**
  * CareLink HMS - Main Application Component
@@ -101,6 +102,14 @@ function App() {
               }
             />
             <Route
+              path="/patients/:id"
+              element={
+                <ProtectedRoute>
+                  <PatientDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/prescriptions"
               element={
                 <ProtectedRoute allowedRoles={['admin', 'doctor']}>
@@ -151,7 +160,7 @@ function App() {
               <Route
                 path="/laboratory"
                 element={
-                  <ProtectedRoute allowedRoles={['admin', 'doctor']}>
+                  <ProtectedRoute allowedRoles={['admin', 'doctor', 'lab_tech']}>
                     <Laboratory />
                   </ProtectedRoute>
                 }
@@ -261,8 +270,28 @@ function App() {
                 }
               />
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              {/* 404 - Not Found */}
+              <Route
+                path="*"
+                element={
+                  <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+                    <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-slate-100 p-10 text-center">
+                      <div className="text-7xl mb-4">🏥</div>
+                      <h1 className="text-5xl font-bold text-slate-800 mb-2">404</h1>
+                      <h2 className="text-xl font-semibold text-slate-700 mb-3">Page Not Found</h2>
+                      <p className="text-slate-500 text-sm mb-8">
+                        The page you're looking for doesn't exist or has been moved.
+                      </p>
+                      <a
+                        href="/dashboard"
+                        className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+                      >
+                        Back to Dashboard
+                      </a>
+                    </div>
+                  </div>
+                }
+              />
             </Routes>
             
             {/* Toast Notifications */}
