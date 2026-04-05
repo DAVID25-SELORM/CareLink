@@ -96,6 +96,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Records', path: '/records', icon: 'RC', roles: ['admin', 'records_officer'] },
     { name: 'Inventory', path: '/inventory', icon: '📦', roles: ['admin'] },
     { name: 'Blood Bank', path: '/blood-bank', icon: '🩸', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Services & Fees', path: '/services-catalog', icon: '💲', roles: ['admin', 'cashier', 'doctor', 'nurse', 'pharmacist', 'records_officer'] },
     { name: 'Reports', path: '/reports', icon: 'RP', roles: ['admin'] },
     { name: 'Users', path: '/users', icon: '👥', roles: ['admin'] },
   ]

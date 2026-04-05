@@ -33,6 +33,7 @@ import InventoryManagement from './pages/InventoryManagement'
 import EmergencyTriage from './pages/EmergencyTriage'
 import BloodBank from './pages/BloodBank'
 import PatientDetail from './pages/PatientDetail'
+import ServicesCatalog from './pages/ServicesCatalog'
 
 /**
  * CareLink HMS - Main Application Component
@@ -266,6 +267,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'doctor', 'nurse']}>
                     <BloodBank />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/services-catalog"
+                element={
+                  <ProtectedRoute>
+                    <ServicesCatalog />
                   </ProtectedRoute>
                 }
               />

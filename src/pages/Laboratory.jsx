@@ -15,11 +15,14 @@ import FileUpload from '../components/FileUpload'
  */
 
 const Laboratory = () => {
-  const { user } = useAuth()
+  const { user, userRole } = useAuth()
+  const isAdmin = userRole === 'admin'
   const { branding } = useHospitalBranding()
   const [labTests, setLabTests] = useState([])
+  const [catalogTests, setCatalogTests] = useState([])
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('orders')
   const [showAddForm, setShowAddForm] = useState(false)
   const [formData, setFormData] = useState({
     patient_id: '',
@@ -30,10 +33,15 @@ const Laboratory = () => {
   const [selectedTest, setSelectedTest] = useState(null)
   const [testResult, setTestResult] = useState('')
   const [uploadedFile, setUploadedFile] = useState(null)
+  const [catalogSearch, setCatalogSearch] = useState('')
+  const [catalogCategory, setCatalogCategory] = useState('')
+  const [editingCatalogId, setEditingCatalogId] = useState(null)
+  const [editCatalogPrice, setEditCatalogPrice] = useState('')
 
   useEffect(() => {
     fetchLabTests()
     fetchPatients()
+    fetchCatalog()
   }, [])
 
   const fetchLabTests = async () => {
@@ -68,6 +76,28 @@ const Laboratory = () => {
     } catch (error) {
       console.error('Error fetching patients:', error)
     }
+  }
+
+  const fetchCatalog = async () => {
+    const { data } = await supabase
+      .from('lab_test_catalog')
+      .select('*')
+      .order('category')
+      .order('name')
+    setCatalogTests(data || [])
+  }
+
+  const handleCatalogPriceSave = async (id) => {
+    const price = parseFloat(editCatalogPrice)
+    if (isNaN(price) || price < 0) { toast.error('Invalid price'); return }
+    const { error } = await supabase
+      .from('lab_test_catalog')
+      .update({ price, updated_at: new Date().toISOString() })
+      .eq('id', id)
+    if (error) { toast.error('Failed to update price'); return }
+    toast.success('Price updated!')
+    setEditingCatalogId(null)
+    fetchCatalog()
   }
 
   const handleSubmit = async (e) => {
@@ -182,14 +212,29 @@ const Laboratory = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-2xl font-bold">Laboratory Tests</h2>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="w-full rounded-lg bg-primary px-6 py-2 text-white transition hover:bg-blue-600 sm:w-auto"
-          >
-            <span className="mr-2">{showAddForm ? 'Close' : 'Add'}</span>
-            {showAddForm ? 'Cancel' : 'Request New Test'}
-          </button>
+          <h2 className="text-2xl font-bold">Laboratory</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setActiveTab('orders'); setShowAddForm(false) }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'orders' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Test Orders
+            </button>
+            <button
+              onClick={() => { setActiveTab('catalog'); setShowAddForm(false) }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'catalog' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Test Catalog {isAdmin && <span className="ml-1 text-xs opacity-75">(Admin)</span>}
+            </button>
+            {activeTab === 'orders' && (
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="rounded-lg bg-medical px-4 py-2 text-white transition hover:bg-green-600 text-sm font-medium"
+              >
+                {showAddForm ? 'Cancel' : '+ Request Test'}
+              </button>
+            )}
+          </div>
         </div>
 
         {showAddForm && (
@@ -239,14 +284,28 @@ const Laboratory = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Test Name
                   </label>
-                  <input
-                    type="text"
-                    value={formData.test_name}
-                    onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="e.g., Full Blood Count (FBC)"
-                  />
+                  {catalogTests.length > 0 ? (
+                    <select
+                      value={formData.test_name}
+                      onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Select test from catalog</option>
+                      {catalogTests.map((t) => (
+                        <option key={t.id} value={t.name}>{t.name} — GH₵{Number(t.price).toFixed(2)}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.test_name}
+                      onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="e.g., Full Blood Count (FBC)"
+                    />
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
@@ -273,7 +332,7 @@ const Laboratory = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        {activeTab === 'orders' && <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="table-scroll">
             <table className="min-w-[920px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -378,7 +437,102 @@ const Laboratory = () => {
             </tbody>
             </table>
           </div>
-        </div>
+        </div>}
+
+        {activeTab === 'catalog' && (
+          <div className="bg-white rounded-lg shadow p-6 space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h3 className="text-lg font-semibold">Lab Test Price Catalog</h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Search tests..."
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <select
+                  value={catalogCategory}
+                  onChange={(e) => setCatalogCategory(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">All Categories</option>
+                  {[...new Set(catalogTests.map((t) => t.category).filter(Boolean))].sort().map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Test Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price (GH₵)</th>
+                    {isAdmin && <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {catalogTests
+                    .filter((t) =>
+                      (!catalogSearch || t.name.toLowerCase().includes(catalogSearch.toLowerCase())) &&
+                      (!catalogCategory || t.category === catalogCategory)
+                    )
+                    .map((t) => (
+                      <tr key={t.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm font-medium">{t.name}</td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{t.category}</span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {editingCatalogId === t.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={editCatalogPrice}
+                                onChange={(e) => setEditCatalogPrice(e.target.value)}
+                                className="w-28 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                              />
+                              <button
+                                onClick={() => handleCatalogPriceSave(t.id)}
+                                className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+                              >Save</button>
+                              <button
+                                onClick={() => setEditingCatalogId(null)}
+                                className="px-2 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400"
+                              >Cancel</button>
+                            </div>
+                          ) : (
+                            <span className="font-medium">GH₵{Number(t.price).toFixed(2)}</span>
+                          )}
+                        </td>
+                        {isAdmin && (
+                          <td className="px-4 py-3">
+                            {editingCatalogId !== t.id && (
+                              <button
+                                onClick={() => { setEditingCatalogId(t.id); setEditCatalogPrice(t.price) }}
+                                className="text-primary hover:text-blue-800 text-sm font-medium"
+                              >Edit Price</button>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  }
+                  {catalogTests.filter((t) =>
+                    (!catalogSearch || t.name.toLowerCase().includes(catalogSearch.toLowerCase())) &&
+                    (!catalogCategory || t.category === catalogCategory)
+                  ).length === 0 && (
+                    <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">No tests found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {selectedTest && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50 p-4 sm:items-center">
