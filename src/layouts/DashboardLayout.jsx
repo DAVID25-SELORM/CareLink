@@ -17,7 +17,7 @@ import { initDarkMode, toggleDarkMode, getCurrentTheme } from '../utils/darkMode
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 
 const SidebarIcon = ({ symbol }) => (
-  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/18 text-lg font-extrabold text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.22)]">
+  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-base font-semibold text-slate-700">
     {symbol}
   </span>
 )
@@ -140,7 +140,7 @@ const DashboardLayout = ({ children }) => {
   const profileInitial = profileName.charAt(0).toUpperCase()
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#3d7cd3_0%,#2d67b9_36%,#2a5da8_100%)] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
+    <div className="min-h-screen bg-[#fafafa] px-0 py-0 text-slate-900">
       {mobileNavOpen ? (
         <button
           type="button"
@@ -150,88 +150,88 @@ const DashboardLayout = ({ children }) => {
         />
       ) : null}
 
-      <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1440px] overflow-hidden rounded-[28px] border border-white/10 bg-white/10 shadow-[0_30px_60px_rgba(10,37,89,0.28)] backdrop-blur-[2px] lg:min-h-[calc(100vh-3rem)]">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] overflow-hidden bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.05)]">
         <div
-          className={`fixed inset-y-0 left-0 z-40 flex w-[250px] max-w-[86vw] flex-col bg-[linear-gradient(180deg,#2f74c7_0%,#2c69bb_52%,#2559a8_100%)] shadow-2xl transition-transform duration-300 lg:static lg:z-auto lg:w-[220px] lg:max-w-none lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-40 flex w-[260px] max-w-[86vw] flex-col bg-white shadow-[2px_0_8px_rgba(0,0,0,0.04)] transition-transform duration-300 lg:static lg:z-auto lg:w-[260px] lg:max-w-none lg:translate-x-0 ${
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         >
-          <div className="border-b border-white/10 px-6 pb-5 pt-9 lg:px-7">
+          <div className="border-b border-slate-200 px-6 pb-6 pt-8 lg:px-7">
             <div className="mb-4 flex justify-end lg:hidden">
             <button
               type="button"
               onClick={() => setMobileNavOpen(false)}
-              className="rounded-full border-2 border-white/30 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-white/95 hover:bg-white/10"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
               Close
             </button>
           </div>
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/95 p-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.2)] ring-2 ring-white/60">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 p-2 shadow-sm">
                 <img
                   src={carelinkLogo}
                   alt="CareLink HMS logo"
-                  className="h-9 w-auto"
+                  className="h-8 w-auto"
                 />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-blue-100/90">
-                  {branding.platformName}
-                </p>
-                <p className="mt-1.5 text-[1.7rem] font-extrabold tracking-tight text-white">
+                <p className="text-sm font-medium uppercase tracking-wider text-slate-400">
                   CareLink
+                </p>
+                <p className="mt-0.5 text-lg font-semibold tracking-tight text-slate-900">
+                  HMS
                 </p>
               </div>
             </div>
-            <p className="mt-5 text-base font-semibold text-blue-100">
+            <p className="mt-4 text-sm font-medium text-slate-600">
               {branding.hospitalName || hospitalDisplayName}
             </p>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-5 py-5 lg:px-4">
+          <nav className="flex-1 overflow-y-auto px-4 py-6 lg:px-4">
           {filteredMenuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setMobileNavOpen(false)}
-              className={`mb-2 flex items-center gap-4 rounded-2xl px-4 py-3.5 text-base font-bold transition-all-smooth ${
+              className={`mb-1 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all ${
                 location.pathname === item.path
-                  ? 'bg-white/16 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_10px_24px_rgba(18,52,110,0.22)]'
-                  : 'text-white/82 hover:bg-white/10 hover:text-white'
+                  ? 'bg-slate-100 text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               <SidebarIcon symbol={item.icon} />
-              <span className="truncate text-base font-bold tracking-tight">{item.name}</span>
+              <span className="truncate">{item.name}</span>
             </Link>
           ))}
           </nav>
 
-          <div className="mt-auto border-t-2 border-white/15 px-6 pb-5 pt-6 text-white lg:px-7">
-            <div className="mb-5 flex items-center justify-between border-b-2 border-white/15 pb-5">
+          <div className="mt-auto border-t border-slate-200 px-6 pb-6 pt-5 lg:px-7">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-4">
               <button
                 type="button"
                 onClick={() => setMobileNavOpen((open) => !open)}
-                className="inline-flex items-center gap-2.5 text-base font-bold text-white lg:pointer-events-none"
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 lg:pointer-events-none"
               >
-                <span className="text-3xl leading-none">»</span>
+                <span className="text-xl leading-none">»</span>
               </button>
-              <span className="text-xs font-bold uppercase tracking-[0.22em] text-white/70">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-slate-400">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
-            <div className="mb-5 text-base">
-              <div className="truncate font-bold">{user?.email}</div>
-              <div className="mt-2 text-sm font-semibold capitalize text-white/80">{userRole}</div>
+            <div className="mb-4 text-sm">
+              <div className="truncate font-medium text-slate-900">{user?.email}</div>
+              <div className="mt-1 text-xs font-medium capitalize text-slate-500">{userRole}</div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={handleDarkModeToggle}
                 title="Toggle dark mode"
-                className="rounded-2xl border-2 border-white/18 bg-white/12 px-4 py-3 text-sm font-extrabold text-white transition hover:bg-white/20 active:scale-95"
+                className="rounded-lg bg-slate-100 px-3 py-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
               >
                 {isDarkMode ? 'Light' : 'Dark'}
               </button>
               <button
                 onClick={handleLogout}
-                className="rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-blue-700 transition hover:bg-blue-50 active:scale-95"
+                className="rounded-lg bg-slate-900 px-3 py-2.5 text-xs font-medium text-white transition hover:bg-slate-800"
               >
                 Sign Out
               </button>
@@ -239,22 +239,22 @@ const DashboardLayout = ({ children }) => {
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col bg-[#f4f8ff]">
-          <header className="sticky top-0 z-20 border-b-2 border-slate-300 bg-white px-5 py-4 shadow-[0_2px_0_rgba(15,23,42,0.06)] sm:px-7 lg:px-9">
+        <div className="flex min-w-0 flex-1 flex-col bg-[#fafafa]">
+          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white px-6 py-5 shadow-sm sm:px-8 lg:px-10">
             <div className="flex items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-4 lg:max-w-[180px] xl:max-w-none">
               <button
                 type="button"
                 onClick={() => setMobileNavOpen(true)}
-                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-300 text-slate-800 shadow-md lg:hidden hover:bg-slate-50 active:scale-95"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700 lg:hidden hover:bg-slate-200"
               >
                 <MenuIcon />
               </button>
               <div className="hidden min-w-0 lg:block">
-                <h1 className="truncate text-xl font-black tracking-tight text-slate-900">
+                <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900">
                   {currentPageLabel}
                 </h1>
-                <p className="mt-1 text-sm font-semibold text-slate-500">
+                <p className="mt-0.5 text-xs font-medium text-slate-500">
                   {currentTime.toLocaleDateString('en-GB', {
                     weekday: 'short',
                     month: 'short',
@@ -277,16 +277,16 @@ const DashboardLayout = ({ children }) => {
                 <button
                   type="button"
                   onClick={() => setProfileMenuOpen((open) => !open)}
-                  className="flex items-center gap-3 rounded-2xl border-2 border-slate-300 bg-white px-3 py-2 text-left shadow-md transition hover:border-slate-400 hover:bg-slate-50 active:scale-98"
+                  className="flex items-center gap-2.5 rounded-lg bg-slate-50 px-3 py-2 text-left transition hover:bg-slate-100"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#67b2ff,#2a73cf)] text-base font-extrabold text-white shadow-md">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white">
                     {profileInitial}
                   </span>
                   <span className="hidden sm:block">
-                    <span className="block max-w-[140px] truncate text-base font-extrabold text-slate-900">
+                    <span className="block max-w-[140px] truncate text-sm font-medium text-slate-900">
                       {profileName}
                     </span>
-                    <span className="block text-sm font-semibold text-slate-500">
+                    <span className="block text-xs font-medium text-slate-500">
                       {userRole === 'doctor' ? 'Doctor' : userRole === 'admin' ? 'Administrator' : userRole || 'Staff'}
                     </span>
                   </span>
@@ -295,23 +295,23 @@ const DashboardLayout = ({ children }) => {
                   </span>
                 </button>
                 {profileMenuOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-64 rounded-2xl border-2 border-slate-300 bg-white p-3 shadow-[0_25px_55px_rgba(15,23,42,0.18)]">
-                    <div className="rounded-xl bg-slate-100 px-4 py-3">
-                      <p className="truncate text-base font-extrabold text-slate-900">{profileName}</p>
-                      <p className="mt-1 truncate text-sm font-semibold text-slate-600">{user?.email}</p>
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+                    <div className="rounded-md bg-slate-50 px-3 py-2.5">
+                      <p className="truncate text-sm font-medium text-slate-900">{profileName}</p>
+                      <p className="mt-0.5 truncate text-xs font-medium text-slate-600">{user?.email}</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleDarkModeToggle}
-                      className="mt-3 flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-100 active:scale-98"
+                      className="mt-2 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                     >
                       <span>Theme</span>
-                      <span className="font-extrabold text-slate-600">{isDarkMode ? 'Light' : 'Dark'}</span>
+                      <span className="text-xs font-medium text-slate-500">{isDarkMode ? 'Light' : 'Dark'}</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="mt-2 flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-red-600 transition hover:bg-red-50 active:scale-98"
+                      className="mt-1 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
                     >
                       <span>Sign Out</span>
                       <span>↗</span>
@@ -323,11 +323,11 @@ const DashboardLayout = ({ children }) => {
           </div>
         </header>
 
-          <main className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
+          <main className="flex-1 overflow-y-auto px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
             {children}
           </main>
 
-          <footer className="border-t-2 border-slate-300 bg-white px-5 py-4 text-sm font-semibold text-slate-600 sm:px-7 lg:px-9">
+          <footer className="border-t border-slate-200 bg-white px-6 py-4 text-xs font-medium text-slate-500 sm:px-8 lg:px-10">
             <p>{branding.platformName} • {branding.hospitalName || hospitalDisplayName} • {branding.tagline || 'Connecting care, simplifying healthcare'}</p>
           </footer>
         </div>

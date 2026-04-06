@@ -82,37 +82,37 @@ const buildRevenueTrend = (totalRevenue) => {
 }
 
 const ActivityRow = ({ activity }) => (
-  <div className="flex items-center gap-5 rounded-2xl border-2 border-slate-300 bg-white px-6 py-5 shadow-[0_10px_20px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:border-blue-400 hover:shadow-[0_20px_40px_rgba(15,23,42,0.15)]">
-    <div className={`flex h-16 w-16 items-center justify-center rounded-full ${activity.iconBg} shadow-md`}>
-      <span className={`text-2xl font-extrabold ${activity.iconColor}`}>{activity.icon}</span>
+  <div className="flex items-center gap-4 rounded-lg bg-white px-5 py-4 shadow-sm transition-all duration-200 hover:shadow-md">
+    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${activity.iconBg}`}>
+      <span className={`text-xl font-semibold ${activity.iconColor}`}>{activity.icon}</span>
     </div>
     <div className="min-w-0 flex-1">
-      <p className="truncate text-lg font-bold text-slate-900">{activity.title}</p>
+      <p className="truncate text-sm font-medium text-slate-900">{activity.title}</p>
     </div>
-    <p className="whitespace-nowrap text-lg font-bold text-slate-600">{activity.time}</p>
+    <p className="whitespace-nowrap text-xs font-medium text-slate-500">{activity.time}</p>
   </div>
 )
 
 const StatCard = ({ title, value, accent, delta, deltaTone }) => (
-  <div className="group rounded-2xl border-3 border-slate-300 bg-white p-7 shadow-[0_15px_40px_rgba(15,23,42,0.1)] transition-all duration-200 hover:-translate-y-1.5 hover:border-blue-400 hover:shadow-[0_25px_60px_rgba(15,23,42,0.18)]">
-    <p className="text-lg font-extrabold uppercase tracking-wide text-slate-700">{title}</p>
-    <div className="mt-6 flex items-end justify-between gap-4">
-      <p className="text-[3.2rem] font-black leading-none tracking-tight text-[#0f172a]">{value}</p>
-      <p className={`text-2xl font-black ${deltaTone === 'negative' ? 'text-[#f59e0b]' : 'text-[#10b981]'}`}>
+  <div className="group rounded-xl bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md">
+    <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{title}</p>
+    <div className="mt-4 flex items-end justify-between gap-3">
+      <p className="text-3xl font-semibold leading-none text-slate-900">{value}</p>
+      <p className={`text-sm font-medium ${deltaTone === 'negative' ? 'text-amber-600' : 'text-emerald-600'}`}>
         {deltaTone === 'negative' ? '▼' : '▲'} {delta}
       </p>
     </div>
-    <div className={`mt-6 h-2.5 rounded-full ${accent} shadow-md`}></div>
+    <div className={`mt-4 h-1 rounded-full ${accent}`}></div>
   </div>
 )
 
 const ActionButton = ({ to, label, icon, colorClass }) => (
   <Link
     to={to}
-    className={`flex min-h-[84px] items-center justify-center gap-5 rounded-2xl border-2 border-white/30 px-8 py-6 text-xl font-extrabold text-white shadow-[0_25px_50px_rgba(15,23,42,0.2)] transition-all duration-200 hover:-translate-y-2 hover:scale-[1.03] hover:shadow-[0_35px_70px_rgba(15,23,42,0.28)] active:scale-[0.98] ${colorClass}`}
+    className={`flex min-h-[56px] items-center justify-center gap-3 rounded-lg px-6 py-4 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:shadow-md ${colorClass}`}
   >
-    <span className="text-3xl leading-none">{icon}</span>
-    <span className="tracking-wide">{label}</span>
+    <span className="text-lg leading-none">{icon}</span>
+    <span>{label}</span>
   </Link>
 )
 
@@ -264,11 +264,11 @@ const Dashboard = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex min-h-[420px] items-center justify-center rounded-[28px] border-2 border-slate-300 bg-white shadow-[0_20px_48px_rgba(15,23,42,0.1)]">
+        <div className="flex min-h-[420px] items-center justify-center rounded-xl bg-white shadow-sm">
           <div className="text-center">
-            <div className="spinner mx-auto mb-5"></div>
-            <h2 className="text-2xl font-extrabold text-slate-900">Loading dashboard</h2>
-            <p className="mt-3 text-lg font-semibold text-slate-600">Fetching live statistics from CareLink.</p>
+            <div className="spinner mx-auto mb-4"></div>
+            <h2 className="text-lg font-semibold text-slate-900">Loading dashboard</h2>
+            <p className="mt-2 text-sm font-medium text-slate-600">Fetching live statistics from CareLink.</p>
           </div>
         </div>
       </DashboardLayout>
@@ -277,69 +277,69 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {loadWarning ? (
-          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-6 py-4 text-base font-bold text-amber-900 shadow-md">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-medium text-amber-900">
             {loadWarning}
           </div>
         ) : null}
 
-        <section className="rounded-[32px] border-3 border-blue-300 bg-gradient-to-br from-[#f0f7ff] to-[#e6f2ff] p-8 shadow-[0_25px_55px_rgba(15,23,42,0.1)] lg:p-10">
-          <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <section className="rounded-xl bg-white p-8 shadow-sm lg:p-10">
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-base font-black uppercase tracking-[0.28em] text-[#2563eb]">{branding.platformName}</p>
-              <h2 className="mt-4 text-5xl font-black tracking-tight text-[#0f172a]">Operations Dashboard</h2>
-              <p className="mt-3 text-lg font-bold text-slate-700">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{branding.platformName}</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Operations Dashboard</h2>
+              <p className="mt-2 text-sm font-medium text-slate-600">
                 {roleMessages[userRole] || roleMessages.default} {branding.hospitalName || hospitalDisplayName}.
               </p>
             </div>
-            <div className="rounded-2xl border-3 border-orange-400 bg-gradient-to-br from-orange-50 to-amber-50 px-6 py-5 shadow-xl">
-              <p className="text-lg font-black text-slate-900">{user?.user_metadata?.full_name || 'Dr. Smith'}</p>
-              <p className="mt-2.5 text-base font-extrabold text-slate-700">Low stock items: <span className="text-xl font-black text-[#ea580c]">{stats.lowStockDrugs}</span></p>
+            <div className="rounded-lg bg-amber-50 px-5 py-4 shadow-sm">
+              <p className="text-sm font-medium text-slate-900">{user?.user_metadata?.full_name || 'Dr. Smith'}</p>
+              <p className="mt-1 text-xs font-medium text-slate-600">Low stock items: <span className="font-semibold text-amber-600">{stats.lowStockDrugs}</span></p>
             </div>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <StatCard
               title="Total Patients Today"
               value={stats.totalPatients}
-              accent="bg-[#2f9cf5]"
+              accent="bg-blue-500"
               delta={patientDelta}
             />
             <StatCard
               title="Prescriptions Filled"
               value={stats.totalPrescriptions}
-              accent="bg-[#23c4b8]"
+              accent="bg-teal-500"
               delta={prescriptionDelta}
             />
             <StatCard
               title="Pending Claims"
               value={stats.pendingClaims}
-              accent="bg-[#ff9a35]"
+              accent="bg-amber-500"
               delta={pendingDelta}
               deltaTone="negative"
             />
             <StatCard
               title="Revenue Today"
               value={`GH₵${stats.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-              accent="bg-[#2cc88a]"
+              accent="bg-emerald-500"
               delta={revenueDelta}
             />
           </div>
         </section>
 
         {showPlatformOnboarding ? (
-          <section className="rounded-[24px] border-2 border-blue-200 bg-white px-7 py-5 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <section className="rounded-lg bg-white px-6 py-5 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h3 className="text-lg font-extrabold text-slate-900">Platform owner tools are available</h3>
-                <p className="mt-2 text-base font-semibold text-slate-600">
+                <h3 className="text-sm font-semibold text-slate-900">Platform owner tools are available</h3>
+                <p className="mt-1 text-xs font-medium text-slate-600">
                   Hospital onboarding, provisioning, and rollout tracking are enabled for this account.
                 </p>
               </div>
               <Link
                 to="/hospital-onboarding"
-                className="inline-flex items-center justify-center rounded-2xl bg-[#2f74c7] px-7 py-4 text-base font-extrabold text-white shadow-lg transition hover:bg-[#245fa7] hover:shadow-xl active:scale-95"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
               >
                 Open Onboarding Hub
               </Link>
@@ -349,83 +349,83 @@ const Dashboard = () => {
 
         <section className="grid gap-6 xl:grid-cols-[1.12fr_0.92fr]">
           <div className="space-y-6">
-            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
-              <div className="mb-7 flex items-center justify-between border-b-2 border-slate-200 pb-5">
-                <h3 className="text-[2rem] font-black tracking-tight text-[#0f172a]">Activity Feed</h3>
-                <span className="rounded-full bg-blue-100 px-5 py-2.5 text-base font-extrabold text-blue-700 shadow-md">Live updates</span>
+            <div className="rounded-xl bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Activity Feed</h3>
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">Live updates</span>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {recentActivities.map((activity, index) => (
                   <ActivityRow key={`${activity.title}-${index}`} activity={activity} />
                 ))}
               </div>
             </div>
 
-            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
-              <div className="mb-7 flex items-center justify-between border-b-2 border-slate-200 pb-5">
-                <h3 className="text-[2rem] font-black tracking-tight text-[#0f172a]">CareLink Snapshot</h3>
-                <span className="rounded-full bg-blue-600 px-5 py-2.5 text-base font-black uppercase tracking-[0.18em] text-white shadow-xl">Today</span>
+            <div className="rounded-xl bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
+                <h3 className="text-lg font-semibold text-slate-900">CareLink Snapshot</h3>
+                <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white">Today</span>
               </div>
-              <div className="grid gap-6 sm:grid-cols-3">
-                <div className="rounded-2xl border-3 border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-lg">
-                  <p className="text-base font-extrabold uppercase tracking-wider text-blue-800">Claims Filed</p>
-                  <p className="mt-4 text-4xl font-black text-[#0f172a]">{stats.totalClaims}</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-lg bg-blue-50 p-5">
+                  <p className="text-xs font-medium uppercase tracking-wider text-blue-700">Claims Filed</p>
+                  <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.totalClaims}</p>
                 </div>
-                <div className="rounded-2xl border-3 border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 p-6 shadow-lg">
-                  <p className="text-base font-extrabold uppercase tracking-wider text-teal-800">Low Stock Drugs</p>
-                  <p className="mt-4 text-4xl font-black text-[#0f172a]">{stats.lowStockDrugs}</p>
+                <div className="rounded-lg bg-teal-50 p-5">
+                  <p className="text-xs font-medium uppercase tracking-wider text-teal-700">Low Stock Drugs</p>
+                  <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.lowStockDrugs}</p>
                 </div>
-                <div className="rounded-2xl border-3 border-amber-300 bg-gradient-to-br from-amber-50 to-amber-100 p-6 shadow-lg">
-                  <p className="text-base font-extrabold uppercase tracking-wider text-amber-800">Hospital</p>
-                  <p className="mt-4 truncate text-xl font-black text-[#0f172a]">{branding.hospitalName || hospitalDisplayName}</p>
+                <div className="rounded-lg bg-slate-100 p-5">
+                  <p className="text-xs font-medium uppercase tracking-wider text-slate-700">Hospital</p>
+                  <p className="mt-3 truncate text-base font-semibold text-slate-900">{branding.hospitalName || hospitalDisplayName}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
-              <h3 className="mb-3 text-[2rem] font-black tracking-tight text-[#0f172a]">Daily Visits</h3>
-              <div className="mt-5 h-[250px]">
+            <div className="rounded-xl bg-white p-6 shadow-sm">
+              <h3 className="mb-2 text-lg font-semibold text-slate-900">Daily Visits</h3>
+              <div className="mt-4 h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={visitTrend} margin={{ top: 12, right: 6, left: -20, bottom: 0 }}>
-                    <CartesianGrid stroke="#e2e8f0" strokeWidth={1.5} vertical={false} />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
+                    <CartesianGrid stroke="#e2e8f0" strokeWidth={1} vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
                     <Tooltip
                       contentStyle={{
-                        borderRadius: '16px',
-                        border: '2px solid #cbd5e1',
-                        boxShadow: '0 24px 48px rgba(15, 23, 42, 0.15)',
-                        fontSize: '15px',
-                        fontWeight: 700,
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                        fontSize: '13px',
+                        fontWeight: 500,
                       }}
                     />
-                    <Line type="monotone" dataKey="visits" stroke="#3b82f6" strokeWidth={4} dot={{ r: 5, fill: '#3b82f6', stroke: '#ffffff', strokeWidth: 3 }} activeDot={{ r: 7 }} />
+                    <Line type="monotone" dataKey="visits" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4, fill: '#3b82f6', stroke: '#ffffff', strokeWidth: 2 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
-              <h3 className="mb-3 text-[2rem] font-black tracking-tight text-[#0f172a]">Revenue This Week</h3>
-              <div className="mt-5 h-[200px]">
+            <div className="rounded-xl bg-white p-6 shadow-sm">
+              <h3 className="mb-2 text-lg font-semibold text-slate-900">Revenue This Week</h3>
+              <div className="mt-4 h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueTrend} margin={{ top: 8, right: 6, left: -22, bottom: 0 }}>
-                    <CartesianGrid stroke="#e2e8f0" strokeWidth={1.5} vertical={false} />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
+                    <CartesianGrid stroke="#e2e8f0" strokeWidth={1} vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
                     <Tooltip
                       formatter={(value) => [`GH₵${Number(value).toLocaleString()}`, 'Revenue']}
                       contentStyle={{
-                        borderRadius: '16px',
-                        border: '2px solid #cbd5e1',
-                        boxShadow: '0 24px 48px rgba(15, 23, 42, 0.15)',
-                        fontSize: '15px',
-                        fontWeight: 700,
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                        fontSize: '13px',
+                        fontWeight: 500,
                       }}
                     />
-                    <Bar dataKey="revenue" radius={[12, 12, 0, 0]} fill="#14b8a6" barSize={30} />
+                    <Bar dataKey="revenue" radius={[6, 6, 0, 0]} fill="#14b8a6" barSize={28} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -433,10 +433,10 @@ const Dashboard = () => {
           </div>
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-3">
-          <ActionButton to="/patients/register" label="Add Patient" icon="＋" colorClass="bg-[linear-gradient(90deg,#2f7ae0,#2b66bf)]" />
-          <ActionButton to="/pharmacy" label="Dispense Drug" icon="✚" colorClass="bg-[linear-gradient(90deg,#18c3c2,#16a2ac)]" />
-          <ActionButton to="/billing" label="Create Invoice" icon="▤" colorClass="bg-[linear-gradient(90deg,#6a66d8,#5753c9)]" />
+        <section className="grid gap-4 lg:grid-cols-3">
+          <ActionButton to="/patients/register" label="Add Patient" icon="＋" colorClass="bg-blue-600 hover:bg-blue-700" />
+          <ActionButton to="/pharmacy" label="Dispense Drug" icon="✚" colorClass="bg-teal-600 hover:bg-teal-700" />
+          <ActionButton to="/billing" label="Create Invoice" icon="▤" colorClass="bg-slate-900 hover:bg-slate-800" />
         </section>
       </div>
     </DashboardLayout>
