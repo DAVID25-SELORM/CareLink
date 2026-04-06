@@ -170,10 +170,10 @@ const NotificationCenter = () => {
       {/* Bell Icon */}
       <button
         onClick={() => setShowPanel(!showPanel)}
-        className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+        className="relative flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-slate-300 bg-white text-slate-600 shadow-md transition hover:border-slate-400 hover:bg-slate-50 active:scale-95"
       >
         <svg
-          className="h-5 w-5"
+          className="h-6 w-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -181,14 +181,14 @@ const NotificationCenter = () => {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={2}
+            strokeWidth={2.5}
             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
           />
         </svg>
         
         {/* Badge */}
         {unreadCount > 0 && (
-          <span className="absolute right-0 top-0 flex h-5 w-5 translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+          <span className="absolute right-0 top-0 flex h-6 w-6 translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full bg-red-500 text-xs font-extrabold text-white shadow-lg">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -204,22 +204,22 @@ const NotificationCenter = () => {
           ></div>
 
           {/* Panel */}
-          <div className="absolute right-0 z-40 mt-3 flex max-h-[80vh] w-96 max-w-[90vw] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_55px_rgba(15,23,42,0.18)]">
+          <div className="absolute right-0 z-40 mt-3 flex max-h-[80vh] w-96 max-w-[90vw] flex-col overflow-hidden rounded-3xl border-2 border-slate-300 bg-white shadow-[0_28px_65px_rgba(15,23,42,0.2)]">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-blue-200 bg-gradient-to-r from-[#2f74c7] to-[#2b66b8] p-4 text-white">
-              <h3 className="font-semibold text-lg">Notifications</h3>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between border-b-2 border-blue-300 bg-gradient-to-r from-[#2f74c7] to-[#2b66b8] p-5 text-white">
+              <h3 className="font-extrabold text-xl">Notifications</h3>
+              <div className="flex items-center gap-3">
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
-                    className="text-xs bg-blue-500 hover:bg-blue-400 px-2 py-1 rounded transition"
+                    className="text-sm font-bold bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg transition active:scale-95"
                   >
                     Mark all read
                   </button>
                 )}
                 <button
                   onClick={() => setShowPanel(false)}
-                  className="text-white hover:bg-blue-500 rounded p-1 transition"
+                  className="text-white hover:bg-blue-500 rounded-lg p-1.5 transition active:scale-95 font-bold text-lg"
                 >
                   ✕
                 </button>
@@ -229,22 +229,22 @@ const NotificationCenter = () => {
             {/* Notifications List */}
             <div className="flex-1 overflow-y-auto">
               {loading ? (
-                <div className="p-8 text-center text-gray-500">
-                  <div className="spinner mx-auto mb-2"></div>
-                  <p>Loading notifications...</p>
+                <div className="p-10 text-center text-gray-600">
+                  <div className="spinner mx-auto mb-3"></div>
+                  <p className="font-semibold text-base">Loading notifications...</p>
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  <div className="text-5xl mb-3">🔔</div>
-                  <p className="font-medium">No notifications yet</p>
-                  <p className="text-sm mt-1">You're all caught up!</p>
+                <div className="p-14 text-center text-gray-600">
+                  <div className="text-6xl mb-4">🔔</div>
+                  <p className="font-extrabold text-lg">No notifications yet</p>
+                  <p className="text-base mt-2 font-semibold">You're all caught up!</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y-2 divide-gray-100">
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 transition cursor-pointer border-l-4 ${
+                      className={`p-5 hover:bg-gray-50 transition cursor-pointer border-l-4 ${
                         notification.status === 'unread' ? 
                         getPriorityColor(notification.priority) : 
                         'bg-white border-gray-200'
@@ -258,13 +258,13 @@ const NotificationCenter = () => {
                         }
                       }}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="text-2xl flex-shrink-0">
+                      <div className="flex items-start gap-4">
+                        <div className="text-3xl flex-shrink-0">
                           {getNotificationIcon(notification.type)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <h4 className={`font-medium text-sm ${
+                            <h4 className={`font-bold text-base ${
                               notification.status === 'unread' ? 'text-gray-900' : 'text-gray-600'
                             }`}>
                               {notification.title}
@@ -274,25 +274,25 @@ const NotificationCenter = () => {
                                 e.stopPropagation()
                                 deleteNotification(notification.id)
                               }}
-                              className="text-gray-400 hover:text-red-600 text-xs"
+                              className="text-gray-400 hover:text-red-600 text-sm font-bold"
                             >
                               ✕
                             </button>
                           </div>
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                          <p className="text-base font-semibold text-gray-700 mt-2 line-clamp-2">
                             {notification.message}
                           </p>
-                          <div className="flex items-center gap-3 mt-2">
-                            <span className="text-xs text-gray-500">
+                          <div className="flex items-center gap-3 mt-3">
+                            <span className="text-sm font-bold text-gray-600">
                               {getTimeAgo(notification.created_at)}
                             </span>
                             {notification.status === 'unread' && (
-                              <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
+                              <span className="text-sm font-extrabold bg-blue-500 text-white px-2.5 py-1 rounded-full">
                                 New
                               </span>
                             )}
                             {notification.priority === 'urgent' && (
-                              <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+                              <span className="text-sm font-extrabold bg-red-500 text-white px-2.5 py-1 rounded-full">
                                 Urgent
                               </span>
                             )}

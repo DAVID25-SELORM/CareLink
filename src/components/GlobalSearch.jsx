@@ -136,10 +136,10 @@ const GlobalSearch = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => searchTerm && setShowResults(true)}
-          className="h-12 w-full rounded-2xl border border-slate-200 bg-[#f7f8fe] pl-11 pr-4 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+          className="h-14 w-full rounded-2xl border-2 border-slate-300 bg-[#f7f8fe] pl-12 pr-4 text-base font-semibold text-slate-800 shadow-[inset_0_1px_2px_rgba(15,23,42,0.08)] outline-none transition placeholder:text-slate-500 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
         />
         <svg
-          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          className="absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -147,43 +147,43 @@ const GlobalSearch = () => {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={2}
+            strokeWidth={2.5}
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
         {loading && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-6 w-6 border-3 border-primary border-t-transparent rounded-full"></div>
           </div>
         )}
       </div>
 
       {/* Search Results Dropdown */}
       {showResults && searchTerm && (
-        <div className="absolute z-50 mt-3 max-h-96 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.15)]">
+        <div className="absolute z-50 mt-3 max-h-96 w-full overflow-y-auto rounded-2xl border-2 border-slate-300 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
           {totalResults === 0 && !loading ? (
-            <div className="p-4 text-center text-gray-500">
-              <p className="text-sm">No results found for "{searchTerm}"</p>
+            <div className="p-6 text-center text-gray-600">
+              <p className="text-base font-semibold">No results found for "{searchTerm}"</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y-2 divide-gray-100">
               {/* Patients */}
               {results.patients.length > 0 && (
-                <div className="p-2">
-                  <p className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Patients</p>
+                <div className="p-3">
+                  <p className="px-4 py-2.5 text-sm font-extrabold text-gray-700 uppercase tracking-wide">Patients</p>
                   {results.patients.map((patient) => (
                     <Link
                       key={patient.id}
                       to="/patients"
                       onClick={() => setShowResults(false)}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg"
+                      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 rounded-xl transition active:scale-98"
                     >
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">👤</span>
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shadow-sm">
+                        <span className="text-blue-600 font-bold text-base">👤</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{patient.name}</p>
-                        <p className="text-xs text-gray-500">{patient.phone} • {patient.insurance_type || 'No insurance'}</p>
+                        <p className="text-base font-bold text-gray-900 truncate">{patient.name}</p>
+                        <p className="text-sm font-semibold text-gray-600">{patient.phone} • {patient.insurance_type || 'No insurance'}</p>
                       </div>
                     </Link>
                   ))}
@@ -192,21 +192,21 @@ const GlobalSearch = () => {
 
               {/* Drugs */}
               {results.drugs.length > 0 && (
-                <div className="p-2">
-                  <p className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Drugs</p>
+                <div className="p-3">
+                  <p className="px-4 py-2.5 text-sm font-extrabold text-gray-700 uppercase tracking-wide">Drugs</p>
                   {results.drugs.map((drug) => (
                     <Link
                       key={drug.id}
                       to="/drugs"
                       onClick={() => setShowResults(false)}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg"
+                      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 rounded-xl transition active:scale-98"
                     >
-                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                        <span className="text-green-600 font-semibold text-sm">💊</span>
+                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shadow-sm">
+                        <span className="text-green-600 font-bold text-base">💊</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{drug.name}</p>
-                        <p className="text-xs text-gray-500">{drug.category} • Stock: {drug.stock} • GH₵{drug.price}</p>
+                        <p className="text-base font-bold text-gray-900 truncate">{drug.name}</p>
+                        <p className="text-sm font-semibold text-gray-600">{drug.category} • Stock: {drug.stock} • GH₵{drug.price}</p>
                       </div>
                     </Link>
                   ))}
@@ -215,23 +215,23 @@ const GlobalSearch = () => {
 
               {/* Prescriptions */}
               {results.prescriptions.length > 0 && (
-                <div className="p-2">
-                  <p className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Prescriptions</p>
+                <div className="p-3">
+                  <p className="px-4 py-2.5 text-sm font-extrabold text-gray-700 uppercase tracking-wide">Prescriptions</p>
                   {results.prescriptions.map((prescription) => (
                     <Link
                       key={prescription.id}
                       to="/prescriptions"
                       onClick={() => setShowResults(false)}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg"
+                      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 rounded-xl transition active:scale-98"
                     >
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                        <span className="text-purple-600 font-semibold text-sm">📋</span>
+                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center shadow-sm">
+                        <span className="text-purple-600 font-bold text-base">📋</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-base font-bold text-gray-900 truncate">
                           {prescription.patients?.name || 'Unknown Patient'}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-sm font-semibold text-gray-600 truncate">
                           {prescription.diagnosis || 'No diagnosis'} • {new Date(prescription.created_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -242,8 +242,8 @@ const GlobalSearch = () => {
 
               {/* Appointments */}
               {results.appointments.length > 0 && (
-                <div className="p-2">
-                  <p className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Appointments</p>
+                <div className="p-3">
+                  <p className="px-4 py-2.5 text-sm font-extrabold text-gray-700 uppercase tracking-wide">Appointments</p>
                   {results.appointments.map((appointment) => (
                     <Link
                       key={appointment.id}

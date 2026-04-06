@@ -17,7 +17,7 @@ import { initDarkMode, toggleDarkMode, getCurrentTheme } from '../utils/darkMode
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 
 const SidebarIcon = ({ symbol }) => (
-  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/14 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
+  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/18 text-lg font-extrabold text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.22)]">
     {symbol}
   </span>
 )
@@ -156,82 +156,82 @@ const DashboardLayout = ({ children }) => {
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         >
-          <div className="border-b border-white/10 px-5 pb-4 pt-8 lg:px-6">
-            <div className="mb-3 flex justify-end lg:hidden">
+          <div className="border-b border-white/10 px-6 pb-5 pt-9 lg:px-7">
+            <div className="mb-4 flex justify-end lg:hidden">
             <button
               type="button"
               onClick={() => setMobileNavOpen(false)}
-              className="rounded-full border border-white/25 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white/90"
+              className="rounded-full border-2 border-white/30 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-white/95 hover:bg-white/10"
             >
               Close
             </button>
           </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/95 p-2 shadow-[0_10px_24px_rgba(0,0,0,0.18)] ring-1 ring-white/50">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/95 p-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.2)] ring-2 ring-white/60">
                 <img
                   src={carelinkLogo}
                   alt="CareLink HMS logo"
-                  className="h-8 w-auto"
+                  className="h-9 w-auto"
                 />
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-100/80">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-blue-100/90">
                   {branding.platformName}
                 </p>
-                <p className="mt-1 text-[1.55rem] font-bold tracking-tight text-white">
+                <p className="mt-1.5 text-[1.7rem] font-extrabold tracking-tight text-white">
                   CareLink
                 </p>
               </div>
             </div>
-            <p className="mt-4 text-sm text-blue-100/90">
+            <p className="mt-5 text-base font-semibold text-blue-100">
               {branding.hospitalName || hospitalDisplayName}
             </p>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-4 py-4 lg:px-3">
+          <nav className="flex-1 overflow-y-auto px-5 py-5 lg:px-4">
           {filteredMenuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setMobileNavOpen(false)}
-              className={`mb-1.5 flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all-smooth ${
+              className={`mb-2 flex items-center gap-4 rounded-2xl px-4 py-3.5 text-base font-bold transition-all-smooth ${
                 location.pathname === item.path
                   ? 'bg-white/16 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_10px_24px_rgba(18,52,110,0.22)]'
                   : 'text-white/82 hover:bg-white/10 hover:text-white'
               }`}
             >
               <SidebarIcon symbol={item.icon} />
-              <span className="truncate text-[15px] font-semibold tracking-tight">{item.name}</span>
+              <span className="truncate text-base font-bold tracking-tight">{item.name}</span>
             </Link>
           ))}
           </nav>
 
-          <div className="mt-auto border-t border-white/10 px-5 pb-4 pt-5 text-white/88 lg:px-6">
-            <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="mt-auto border-t-2 border-white/15 px-6 pb-5 pt-6 text-white lg:px-7">
+            <div className="mb-5 flex items-center justify-between border-b-2 border-white/15 pb-5">
               <button
                 type="button"
                 onClick={() => setMobileNavOpen((open) => !open)}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-white/92 lg:pointer-events-none"
+                className="inline-flex items-center gap-2.5 text-base font-bold text-white lg:pointer-events-none"
               >
-                <span className="text-2xl leading-none">»</span>
+                <span className="text-3xl leading-none">»</span>
               </button>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-white/60">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="text-xs font-bold uppercase tracking-[0.22em] text-white/70">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
-            <div className="mb-4 text-sm">
-              <div className="truncate font-medium">{user?.email}</div>
-              <div className="mt-1 text-xs capitalize text-white/70">{userRole}</div>
+            <div className="mb-5 text-base">
+              <div className="truncate font-bold">{user?.email}</div>
+              <div className="mt-2 text-sm font-semibold capitalize text-white/80">{userRole}</div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleDarkModeToggle}
                 title="Toggle dark mode"
-                className="rounded-2xl border border-white/14 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/16"
+                className="rounded-2xl border-2 border-white/18 bg-white/12 px-4 py-3 text-sm font-extrabold text-white transition hover:bg-white/20 active:scale-95"
               >
                 {isDarkMode ? 'Light' : 'Dark'}
               </button>
               <button
                 onClick={handleLogout}
-                className="rounded-2xl bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50"
+                className="rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-blue-700 transition hover:bg-blue-50 active:scale-95"
               >
                 Sign Out
               </button>
@@ -240,21 +240,21 @@ const DashboardLayout = ({ children }) => {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col bg-[#f4f8ff]">
-          <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white px-4 py-3 shadow-[0_1px_0_rgba(15,23,42,0.04)] sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3 lg:max-w-[180px] xl:max-w-none">
+          <header className="sticky top-0 z-20 border-b-2 border-slate-300 bg-white px-5 py-4 shadow-[0_2px_0_rgba(15,23,42,0.06)] sm:px-7 lg:px-9">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-4 lg:max-w-[180px] xl:max-w-none">
               <button
                 type="button"
                 onClick={() => setMobileNavOpen(true)}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-700 shadow-sm lg:hidden"
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-300 text-slate-800 shadow-md lg:hidden hover:bg-slate-50 active:scale-95"
               >
                 <MenuIcon />
               </button>
               <div className="hidden min-w-0 lg:block">
-                <h1 className="truncate text-lg font-bold tracking-tight text-slate-800">
+                <h1 className="truncate text-xl font-black tracking-tight text-slate-900">
                   {currentPageLabel}
                 </h1>
-                <p className="mt-0.5 text-xs text-slate-400">
+                <p className="mt-1 text-sm font-semibold text-slate-500">
                   {currentTime.toLocaleDateString('en-GB', {
                     weekday: 'short',
                     month: 'short',
@@ -268,7 +268,7 @@ const DashboardLayout = ({ children }) => {
                 </p>
               </div>
             </div>
-            <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
               <div className="min-w-0 flex-1 md:max-w-[360px] lg:max-w-[420px]">
                 <GlobalSearch />
               </div>
@@ -277,41 +277,41 @@ const DashboardLayout = ({ children }) => {
                 <button
                   type="button"
                   onClick={() => setProfileMenuOpen((open) => !open)}
-                  className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-2.5 py-1.5 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                  className="flex items-center gap-3 rounded-2xl border-2 border-slate-300 bg-white px-3 py-2 text-left shadow-md transition hover:border-slate-400 hover:bg-slate-50 active:scale-98"
                 >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#67b2ff,#2a73cf)] text-sm font-bold text-white">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#67b2ff,#2a73cf)] text-base font-extrabold text-white shadow-md">
                     {profileInitial}
                   </span>
                   <span className="hidden sm:block">
-                    <span className="block max-w-[140px] truncate text-sm font-semibold text-slate-700">
+                    <span className="block max-w-[140px] truncate text-base font-extrabold text-slate-900">
                       {profileName}
                     </span>
-                    <span className="block text-xs text-slate-400">
+                    <span className="block text-sm font-semibold text-slate-500">
                       {userRole === 'doctor' ? 'Doctor' : userRole === 'admin' ? 'Administrator' : userRole || 'Staff'}
                     </span>
                   </span>
-                  <span className="text-slate-400">
+                  <span className="text-slate-500">
                     <ChevronDownIcon />
                   </span>
                 </button>
                 {profileMenuOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_45px_rgba(15,23,42,0.14)]">
-                    <div className="rounded-xl bg-slate-50 px-3 py-2">
-                      <p className="truncate text-sm font-semibold text-slate-700">{profileName}</p>
-                      <p className="mt-0.5 truncate text-xs text-slate-400">{user?.email}</p>
+                  <div className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-64 rounded-2xl border-2 border-slate-300 bg-white p-3 shadow-[0_25px_55px_rgba(15,23,42,0.18)]">
+                    <div className="rounded-xl bg-slate-100 px-4 py-3">
+                      <p className="truncate text-base font-extrabold text-slate-900">{profileName}</p>
+                      <p className="mt-1 truncate text-sm font-semibold text-slate-600">{user?.email}</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleDarkModeToggle}
-                      className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50"
+                      className="mt-3 flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-100 active:scale-98"
                     >
                       <span>Theme</span>
-                      <span className="font-semibold text-slate-500">{isDarkMode ? 'Light' : 'Dark'}</span>
+                      <span className="font-extrabold text-slate-600">{isDarkMode ? 'Light' : 'Dark'}</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
+                      className="mt-2 flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-red-600 transition hover:bg-red-50 active:scale-98"
                     >
                       <span>Sign Out</span>
                       <span>↗</span>
@@ -323,11 +323,11 @@ const DashboardLayout = ({ children }) => {
           </div>
         </header>
 
-          <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
+          <main className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
             {children}
           </main>
 
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-3 text-xs text-slate-500 sm:px-6 lg:px-8">
+          <footer className="border-t-2 border-slate-300 bg-white px-5 py-4 text-sm font-semibold text-slate-600 sm:px-7 lg:px-9">
             <p>{branding.platformName} • {branding.hospitalName || hospitalDisplayName} • {branding.tagline || 'Connecting care, simplifying healthcare'}</p>
           </footer>
         </div>

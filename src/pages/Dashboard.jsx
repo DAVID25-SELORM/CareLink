@@ -82,37 +82,37 @@ const buildRevenueTrend = (totalRevenue) => {
 }
 
 const ActivityRow = ({ activity }) => (
-  <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-[0_5px_12px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]">
-    <div className={`flex h-11 w-11 items-center justify-center rounded-full ${activity.iconBg}`}>
-      <span className={`text-sm font-bold ${activity.iconColor}`}>{activity.icon}</span>
+  <div className="flex items-center gap-5 rounded-2xl border-2 border-slate-300 bg-white px-6 py-5 shadow-[0_10px_20px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:border-blue-400 hover:shadow-[0_20px_40px_rgba(15,23,42,0.15)]">
+    <div className={`flex h-16 w-16 items-center justify-center rounded-full ${activity.iconBg} shadow-md`}>
+      <span className={`text-2xl font-extrabold ${activity.iconColor}`}>{activity.icon}</span>
     </div>
     <div className="min-w-0 flex-1">
-      <p className="truncate text-sm font-semibold text-slate-700">{activity.title}</p>
+      <p className="truncate text-lg font-bold text-slate-900">{activity.title}</p>
     </div>
-    <p className="whitespace-nowrap text-sm text-slate-400">{activity.time}</p>
+    <p className="whitespace-nowrap text-lg font-bold text-slate-600">{activity.time}</p>
   </div>
 )
 
 const StatCard = ({ title, value, accent, delta, deltaTone }) => (
-  <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-    <p className="text-sm font-semibold text-slate-500">{title}</p>
-    <div className="mt-4 flex items-end justify-between gap-3">
-      <p className="text-[2.3rem] font-bold leading-none tracking-tight text-[#183153]">{value}</p>
-      <p className={`text-base font-bold ${deltaTone === 'negative' ? 'text-[#f59e0b]' : 'text-[#42b76c]'}`}>
-        ▲ {delta}
+  <div className="group rounded-2xl border-3 border-slate-300 bg-white p-7 shadow-[0_15px_40px_rgba(15,23,42,0.1)] transition-all duration-200 hover:-translate-y-1.5 hover:border-blue-400 hover:shadow-[0_25px_60px_rgba(15,23,42,0.18)]">
+    <p className="text-lg font-extrabold uppercase tracking-wide text-slate-700">{title}</p>
+    <div className="mt-6 flex items-end justify-between gap-4">
+      <p className="text-[3.2rem] font-black leading-none tracking-tight text-[#0f172a]">{value}</p>
+      <p className={`text-2xl font-black ${deltaTone === 'negative' ? 'text-[#f59e0b]' : 'text-[#10b981]'}`}>
+        {deltaTone === 'negative' ? '▼' : '▲'} {delta}
       </p>
     </div>
-    <div className={`mt-4 h-1.5 rounded-full ${accent}`}></div>
+    <div className={`mt-6 h-2.5 rounded-full ${accent} shadow-md`}></div>
   </div>
 )
 
 const ActionButton = ({ to, label, icon, colorClass }) => (
   <Link
     to={to}
-    className={`flex min-h-[60px] items-center justify-center gap-3 rounded-2xl px-5 py-4 text-base font-semibold text-white shadow-[0_16px_30px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5 ${colorClass}`}
+    className={`flex min-h-[84px] items-center justify-center gap-5 rounded-2xl border-2 border-white/30 px-8 py-6 text-xl font-extrabold text-white shadow-[0_25px_50px_rgba(15,23,42,0.2)] transition-all duration-200 hover:-translate-y-2 hover:scale-[1.03] hover:shadow-[0_35px_70px_rgba(15,23,42,0.28)] active:scale-[0.98] ${colorClass}`}
   >
-    <span className="text-xl leading-none">{icon}</span>
-    <span>{label}</span>
+    <span className="text-3xl leading-none">{icon}</span>
+    <span className="tracking-wide">{label}</span>
   </Link>
 )
 
@@ -264,11 +264,11 @@ const Dashboard = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex min-h-[420px] items-center justify-center rounded-[28px] border border-slate-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+        <div className="flex min-h-[420px] items-center justify-center rounded-[28px] border-2 border-slate-300 bg-white shadow-[0_20px_48px_rgba(15,23,42,0.1)]">
           <div className="text-center">
-            <div className="spinner mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-slate-800">Loading dashboard</h2>
-            <p className="mt-2 text-sm text-slate-500">Fetching live statistics from CareLink.</p>
+            <div className="spinner mx-auto mb-5"></div>
+            <h2 className="text-2xl font-extrabold text-slate-900">Loading dashboard</h2>
+            <p className="mt-3 text-lg font-semibold text-slate-600">Fetching live statistics from CareLink.</p>
           </div>
         </div>
       </DashboardLayout>
@@ -277,29 +277,29 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5">
+      <div className="space-y-6">
         {loadWarning ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-sm">
+          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-6 py-4 text-base font-bold text-amber-900 shadow-md">
             {loadWarning}
           </div>
         ) : null}
 
-        <section className="rounded-[28px] border border-slate-100 bg-[#f7f9ff] p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)] lg:p-6">
-          <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <section className="rounded-[32px] border-3 border-blue-300 bg-gradient-to-br from-[#f0f7ff] to-[#e6f2ff] p-8 shadow-[0_25px_55px_rgba(15,23,42,0.1)] lg:p-10">
+          <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#2f74c7]">{branding.platformName}</p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#183153]">Operations Dashboard</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="text-base font-black uppercase tracking-[0.28em] text-[#2563eb]">{branding.platformName}</p>
+              <h2 className="mt-4 text-5xl font-black tracking-tight text-[#0f172a]">Operations Dashboard</h2>
+              <p className="mt-3 text-lg font-bold text-slate-700">
                 {roleMessages[userRole] || roleMessages.default} {branding.hospitalName || hospitalDisplayName}.
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
-              <p className="font-semibold text-slate-700">{user?.user_metadata?.full_name || 'Dr. Smith'}</p>
-              <p className="mt-1">Low stock items: <span className="font-semibold text-[#f68b2c]">{stats.lowStockDrugs}</span></p>
+            <div className="rounded-2xl border-3 border-orange-400 bg-gradient-to-br from-orange-50 to-amber-50 px-6 py-5 shadow-xl">
+              <p className="text-lg font-black text-slate-900">{user?.user_metadata?.full_name || 'Dr. Smith'}</p>
+              <p className="mt-2.5 text-base font-extrabold text-slate-700">Low stock items: <span className="text-xl font-black text-[#ea580c]">{stats.lowStockDrugs}</span></p>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             <StatCard
               title="Total Patients Today"
               value={stats.totalPatients}
@@ -329,17 +329,17 @@ const Dashboard = () => {
         </section>
 
         {showPlatformOnboarding ? (
-          <section className="rounded-[24px] border border-blue-100 bg-white px-5 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <section className="rounded-[24px] border-2 border-blue-200 bg-white px-7 py-5 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h3 className="text-base font-semibold text-slate-800">Platform owner tools are available</h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <h3 className="text-lg font-extrabold text-slate-900">Platform owner tools are available</h3>
+                <p className="mt-2 text-base font-semibold text-slate-600">
                   Hospital onboarding, provisioning, and rollout tracking are enabled for this account.
                 </p>
               </div>
               <Link
                 to="/hospital-onboarding"
-                className="inline-flex items-center justify-center rounded-2xl bg-[#2f74c7] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#245fa7]"
+                className="inline-flex items-center justify-center rounded-2xl bg-[#2f74c7] px-7 py-4 text-base font-extrabold text-white shadow-lg transition hover:bg-[#245fa7] hover:shadow-xl active:scale-95"
               >
                 Open Onboarding Hub
               </Link>
@@ -347,81 +347,85 @@ const Dashboard = () => {
           </section>
         ) : null}
 
-        <section className="grid gap-5 xl:grid-cols-[1.12fr_0.92fr]">
-          <div className="space-y-5">
-            <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[1.4rem] font-bold tracking-tight text-[#183153]">Activity Feed</h3>
-                <span className="text-sm font-medium text-slate-400">Live updates</span>
+        <section className="grid gap-6 xl:grid-cols-[1.12fr_0.92fr]">
+          <div className="space-y-6">
+            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
+              <div className="mb-7 flex items-center justify-between border-b-2 border-slate-200 pb-5">
+                <h3 className="text-[2rem] font-black tracking-tight text-[#0f172a]">Activity Feed</h3>
+                <span className="rounded-full bg-blue-100 px-5 py-2.5 text-base font-extrabold text-blue-700 shadow-md">Live updates</span>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {recentActivities.map((activity, index) => (
                   <ActivityRow key={`${activity.title}-${index}`} activity={activity} />
                 ))}
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[1.4rem] font-bold tracking-tight text-[#183153]">CareLink Snapshot</h3>
-                <span className="rounded-full bg-[#edf4ff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#2f74c7]">Today</span>
+            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
+              <div className="mb-7 flex items-center justify-between border-b-2 border-slate-200 pb-5">
+                <h3 className="text-[2rem] font-black tracking-tight text-[#0f172a]">CareLink Snapshot</h3>
+                <span className="rounded-full bg-blue-600 px-5 py-2.5 text-base font-black uppercase tracking-[0.18em] text-white shadow-xl">Today</span>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl bg-[#f5f9ff] p-4">
-                  <p className="text-sm font-medium text-slate-500">Claims Filed</p>
-                  <p className="mt-2 text-2xl font-bold text-[#183153]">{stats.totalClaims}</p>
+              <div className="grid gap-6 sm:grid-cols-3">
+                <div className="rounded-2xl border-3 border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-lg">
+                  <p className="text-base font-extrabold uppercase tracking-wider text-blue-800">Claims Filed</p>
+                  <p className="mt-4 text-4xl font-black text-[#0f172a]">{stats.totalClaims}</p>
                 </div>
-                <div className="rounded-2xl bg-[#f4fcfb] p-4">
-                  <p className="text-sm font-medium text-slate-500">Low Stock Drugs</p>
-                  <p className="mt-2 text-2xl font-bold text-[#183153]">{stats.lowStockDrugs}</p>
+                <div className="rounded-2xl border-3 border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 p-6 shadow-lg">
+                  <p className="text-base font-extrabold uppercase tracking-wider text-teal-800">Low Stock Drugs</p>
+                  <p className="mt-4 text-4xl font-black text-[#0f172a]">{stats.lowStockDrugs}</p>
                 </div>
-                <div className="rounded-2xl bg-[#fff8f1] p-4">
-                  <p className="text-sm font-medium text-slate-500">Hospital</p>
-                  <p className="mt-2 truncate text-base font-bold text-[#183153]">{branding.hospitalName || hospitalDisplayName}</p>
+                <div className="rounded-2xl border-3 border-amber-300 bg-gradient-to-br from-amber-50 to-amber-100 p-6 shadow-lg">
+                  <p className="text-base font-extrabold uppercase tracking-wider text-amber-800">Hospital</p>
+                  <p className="mt-4 truncate text-xl font-black text-[#0f172a]">{branding.hospitalName || hospitalDisplayName}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-5">
-            <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
-              <h3 className="text-[1.35rem] font-bold tracking-tight text-[#183153]">Daily Visits</h3>
-              <div className="mt-4 h-[250px]">
+          <div className="space-y-6">
+            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
+              <h3 className="mb-3 text-[2rem] font-black tracking-tight text-[#0f172a]">Daily Visits</h3>
+              <div className="mt-5 h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={visitTrend} margin={{ top: 12, right: 6, left: -20, bottom: 0 }}>
-                    <CartesianGrid stroke="#e7eef8" vertical={false} />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#7b8ca8', fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#7b8ca8', fontSize: 12 }} />
+                    <CartesianGrid stroke="#e2e8f0" strokeWidth={1.5} vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
                     <Tooltip
                       contentStyle={{
                         borderRadius: '16px',
-                        border: '1px solid #d8e4f5',
-                        boxShadow: '0 20px 40px rgba(15, 23, 42, 0.12)',
+                        border: '2px solid #cbd5e1',
+                        boxShadow: '0 24px 48px rgba(15, 23, 42, 0.15)',
+                        fontSize: '15px',
+                        fontWeight: 700,
                       }}
                     />
-                    <Line type="monotone" dataKey="visits" stroke="#4a9bf0" strokeWidth={3} dot={{ r: 4, fill: '#4a9bf0', stroke: '#ffffff', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="visits" stroke="#3b82f6" strokeWidth={4} dot={{ r: 5, fill: '#3b82f6', stroke: '#ffffff', strokeWidth: 3 }} activeDot={{ r: 7 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
-              <h3 className="text-[1.35rem] font-bold tracking-tight text-[#183153]">Revenue This Week</h3>
-              <div className="mt-4 h-[200px]">
+            <div className="rounded-[28px] border-3 border-slate-300 bg-white p-7 shadow-[0_25px_55px_rgba(15,23,42,0.1)]">
+              <h3 className="mb-3 text-[2rem] font-black tracking-tight text-[#0f172a]">Revenue This Week</h3>
+              <div className="mt-5 h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueTrend} margin={{ top: 8, right: 6, left: -22, bottom: 0 }}>
-                    <CartesianGrid stroke="#eef3fa" vertical={false} />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#7b8ca8', fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#7b8ca8', fontSize: 12 }} />
+                    <CartesianGrid stroke="#e2e8f0" strokeWidth={1.5} vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 14, fontWeight: 600 }} />
                     <Tooltip
                       formatter={(value) => [`GH₵${Number(value).toLocaleString()}`, 'Revenue']}
                       contentStyle={{
                         borderRadius: '16px',
-                        border: '1px solid #d8e4f5',
-                        boxShadow: '0 20px 40px rgba(15, 23, 42, 0.12)',
+                        border: '2px solid #cbd5e1',
+                        boxShadow: '0 24px 48px rgba(15, 23, 42, 0.15)',
+                        fontSize: '15px',
+                        fontWeight: 700,
                       }}
                     />
-                    <Bar dataKey="revenue" radius={[12, 12, 0, 0]} fill="#24b6c7" barSize={26} />
+                    <Bar dataKey="revenue" radius={[12, 12, 0, 0]} fill="#14b8a6" barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -429,7 +433,7 @@ const Dashboard = () => {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="grid gap-5 lg:grid-cols-3">
           <ActionButton to="/patients/register" label="Add Patient" icon="＋" colorClass="bg-[linear-gradient(90deg,#2f7ae0,#2b66bf)]" />
           <ActionButton to="/pharmacy" label="Dispense Drug" icon="✚" colorClass="bg-[linear-gradient(90deg,#18c3c2,#16a2ac)]" />
           <ActionButton to="/billing" label="Create Invoice" icon="▤" colorClass="bg-[linear-gradient(90deg,#6a66d8,#5753c9)]" />
