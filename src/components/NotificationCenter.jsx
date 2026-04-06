@@ -170,10 +170,10 @@ const NotificationCenter = () => {
       {/* Bell Icon */}
       <button
         onClick={() => setShowPanel(!showPanel)}
-        className="relative p-2 rounded-lg hover:bg-gray-100 transition"
+        className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
       >
         <svg
-          className="w-6 h-6 text-gray-600"
+          className="h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -188,7 +188,7 @@ const NotificationCenter = () => {
         
         {/* Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="absolute right-0 top-0 flex h-5 w-5 translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -204,9 +204,9 @@ const NotificationCenter = () => {
           ></div>
 
           {/* Panel */}
-          <div className="absolute right-0 mt-2 w-96 max-w-[90vw] bg-white rounded-lg shadow-2xl border border-gray-200 z-40 max-h-[80vh] flex flex-col">
+          <div className="absolute right-0 z-40 mt-3 flex max-h-[80vh] w-96 max-w-[90vw] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_55px_rgba(15,23,42,0.18)]">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
+            <div className="flex items-center justify-between border-b border-blue-200 bg-gradient-to-r from-[#2f74c7] to-[#2b66b8] p-4 text-white">
               <h3 className="font-semibold text-lg">Notifications</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (

@@ -127,7 +127,7 @@ const GlobalSearch = () => {
     results.referrals.length
 
   return (
-    <div className="relative w-full max-w-xl" ref={searchRef}>
+    <div className="relative w-full" ref={searchRef}>
       {/* Search Input */}
       <div className="relative">
         <input
@@ -136,10 +136,10 @@ const GlobalSearch = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => searchTerm && setShowResults(true)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          className="h-12 w-full rounded-2xl border border-slate-200 bg-[#f7f8fe] pl-11 pr-4 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
         />
         <svg
-          className="absolute left-3 top-3 h-5 w-5 text-gray-400"
+          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -152,7 +152,7 @@ const GlobalSearch = () => {
           />
         </svg>
         {loading && (
-          <div className="absolute right-3 top-3">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
           </div>
         )}
@@ -160,7 +160,7 @@ const GlobalSearch = () => {
 
       {/* Search Results Dropdown */}
       {showResults && searchTerm && (
-        <div className="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto">
+        <div className="absolute z-50 mt-3 max-h-96 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.15)]">
           {totalResults === 0 && !loading ? (
             <div className="p-4 text-center text-gray-500">
               <p className="text-sm">No results found for "{searchTerm}"</p>
