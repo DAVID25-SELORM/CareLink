@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient'
 import { logAuditEvent } from './auditLog'
+import { fetchEncounterCcCode } from './nhisCcCodeService'
 
 // ─── Lab Sample Tracking Service ─────────────────────────────────────
 // Adds barcode/accession numbers, specimen tracking, collection workflow
@@ -15,13 +16,16 @@ export function generateAccessionNumber(prefix = 'LAB') {
 
 // ─── Create Lab Order with Sample ────────────────────────────────────
 
-export async function createLabOrder({ patientId, orderedBy, tests, clinicalNotes, priority = 'routine' }) {
+export async function createLabOrder({ patientId, encounterId = null, orderedBy, tests, clinicalNotes, priority = 'routine' }) {
   const accessionNumber = generateAccessionNumber()
+  const nhisCcCode = await fetchEncounterCcCode(encounterId)
 
   const { data: order, error } = await supabase
     .from('lab_tests')
     .insert({
       patient_id: patientId,
+      encounter_id: encounterId,
+      nhis_cc_code: nhisCcCode,
       requested_by: orderedBy,   // maps to existing FK column (was: ordered_by)
       test_type: tests.join(', '),
       accession_number: accessionNumber,

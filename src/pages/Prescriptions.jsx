@@ -8,6 +8,7 @@ import { supabase } from '../supabaseClient'
 import { generatePrescriptionPDF, downloadPDF, printPDF } from '../services/pdfService'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import PDFButton from '../components/PDFButton'
+import { getEncounterCcCode } from '../services/nhisCcCodeService'
 
 const createEmptyItem = () => ({
   drug_id: '',
@@ -70,7 +71,7 @@ const Prescriptions = () => {
     try {
       const { data, error } = await supabase
         .from('encounters')
-        .select('id, patient_id, encounter_type, chief_complaint, started_at, patients:patient_id(name)')
+        .select('id, patient_id, encounter_type, chief_complaint, started_at, nhis_cc_code, patients:patient_id(name)')
         .in('status', ['registered', 'in_progress'])
         .order('started_at', { ascending: false })
         .limit(50)
@@ -242,10 +243,12 @@ const Prescriptions = () => {
         doctors.find((doctor) => doctor.id === formData.doctor_id) ||
         currentDoctorRecord ||
         null
+      const selectedEncounter = encounters.find((encounter) => encounter.id === formData.encounter_id)
 
       const prescriptionPayload = {
         patient_id: formData.patient_id,
         encounter_id: formData.encounter_id || null,
+        nhis_cc_code: getEncounterCcCode(selectedEncounter),
         doctor_id: selectedDoctor?.id || null,
         doctor_name: getDoctorDisplayName(selectedDoctor, user?.email || null),
         diagnosis: formData.diagnosis.trim() || null,

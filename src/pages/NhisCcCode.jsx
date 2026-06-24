@@ -4,6 +4,7 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useOrg } from '../hooks/useOrg'
+import { findActiveEncounterCcCode, getCcCodeExpiry } from '../services/nhisCcCodeService'
 
 const VERIFICATION_METHODS = ['manual', 'healthflow', 'api', 'card_swipe']
 const METHOD_LABELS = {
@@ -67,7 +68,7 @@ export default function NhisCcCode() {
   const fetchPatients = async () => {
     const { data } = await supabase
       .from('patients')
-      .select('id, name, patient_id, nhis_number, phone, date_of_birth')
+      .select('id, name, patient_id, nhis_number, phone, date_of_birth, insurance_type, insurance_name')
       .order('name')
     setPatients(data || [])
     setLoading(false)
@@ -76,7 +77,7 @@ export default function NhisCcCode() {
   const fetchPatientEncounters = async (patientId) => {
     const { data } = await supabase
       .from('encounters')
-      .select('id, encounter_type, status, chief_complaint, created_at, nhis_cc_code')
+      .select('id, encounter_type, status, chief_complaint, created_at, nhis_cc_code, nhis_member_number')
       .eq('patient_id', patientId)
       .in('status', ['registered', 'in_progress', 'triaged'])
       .order('created_at', { ascending: false })
@@ -130,36 +131,55 @@ export default function NhisCcCode() {
 
     setSaving(true)
     try {
+      const normalizedCode = form.cc_code.trim().toUpperCase()
+      const verified = form.verification_method !== 'manual'
+      let existingCode = null
+
+      if (form.encounter_id) {
+        existingCode = await findActiveEncounterCcCode(form.encounter_id)
+        if (existingCode && existingCode.cc_code !== normalizedCode) {
+          toast.error(`This encounter already has active CC Code ${existingCode.cc_code}`)
+          setSaving(false)
+          return
+        }
+      }
+
       // 1. Save CC code record
-      const { error: ccErr } = await supabase.from('nhis_cc_codes').insert({
-        patient_id: form.patient_id,
-        encounter_id: form.encounter_id || null,
-        cc_code: form.cc_code.trim().toUpperCase(),
-        nhis_member_number: form.nhis_member_number.trim(),
-        patient_name: selectedPatient?.name,
-        verification_method: form.verification_method,
-        verified: form.verification_method !== 'manual',
-        verified_at: form.verification_method !== 'manual' ? new Date().toISOString() : null,
-        generated_by: user.id,
-        hospital_id: orgId,
-      })
-      if (ccErr) throw ccErr
+      if (!existingCode) {
+        const { error: ccErr } = await supabase.from('nhis_cc_codes').insert({
+          patient_id: form.patient_id,
+          encounter_id: form.encounter_id || null,
+          cc_code: normalizedCode,
+          nhis_member_number: form.nhis_member_number.trim(),
+          patient_name: selectedPatient?.name,
+          verification_method: form.verification_method,
+          verified,
+          verified_at: verified ? new Date().toISOString() : null,
+          status: 'active',
+          expires_at: getCcCodeExpiry(),
+          source_page: 'nhis_cc_code',
+          user_agent: navigator.userAgent,
+          generated_by: user.id,
+          hospital_id: orgId,
+        })
+        if (ccErr) throw ccErr
+      }
 
       // 2. Stamp the CC code onto the encounter if one is selected
       if (form.encounter_id) {
         await supabase
           .from('encounters')
           .update({
-            nhis_cc_code: form.cc_code.trim().toUpperCase(),
+            nhis_cc_code: normalizedCode,
             nhis_member_number: form.nhis_member_number.trim(),
-            nhis_verified: form.verification_method !== 'manual',
-            nhis_verified_at: form.verification_method !== 'manual' ? new Date().toISOString() : null,
+            nhis_verified: verified,
+            nhis_verified_at: verified ? new Date().toISOString() : null,
             insurance_type: 'nhis',
           })
           .eq('id', form.encounter_id)
       }
 
-      toast.success(`CC Code ${form.cc_code} saved successfully`)
+      toast.success(`CC Code ${normalizedCode} saved successfully`)
       setForm({ patient_id: '', encounter_id: '', nhis_member_number: '', cc_code: '', verification_method: 'manual' })
       setSelectedPatient(null)
       setGeneratedCode('')
@@ -174,12 +194,16 @@ export default function NhisCcCode() {
     }
   }
 
-  const filteredPatients = patients.filter(p =>
-    !searchPatient ||
-    p.name?.toLowerCase().includes(searchPatient.toLowerCase()) ||
-    p.patient_id?.toLowerCase().includes(searchPatient.toLowerCase()) ||
-    p.nhis_number?.toLowerCase().includes(searchPatient.toLowerCase())
-  )
+  const filteredPatients = patients
+    .filter(p =>
+      !searchPatient ||
+      p.name?.toLowerCase().includes(searchPatient.toLowerCase()) ||
+      p.patient_id?.toLowerCase().includes(searchPatient.toLowerCase()) ||
+      p.nhis_number?.toLowerCase().includes(searchPatient.toLowerCase())
+    )
+    .sort((a, b) => Number(Boolean(b.nhis_number || b.insurance_type === 'nhis')) - Number(Boolean(a.nhis_number || a.insurance_type === 'nhis')))
+
+  const selectedEncounter = encounters.find((enc) => enc.id === form.encounter_id)
 
   const filteredHistory = history.filter(h =>
     !historySearch ||
@@ -296,6 +320,11 @@ export default function NhisCcCode() {
                           </option>
                         ))}
                       </select>
+                      {selectedEncounter?.nhis_cc_code && (
+                        <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded px-3 py-2">
+                          This encounter already has active CC Code {selectedEncounter.nhis_cc_code}. Reuse it for claims unless it must be corrected by an admin.
+                        </p>
+                      )}
                     </div>
                   )}
 

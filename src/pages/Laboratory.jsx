@@ -8,6 +8,7 @@ import { generateLabResultPDF, downloadPDF, printPDF } from '../services/pdfServ
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import PDFButton from '../components/PDFButton'
 import FileUpload from '../components/FileUpload'
+import { getEncounterCcCode } from '../services/nhisCcCodeService'
 
 /**
  * Laboratory Management Page
@@ -161,7 +162,7 @@ const Laboratory = () => {
     try {
       const { data, error } = await supabase
         .from('encounters')
-        .select('id, patient_id, encounter_type, chief_complaint, started_at, patients:patient_id(name)')
+        .select('id, patient_id, encounter_type, chief_complaint, started_at, nhis_cc_code, patients:patient_id(name)')
         .in('status', ['registered', 'in_progress'])
         .order('started_at', { ascending: false })
         .limit(50)
@@ -198,9 +199,11 @@ const Laboratory = () => {
     e.preventDefault()
 
     try {
+      const selectedEncounter = encounters.find((enc) => enc.id === formData.encounter_id)
       const labTestPayload = {
         patient_id: formData.patient_id,
         encounter_id: formData.encounter_id || null,
+        nhis_cc_code: getEncounterCcCode(selectedEncounter),
         test_name: formData.test_name,
         test_type: formData.test_type,
         notes: formData.notes,

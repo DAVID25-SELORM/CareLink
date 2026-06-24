@@ -7,6 +7,7 @@ import { supabase } from '../supabaseClient'
 import { generateBillingReceiptPDF, downloadPDF, printPDF } from '../services/pdfService'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import PDFButton from '../components/PDFButton'
+import { fetchEncounterCcCode } from '../services/nhisCcCodeService'
 
 /**
  * Billing Page
@@ -168,11 +169,13 @@ const Billing = () => {
       })
 
       if (paymentMethod === 'insurance' && insuranceType) {
+        const nhisCcCode = selectedPrescription.nhis_cc_code || await fetchEncounterCcCode(selectedPrescription.encounter_id)
         const claimPayload = {
           patient_id: selectedPrescription.patient_id,
           payment_id: paymentRecord.id,
           prescription_id: selectedPrescription.id,
           encounter_id: selectedPrescription.encounter_id || null,
+          nhis_cc_code: nhisCcCode,
           insurance_type: insuranceType,
           insurance_name: selectedPrescription.patients?.insurance_name || null,
           amount: totalAmount,

@@ -87,6 +87,11 @@ const Claims = () => {
 
         // Attempt live submission to NHIA eClaims portal
         if (claim?.insurance_type === 'nhis') {
+          if (!claim.nhis_cc_code) {
+            toast.error('NHIS claim requires a CC Code before submission')
+            return
+          }
+
           toast.info('Submitting to NHIA portal…')
           const result = await submitClaimToNhia(claim)
 
@@ -244,7 +249,7 @@ const Claims = () => {
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="table-scroll">
-            <table className="min-w-[960px] divide-y divide-gray-200">
+            <table className="min-w-[1080px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -255,6 +260,9 @@ const Claims = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Insurance Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  CC Code
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Amount
@@ -276,7 +284,7 @@ const Claims = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredClaims.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
                     No claims found
                   </td>
                 </tr>
@@ -292,6 +300,19 @@ const Claims = () => {
                     </td>
                     <td className="px-6 py-4">
                       {getCoverageLabel(claim)}
+                    </td>
+                    <td className="px-6 py-4">
+                      {claim.nhis_cc_code ? (
+                        <span className="font-mono font-semibold text-green-700 bg-green-50 px-2 py-1 rounded">
+                          {claim.nhis_cc_code}
+                        </span>
+                      ) : claim.insurance_type === 'nhis' ? (
+                        <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                          Missing
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">N/A</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 font-semibold">
                       GHS {parseFloat(claim.amount).toFixed(2)}
