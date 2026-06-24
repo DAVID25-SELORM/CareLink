@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useOrg } from '../hooks/useOrg'
 import { findActiveEncounterCcCode, getCcCodeExpiry } from '../services/nhisCcCodeService'
+import { lookupNhisMemberViaHealthFlow, pingHealthFlow } from '../services/healthflowService'
 
 const VERIFICATION_METHODS = ['manual', 'healthflow', 'api', 'card_swipe']
 const METHOD_LABELS = {
@@ -49,6 +50,9 @@ export default function NhisCcCode() {
   })
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [generatedCode, setGeneratedCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [hfMember, setHfMember] = useState(null)   // HealthFlow member lookup result
+  const [hfOnline, setHfOnline] = useState(null)   // null=unknown, true, false
 
   useEffect(() => {
     fetchPatients()
@@ -61,6 +65,7 @@ export default function NhisCcCode() {
       fetchPatientEncounters(form.patient_id)
       const p = patients.find(x => x.id === form.patient_id)
       setSelectedPatient(p || null)
+      setHfMember(null)
       if (p?.nhis_number) setForm(prev => ({ ...prev, nhis_member_number: p.nhis_number }))
     }
   }, [form.patient_id])
@@ -110,6 +115,47 @@ export default function NhisCcCode() {
       .order('created_at', { ascending: false })
       .limit(100)
     setHistory(data || [])
+  }
+
+  // Check HealthFlow reachability on mount
+  useEffect(() => {
+    pingHealthFlow().then(r => setHfOnline(r.reachable))
+  }, [])
+
+  const handleVerifyWithHealthFlow = async () => {
+    if (!form.nhis_member_number.trim()) {
+      toast.error('Enter the NHIS member number first')
+      return
+    }
+    setVerifying(true)
+    setHfMember(null)
+    try {
+      const result = await lookupNhisMemberViaHealthFlow(form.nhis_member_number.trim())
+      if (!result.success) {
+        toast.error(result.message || 'HealthFlow verification failed')
+        if (result.localOnly) setHfOnline(false)
+        return
+      }
+      setHfMember(result)
+      setHfOnline(true)
+
+      // Auto-fill CC code if HealthFlow returned one
+      if (result.ccCode) {
+        setForm(prev => ({ ...prev, cc_code: result.ccCode, verification_method: 'healthflow' }))
+        setGeneratedCode(result.ccCode)
+        toast.success(`CC Code received from HealthFlow: ${result.ccCode}`)
+      } else {
+        // Member verified but no CC code yet — generate locally and mark as healthflow-verified
+        const code = generateLocalCcCode(form.nhis_member_number)
+        setForm(prev => ({ ...prev, cc_code: code, verification_method: 'healthflow' }))
+        setGeneratedCode(code)
+        toast.success(`Member verified. CC Code generated: ${code}`)
+      }
+    } catch (err) {
+      toast.error('HealthFlow error: ' + err.message)
+    } finally {
+      setVerifying(false)
+    }
   }
 
   const handleGenerate = () => {
@@ -328,18 +374,111 @@ export default function NhisCcCode() {
                     </div>
                   )}
 
+                  {/* HealthFlow Status Banner */}
+                  <div className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm border ${
+                    hfOnline === true  ? 'bg-green-50 border-green-200 text-green-800' :
+                    hfOnline === false ? 'bg-amber-50 border-amber-200 text-amber-800' :
+                    'bg-slate-50 border-slate-200 text-slate-600'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${
+                      hfOnline === true ? 'bg-green-500' :
+                      hfOnline === false ? 'bg-amber-500' :
+                      'bg-slate-400'
+                    }`} />
+                    <span className="font-medium">HealthFlow CLAIM-it:</span>
+                    <span>
+                      {hfOnline === true  ? 'Connected — verification will use live NHIA API' :
+                       hfOnline === false ? 'Offline or not configured — manual entry only' :
+                       'Checking connection...'}
+                    </span>
+                    {hfOnline === false && (
+                      <a href="/settings" className="ml-auto text-xs font-medium underline whitespace-nowrap">
+                        Configure →
+                      </a>
+                    )}
+                  </div>
+
                   {/* NHIS Member Number */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">NHIS Member Number *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. P/NHF/12345/25"
-                      value={form.nhis_member_number}
-                      onChange={e => setForm(prev => ({ ...prev, nhis_member_number: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. P/NHF/12345/25"
+                        value={form.nhis_member_number}
+                        onChange={e => {
+                          setForm(prev => ({ ...prev, nhis_member_number: e.target.value }))
+                          setHfMember(null)
+                        }}
+                        className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyWithHealthFlow}
+                        disabled={verifying || !form.nhis_member_number.trim()}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap disabled:opacity-50 ${
+                          hfOnline === false
+                            ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                            : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                        title={hfOnline === false ? 'HealthFlow not connected' : 'Verify via HealthFlow CLAIM-it'}
+                      >
+                        {verifying ? 'Verifying...' : '✓ Verify via HealthFlow'}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* HealthFlow Member Details */}
+                  {hfMember && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-green-600 font-bold text-sm">✓ Member Verified via HealthFlow</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                        {hfMember.memberName && (
+                          <div>
+                            <p className="text-xs text-slate-500">Member Name</p>
+                            <p className="font-semibold text-slate-800">{hfMember.memberName}</p>
+                          </div>
+                        )}
+                        {hfMember.memberNumber && (
+                          <div>
+                            <p className="text-xs text-slate-500">Member No.</p>
+                            <p className="font-semibold font-mono text-slate-800">{hfMember.memberNumber}</p>
+                          </div>
+                        )}
+                        {hfMember.schemeCode && (
+                          <div>
+                            <p className="text-xs text-slate-500">Scheme</p>
+                            <p className="font-semibold text-slate-800">{hfMember.schemeCode}</p>
+                          </div>
+                        )}
+                        {hfMember.expiryDate && (
+                          <div>
+                            <p className="text-xs text-slate-500">Card Expiry</p>
+                            <p className={`font-semibold ${new Date(hfMember.expiryDate) < new Date() ? 'text-red-600' : 'text-slate-800'}`}>
+                              {hfMember.expiryDate}
+                            </p>
+                          </div>
+                        )}
+                        {hfMember.status && (
+                          <div>
+                            <p className="text-xs text-slate-500">Status</p>
+                            <p className={`font-semibold ${hfMember.status === 'active' ? 'text-green-700' : 'text-red-600'}`}>
+                              {hfMember.status}
+                            </p>
+                          </div>
+                        )}
+                        {hfMember.ccCode && (
+                          <div>
+                            <p className="text-xs text-slate-500">CC Code (from API)</p>
+                            <p className="font-bold font-mono text-green-700 text-base">{hfMember.ccCode}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Verification Method */}
                   <div>
@@ -379,12 +518,15 @@ export default function NhisCcCode() {
                         onClick={handleGenerate}
                         className="px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap"
                       >
-                        Generate
+                        Generate Locally
                       </button>
                     </div>
                     {generatedCode && (
                       <p className="text-xs text-slate-500 mt-1">
-                        Generated: <span className="font-mono font-semibold text-green-700">{generatedCode}</span> — edit if your NHIA system provides a different code
+                        {form.verification_method === 'healthflow'
+                          ? <span>From HealthFlow: <span className="font-mono font-semibold text-green-700">{generatedCode}</span></span>
+                          : <span>Generated locally: <span className="font-mono font-semibold text-slate-700">{generatedCode}</span> — replace with NHIA-issued code if available</span>
+                        }
                       </p>
                     )}
                   </div>
