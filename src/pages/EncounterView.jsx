@@ -166,6 +166,15 @@ const EncounterView = () => {
                   <span className="font-medium">Chief Complaint:</span> {encounter.chief_complaint}
                 </p>
               )}
+              {encounter.nhis_cc_code && (
+                <div className="mt-2 inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1">
+                  <span className="text-xs text-green-600 font-medium">NHIS CC Code</span>
+                  <span className="font-mono font-bold text-green-800 tracking-wider">{encounter.nhis_cc_code}</span>
+                  {encounter.nhis_member_number && (
+                    <span className="text-xs text-green-600">· {encounter.nhis_member_number}</span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               {isActive && isDoctor && (

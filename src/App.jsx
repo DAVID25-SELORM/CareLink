@@ -54,6 +54,7 @@ const NotificationSettings = lazy(() => import('./pages/NotificationSettings'))
 const HRPayroll = lazy(() => import('./pages/HRPayroll'))
 const Ambulance = lazy(() => import('./pages/Ambulance'))
 const PatientPortal = lazy(() => import('./pages/PatientPortal'))
+const NhisCcCode = lazy(() => import('./pages/NhisCcCode'))
 
 /**
  * CareLink HMS - Main Application Component
@@ -427,6 +428,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <PatientPortal />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/nhis-cc-code"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'nurse', 'doctor', 'cashier', 'records_officer']}>
+                    <NhisCcCode />
                   </ProtectedRoute>
                 }
               />

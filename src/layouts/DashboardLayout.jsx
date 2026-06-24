@@ -135,6 +135,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'HR & Payroll', path: '/hr-payroll', icon: '◒', roles: ['admin'] },
     { name: 'Notifications', path: '/notifications', icon: '◔', roles: ['admin'] },
     { name: 'Patient Portal', path: '/patient-portal', icon: '◕', roles: ['admin', 'doctor', 'nurse', 'pharmacist', 'cashier', 'lab_tech', 'records_officer', 'staff'] },
+    { name: 'NHIS CC Code', path: '/nhis-cc-code', icon: '🏷', roles: ['admin', 'nurse', 'doctor', 'cashier', 'records_officer'] },
     { name: 'Settings', path: '/settings', icon: '⚙', roles: ['admin', 'doctor', 'nurse', 'pharmacist', 'cashier', 'lab_tech', 'records_officer', 'staff'] },
   ]
 
