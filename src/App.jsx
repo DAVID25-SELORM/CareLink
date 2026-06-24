@@ -1,39 +1,59 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './hooks/useAuth'
+import { OrgProvider } from './hooks/useOrg'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppErrorBoundary from './components/AppErrorBoundary'
+import OfflineIndicator from './components/OfflineIndicator'
 
-// Pages
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import DoctorDashboard from './pages/DoctorDashboard'
-import NurseDashboard from './pages/NurseDashboard'
-import UserManagement from './pages/UserManagement'
-import Patients from './pages/Patients'
-import PatientRegistration from './pages/PatientRegistration'
-import Prescriptions from './pages/Prescriptions'
-import Cashier from './pages/Cashier'
-import Pharmacy from './pages/Pharmacy'
-import DrugManagement from './pages/DrugManagement'
-import Billing from './pages/Billing'
-import Claims from './pages/Claims'
-import Laboratory from './pages/Laboratory'
-import Appointments from './pages/Appointments'
-import Referrals from './pages/Referrals'
-import Reports from './pages/Reports'
-import RecordsDashboard from './pages/RecordsDashboard'
-import HospitalOnboarding from './pages/HospitalOnboarding'
-import HospitalProfile from './pages/HospitalProfile'
-import QueueManagement from './pages/QueueManagement'
-import Telemedicine from './pages/Telemedicine'
-import BedManagement from './pages/BedManagement'
-import InventoryManagement from './pages/InventoryManagement'
-import EmergencyTriage from './pages/EmergencyTriage'
-import BloodBank from './pages/BloodBank'
-import PatientDetail from './pages/PatientDetail'
-import ServicesCatalog from './pages/ServicesCatalog'
+// Route-level code splitting — each page loads only when first visited
+const Login = lazy(() => import('./pages/Login'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const DoctorDashboard = lazy(() => import('./pages/DoctorDashboard'))
+const NurseDashboard = lazy(() => import('./pages/NurseDashboard'))
+const UserManagement = lazy(() => import('./pages/UserManagement'))
+const Patients = lazy(() => import('./pages/Patients'))
+const PatientRegistration = lazy(() => import('./pages/PatientRegistration'))
+const Prescriptions = lazy(() => import('./pages/Prescriptions'))
+const Cashier = lazy(() => import('./pages/Cashier'))
+const Pharmacy = lazy(() => import('./pages/Pharmacy'))
+const DrugManagement = lazy(() => import('./pages/DrugManagement'))
+const Billing = lazy(() => import('./pages/Billing'))
+const Claims = lazy(() => import('./pages/Claims'))
+const Laboratory = lazy(() => import('./pages/Laboratory'))
+const Appointments = lazy(() => import('./pages/Appointments'))
+const Referrals = lazy(() => import('./pages/Referrals'))
+const Reports = lazy(() => import('./pages/Reports'))
+const RecordsDashboard = lazy(() => import('./pages/RecordsDashboard'))
+const HospitalOnboarding = lazy(() => import('./pages/HospitalOnboarding'))
+const HospitalProfile = lazy(() => import('./pages/HospitalProfile'))
+const QueueManagement = lazy(() => import('./pages/QueueManagement'))
+const Telemedicine = lazy(() => import('./pages/Telemedicine'))
+const BedManagement = lazy(() => import('./pages/BedManagement'))
+const InventoryManagement = lazy(() => import('./pages/InventoryManagement'))
+const EmergencyTriage = lazy(() => import('./pages/EmergencyTriage'))
+const BloodBank = lazy(() => import('./pages/BloodBank'))
+const PatientDetail = lazy(() => import('./pages/PatientDetail'))
+const ServicesCatalog = lazy(() => import('./pages/ServicesCatalog'))
+const EncounterView = lazy(() => import('./pages/EncounterView'))
+const NursingCare = lazy(() => import('./pages/NursingCare'))
+const WardRounds = lazy(() => import('./pages/WardRounds'))
+const DHIMS2Reports = lazy(() => import('./pages/DHIMS2Reports'))
+const SampleTracking = lazy(() => import('./pages/SampleTracking'))
+const Landing = lazy(() => import('./pages/Landing'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Radiology = lazy(() => import('./pages/Radiology'))
+const Discharge = lazy(() => import('./pages/Discharge'))
+const Procurement = lazy(() => import('./pages/Procurement'))
+const Theatre = lazy(() => import('./pages/Theatre'))
+const Maternity = lazy(() => import('./pages/Maternity'))
+const Dietary = lazy(() => import('./pages/Dietary'))
+const NotificationSettings = lazy(() => import('./pages/NotificationSettings'))
+const HRPayroll = lazy(() => import('./pages/HRPayroll'))
+const Ambulance = lazy(() => import('./pages/Ambulance'))
+const PatientPortal = lazy(() => import('./pages/PatientPortal'))
 
 /**
  * CareLink HMS - Main Application Component
@@ -46,22 +66,24 @@ import ServicesCatalog from './pages/ServicesCatalog'
 function App() {
   return (
     <AuthProvider>
+      <OrgProvider>
       <AppErrorBoundary>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <div className="App">
+            <Suspense fallback={
+              <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-slate-500 text-sm">Loading...</p>
+                </div>
+              </div>
+            }>
             <Routes>
               {/* Public Routes */}
+              <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               
               {/* Protected Routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/dashboard"
               element={
@@ -278,6 +300,136 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/encounter/:encounterId"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <EncounterView />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/nursing-care"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'nurse']}>
+                    <NursingCare />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ward-rounds"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor']}>
+                    <WardRounds />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dhims2-reports"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <DHIMS2Reports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sample-tracking"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'lab_tech', 'doctor', 'nurse']}>
+                    <SampleTracking />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/radiology"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor', 'lab_tech', 'nurse']}>
+                    <Radiology />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/discharge"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Discharge />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/procurement"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'pharmacist']}>
+                    <Procurement />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/theatre"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Theatre />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/maternity"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Maternity />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dietary"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'nurse', 'doctor']}>
+                    <Dietary />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <NotificationSettings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/hr-payroll"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <HRPayroll />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ambulance"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'nurse', 'doctor']}>
+                    <Ambulance />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/patient-portal"
+                element={
+                  <ProtectedRoute>
+                    <PatientPortal />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* 404 - Not Found */}
               <Route
@@ -302,7 +454,8 @@ function App() {
                 }
               />
             </Routes>
-            
+            </Suspense>
+
             {/* Toast Notifications */}
             <ToastContainer
               position="top-right"
@@ -315,9 +468,11 @@ function App() {
               draggable
               pauseOnHover
             />
+            <OfflineIndicator />
           </div>
         </Router>
       </AppErrorBoundary>
+      </OrgProvider>
     </AuthProvider>
   )
 }

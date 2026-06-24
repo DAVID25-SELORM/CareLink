@@ -48,12 +48,14 @@ const Prescriptions = () => {
   const [doctors, setDoctors] = useState([])
   const [prescriptions, setPrescriptions] = useState([])
   const [currentDoctorRecord, setCurrentDoctorRecord] = useState(null)
+  const [encounters, setEncounters] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 20
   const [formData, setFormData] = useState({
     patient_id: '',
     doctor_id: '',
+    encounter_id: '',
     diagnosis: '',
     notes: '',
     items: [createEmptyItem()],
@@ -61,7 +63,23 @@ const Prescriptions = () => {
 
   useEffect(() => {
     fetchPageData()
+    fetchEncounters()
   }, [user?.email, userRole, currentPage])
+
+  const fetchEncounters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('encounters')
+        .select('id, patient_id, encounter_type, chief_complaint, started_at, patients:patient_id(name)')
+        .in('status', ['registered', 'in_progress'])
+        .order('started_at', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      setEncounters(data || [])
+    } catch (error) {
+      console.error('Error fetching encounters:', error)
+    }
+  }
 
   const fetchPageData = async () => {
     setLoading(true)
@@ -159,6 +177,7 @@ const Prescriptions = () => {
     setFormData({
       patient_id: '',
       doctor_id: userRole === 'doctor' ? currentDoctorRecord?.id || '' : '',
+      encounter_id: '',
       diagnosis: '',
       notes: '',
       items: [createEmptyItem()],
@@ -226,6 +245,7 @@ const Prescriptions = () => {
 
       const prescriptionPayload = {
         patient_id: formData.patient_id,
+        encounter_id: formData.encounter_id || null,
         doctor_id: selectedDoctor?.id || null,
         doctor_name: getDoctorDisplayName(selectedDoctor, user?.email || null),
         diagnosis: formData.diagnosis.trim() || null,
@@ -447,6 +467,31 @@ const Prescriptions = () => {
                       ))}
                     </select>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Encounter (Visit)
+                  </label>
+                  <select
+                    value={formData.encounter_id}
+                    onChange={(event) => {
+                      const enc = encounters.find(en => en.id === event.target.value)
+                      setFormData((prev) => ({
+                        ...prev,
+                        encounter_id: event.target.value,
+                        patient_id: enc?.patient_id || prev.patient_id
+                      }))
+                    }}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">No encounter (standalone)</option>
+                    {encounters.map((enc) => (
+                      <option key={enc.id} value={enc.id}>
+                        {enc.patients?.name} — {enc.encounter_type} — {new Date(enc.started_at).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

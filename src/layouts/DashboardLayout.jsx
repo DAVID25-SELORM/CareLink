@@ -111,16 +111,31 @@ const DashboardLayout = ({ children }) => {
     { name: 'Billing', path: '/billing', icon: '▣', roles: ['admin'] },
     { name: 'Claims', path: '/claims', icon: '◨', roles: ['admin'] },
     { name: 'Laboratory', path: '/laboratory', icon: '◧', roles: ['admin', 'doctor', 'lab_tech'] },
+    { name: 'Sample Tracking', path: '/sample-tracking', icon: '⌬', roles: ['admin', 'lab_tech', 'doctor', 'nurse'] },
     { name: 'Appointments', path: '/appointments', icon: '◫', roles: ['admin', 'doctor'] },
     { name: 'Telemedicine', path: '/telemedicine', icon: '◍', roles: ['admin', 'doctor'] },
+    { name: 'Nursing Care', path: '/nursing-care', icon: '♥', roles: ['admin', 'nurse'] },
+    { name: 'Ward Rounds', path: '/ward-rounds', icon: '⚕', roles: ['admin', 'doctor'] },
     { name: 'Bed Management', path: '/bed-management', icon: '▤', roles: ['admin', 'nurse'] },
     { name: 'Referrals', path: '/referrals', icon: '⇄', roles: ['admin', 'doctor'] },
     { name: 'Records', path: '/records', icon: '▥', roles: ['admin', 'records_officer'] },
     { name: 'Inventory', path: '/inventory', icon: '▦', roles: ['admin'] },
+    { name: 'Procurement', path: '/procurement', icon: '🏭', roles: ['admin', 'pharmacist'] },
     { name: 'Blood Bank', path: '/blood-bank', icon: '◍', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Radiology', path: '/radiology', icon: '📷', roles: ['admin', 'doctor', 'lab_tech', 'nurse'] },
+    { name: 'Discharge', path: '/discharge', icon: '📋', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'Services & Fees', path: '/services-catalog', icon: '¤', roles: ['admin', 'cashier', 'doctor', 'nurse', 'pharmacist', 'records_officer'] },
     { name: 'Reports', path: '/reports', icon: '▮', roles: ['admin'] },
+    { name: 'DHIMS2 Reports', path: '/dhims2-reports', icon: '⊞', roles: ['admin'] },
     { name: 'Users', path: '/users', icon: '◎', roles: ['admin'] },
+    { name: 'Theatre', path: '/theatre', icon: '⚔', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Maternity', path: '/maternity', icon: '♀', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Dietary', path: '/dietary', icon: '◑', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Ambulance', path: '/ambulance', icon: '⚡', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'HR & Payroll', path: '/hr-payroll', icon: '◒', roles: ['admin'] },
+    { name: 'Notifications', path: '/notifications', icon: '◔', roles: ['admin'] },
+    { name: 'Patient Portal', path: '/patient-portal', icon: '◕', roles: ['admin', 'doctor', 'nurse', 'pharmacist', 'cashier', 'lab_tech', 'records_officer', 'staff'] },
+    { name: 'Settings', path: '/settings', icon: '⚙', roles: ['admin', 'doctor', 'nurse', 'pharmacist', 'cashier', 'lab_tech', 'records_officer', 'staff'] },
   ]
 
   const filteredMenuItems = menuItems.filter((item) => {
@@ -130,7 +145,7 @@ const DashboardLayout = ({ children }) => {
 
     if (userRole === 'admin') return true
     if (!userRole || userRole === 'staff') {
-      return ['/dashboard', '/patients', '/patients/register'].includes(item.path)
+      return ['/dashboard', '/patients', '/patients/register', '/patient-portal'].includes(item.path)
     }
     return item.roles.includes(userRole)
   })

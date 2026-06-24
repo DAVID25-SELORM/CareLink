@@ -1,0 +1,149 @@
+-- ============================================
+-- Migration 007: Encounter Threading
+-- Add encounter_id to legacy tables + discharge_summaries
+-- ============================================
+
+-- 1. Add encounter_id to prescriptions table
+ALTER TABLE prescriptions 
+  ADD COLUMN IF NOT EXISTS encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_prescriptions_encounter ON prescriptions(encounter_id);
+
+COMMENT ON COLUMN prescriptions.encounter_id IS 'Links prescription to the clinical encounter';
+
+-- 2. Add encounter_id to payments table
+ALTER TABLE payments 
+  ADD COLUMN IF NOT EXISTS encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_payments_encounter ON payments(encounter_id);
+
+COMMENT ON COLUMN payments.encounter_id IS 'Links payment to the clinical encounter';
+
+-- 3. Add encounter_id to claims table (if not already present)
+ALTER TABLE claims 
+  ADD COLUMN IF NOT EXISTS encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_claims_encounter_legacy ON claims(encounter_id);
+
+-- 4. Add encounter_id to lab_tests table
+ALTER TABLE lab_tests 
+  ADD COLUMN IF NOT EXISTS encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_lab_tests_encounter ON lab_tests(encounter_id);
+
+COMMENT ON COLUMN lab_tests.encounter_id IS 'Links lab test to the clinical encounter';
+
+-- 5. Add encounter_id to admissions table
+ALTER TABLE admissions 
+  ADD COLUMN IF NOT EXISTS encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_admissions_encounter ON admissions(encounter_id);
+
+COMMENT ON COLUMN admissions.encounter_id IS 'Links admission to the clinical encounter';
+
+-- 6. Add encounter_id to triage_assessments table
+ALTER TABLE triage_assessments 
+  ADD COLUMN IF NOT EXISTS encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_triage_encounter ON triage_assessments(encounter_id);
+
+COMMENT ON COLUMN triage_assessments.encounter_id IS 'Links triage assessment to the clinical encounter';
+
+-- Fix triage_assessments column names (severity vs triage_level mismatch)
+ALTER TABLE triage_assessments 
+  ADD COLUMN IF NOT EXISTS severity TEXT;
+
+UPDATE triage_assessments SET severity = triage_level WHERE severity IS NULL;
+
+ALTER TABLE triage_assessments 
+  ADD COLUMN IF NOT EXISTS pain_score TEXT;
+
+UPDATE triage_assessments SET pain_score = COALESCE(pain_scale::TEXT, '0') WHERE pain_score IS NULL;
+
+-- Add notes alias column (code sends 'notes', DB has 'assessment_notes')
+ALTER TABLE triage_assessments 
+  ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- Give triage_level a default so new inserts without it don't violate NOT NULL
+ALTER TABLE triage_assessments ALTER COLUMN triage_level SET DEFAULT 'yellow';
+
+-- 7. Create discharge_summaries table
+CREATE TABLE IF NOT EXISTS discharge_summaries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  admission_id UUID REFERENCES admissions(id) ON DELETE CASCADE,
+  encounter_id UUID REFERENCES encounters(id) ON DELETE SET NULL,
+  final_diagnosis TEXT NOT NULL,
+  icd10_code TEXT,
+  discharge_instructions TEXT NOT NULL,
+  medications_at_discharge TEXT,
+  follow_up_date DATE,
+  follow_up_notes TEXT,
+  discharge_condition TEXT NOT NULL CHECK (discharge_condition IN ('improved', 'unchanged', 'deteriorated', 'cured')),
+  discharge_type TEXT NOT NULL DEFAULT 'regular' CHECK (discharge_type IN ('regular', 'against_advice', 'transfer', 'deceased')),
+  discharge_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  discharged_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_discharge_patient ON discharge_summaries(patient_id);
+CREATE INDEX IF NOT EXISTS idx_discharge_admission ON discharge_summaries(admission_id);
+CREATE INDEX IF NOT EXISTS idx_discharge_encounter ON discharge_summaries(encounter_id);
+CREATE INDEX IF NOT EXISTS idx_discharge_date ON discharge_summaries(discharge_date DESC);
+
+COMMENT ON TABLE discharge_summaries IS 'Structured discharge documentation linking admission and encounter';
+
+-- 8. Enable RLS on discharge_summaries
+ALTER TABLE discharge_summaries ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Staff can view discharge summaries
+DROP POLICY IF EXISTS "Staff view discharge summaries" ON discharge_summaries;
+CREATE POLICY "Staff view discharge summaries"
+  ON discharge_summaries FOR SELECT
+  USING (
+    auth.jwt() ->> 'role' IN ('admin', 'doctor', 'nurse', 'records_officer')
+  );
+
+-- Policy: Doctors and nurses can create discharge summaries
+DROP POLICY IF EXISTS "Clinical staff create discharge summaries" ON discharge_summaries;
+CREATE POLICY "Clinical staff create discharge summaries"
+  ON discharge_summaries FOR INSERT
+  WITH CHECK (
+    auth.jwt() ->> 'role' IN ('admin', 'doctor', 'nurse')
+  );
+
+-- 9. Update existing admissions with discharge_summary data
+-- (Optional: migrate old discharge_summary text to new table)
+
+-- 10. Triggers
+DROP TRIGGER IF EXISTS update_discharge_summaries_timestamp ON discharge_summaries;
+CREATE TRIGGER update_discharge_summaries_timestamp
+  BEFORE UPDATE ON discharge_summaries
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- 11. Fix ward_rounds for WardRounds.jsx
+-- admission_id is NOT NULL but code never provides it (rounds can exist without a formal admission)
+ALTER TABLE ward_rounds ALTER COLUMN admission_id DROP NOT NULL;
+-- Code sends ward_id, clinical_findings, orders, notes — columns that don't exist yet
+ALTER TABLE ward_rounds ADD COLUMN IF NOT EXISTS ward_id UUID REFERENCES wards(id) ON DELETE SET NULL;
+ALTER TABLE ward_rounds ADD COLUMN IF NOT EXISTS clinical_findings TEXT;
+ALTER TABLE ward_rounds ADD COLUMN IF NOT EXISTS orders TEXT;
+ALTER TABLE ward_rounds ADD COLUMN IF NOT EXISTS notes TEXT;
+CREATE INDEX IF NOT EXISTS idx_ward_rounds_ward ON ward_rounds(ward_id);
+
+-- 12. Add missing columns to clinical_orders for Radiology.jsx
+-- Code sets started_at when scan begins, result_notes for findings
+ALTER TABLE clinical_orders ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
+ALTER TABLE clinical_orders ADD COLUMN IF NOT EXISTS result_notes TEXT;
+
+-- ============================================
+-- Summary:
+-- - Added encounter_id to: prescriptions, payments, claims, lab_tests, admissions, triage_assessments
+-- - Created discharge_summaries table
+-- - Fixed triage_assessments column name mismatches
+-- - Fixed ward_rounds: made admission_id nullable, added ward_id/clinical_findings/orders/notes columns
+-- - Fixed clinical_orders: added started_at and result_notes columns
+-- - Added indexes and RLS policies
+-- ============================================

@@ -20,10 +20,15 @@ const BedManagement = () => {
   const [loading, setLoading] = useState(true)
   const [selectedWard, setSelectedWard] = useState(null)
   const [showAdmitForm, setShowAdmitForm] = useState(false)
+  const [showTransferForm, setShowTransferForm] = useState(false)
+  const [transferAdmission, setTransferAdmission] = useState(null)
+  const [transferData, setTransferData] = useState({ ward_id: '', bed_id: '', reason: '' })
+  const [encounters, setEncounters] = useState([])
   const [formData, setFormData] = useState({
     patient_id: '',
     ward_id: '',
     bed_id: '',
+    encounter_id: '',
     diagnosis: '',
     admission_type: 'emergency',
     admission_notes: '',
@@ -40,7 +45,8 @@ const BedManagement = () => {
       fetchWards(),
       fetchBeds(),
       fetchAdmissions(),
-      fetchPatients()
+      fetchPatients(),
+      fetchEncounters()
     ])
     setLoading(false)
   }
@@ -116,6 +122,21 @@ const BedManagement = () => {
     }
   }
 
+  const fetchEncounters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('encounters')
+        .select('id, patient_id, encounter_type, chief_complaint, started_at, patients:patient_id(name)')
+        .in('status', ['registered', 'in_progress'])
+        .order('started_at', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      setEncounters(data || [])
+    } catch (error) {
+      console.error('Error fetching encounters:', error)
+    }
+  }
+
   const admitPatient = async (e) => {
     e.preventDefault()
 
@@ -137,6 +158,7 @@ const BedManagement = () => {
         .from('admissions')
         .insert([{
           ...formData,
+          encounter_id: formData.encounter_id || null,
           admitted_by: user.id,
           status: 'admitted'
         }])
@@ -175,6 +197,7 @@ const BedManagement = () => {
         patient_id: '',
         ward_id: '',
         bed_id: '',
+        encounter_id: '',
         diagnosis: '',
         admission_type: 'emergency',
         admission_notes: '',
@@ -219,6 +242,74 @@ const BedManagement = () => {
     } catch (error) {
       console.error('Error discharging patient:', error)
       toast.error('Failed to discharge patient')
+    }
+  }
+
+  const transferPatient = async (e) => {
+    e.preventDefault()
+    if (!transferAdmission || !transferData.ward_id || !transferData.bed_id) return
+
+    try {
+      // Verify new bed is still available
+      const { data: newBed } = await supabase
+        .from('beds')
+        .select('status')
+        .eq('id', transferData.bed_id)
+        .single()
+
+      if (newBed?.status !== 'available') {
+        toast.error('Selected bed is no longer available')
+        return
+      }
+
+      // Free old bed
+      await supabase
+        .from('beds')
+        .update({ status: 'cleaning', current_patient_id: null, assigned_at: null })
+        .eq('id', transferAdmission.bed_id)
+
+      // Occupy new bed
+      await supabase
+        .from('beds')
+        .update({ status: 'occupied', current_patient_id: transferAdmission.patient_id, assigned_at: new Date().toISOString() })
+        .eq('id', transferData.bed_id)
+
+      // Update admission record
+      await supabase
+        .from('admissions')
+        .update({ ward_id: transferData.ward_id, bed_id: transferData.bed_id })
+        .eq('id', transferAdmission.id)
+
+      // Log to patient_transfers table
+      await supabase.from('patient_transfers').insert({
+        patient_id: transferAdmission.patient_id,
+        admission_id: transferAdmission.id,
+        from_ward_id: transferAdmission.ward_id,
+        from_bed_id: transferAdmission.bed_id,
+        to_ward_id: transferData.ward_id,
+        to_bed_id: transferData.bed_id,
+        reason: transferData.reason || null,
+        transferred_by: user.id,
+        transfer_date: new Date().toISOString(),
+      })
+
+      await logAuditEvent({
+        user,
+        action: 'transfer_patient',
+        tableName: 'admissions',
+        recordId: transferAdmission.id,
+        oldValues: { ward_id: transferAdmission.ward_id, bed_id: transferAdmission.bed_id },
+        newValues: { ward_id: transferData.ward_id, bed_id: transferData.bed_id, reason: transferData.reason },
+      })
+
+      toast.success('Patient transferred successfully!')
+      setShowTransferForm(false)
+      setTransferAdmission(null)
+      setTransferData({ ward_id: '', bed_id: '', reason: '' })
+      fetchAll()
+    } catch (error) {
+      console.error('Transfer error:', error)
+      toast.error('Failed to transfer patient')
     }
   }
 
@@ -403,12 +494,24 @@ const BedManagement = () => {
                       {new Date(admission.admission_date).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => dischargePatient(admission.id, admission.bed_id)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      >
-                        Discharge
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            setTransferAdmission(admission)
+                            setTransferData({ ward_id: '', bed_id: '', reason: '' })
+                            setShowTransferForm(true)
+                          }}
+                          className="text-orange-600 hover:text-orange-800 text-sm font-medium"
+                        >
+                          Transfer
+                        </button>
+                        <button
+                          onClick={() => dischargePatient(admission.id, admission.bed_id)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          Discharge
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -416,6 +519,79 @@ const BedManagement = () => {
             </table>
           </div>
         </div>
+
+        {/* Ward Transfer Modal */}
+        {showTransferForm && transferAdmission && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h3 className="text-lg font-semibold mb-1">Transfer Patient</h3>
+              <p className="text-sm text-slate-500 mb-4">
+                {transferAdmission.patients?.name} — currently in {transferAdmission.wards?.name}, Bed {transferAdmission.beds?.bed_number}
+              </p>
+              <form onSubmit={transferPatient} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">New Ward *</label>
+                  <select
+                    required
+                    value={transferData.ward_id}
+                    onChange={(e) => setTransferData({ ...transferData, ward_id: e.target.value, bed_id: '' })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select ward</option>
+                    {wards
+                      .filter(w => w.id !== transferAdmission.ward_id)
+                      .map(ward => (
+                        <option key={ward.id} value={ward.id}>
+                          {ward.name} ({getAvailableBeds(ward.id).length} available)
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {transferData.ward_id && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">New Bed *</label>
+                    <select
+                      required
+                      value={transferData.bed_id}
+                      onChange={(e) => setTransferData({ ...transferData, bed_id: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select bed</option>
+                      {getAvailableBeds(transferData.ward_id).map(bed => (
+                        <option key={bed.id} value={bed.id}>{bed.bed_number}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Transfer</label>
+                  <input
+                    type="text"
+                    value={transferData.reason}
+                    onChange={(e) => setTransferData({ ...transferData, reason: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Requires ICU monitoring, bed availability..."
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition">
+                    Confirm Transfer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowTransferForm(false); setTransferAdmission(null) }}
+                    className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Admit Patient Modal */}
         {showAdmitForm && (
@@ -444,8 +620,31 @@ const BedManagement = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ward *
+                  <label className="block text-sm font-medium text-gray-700 mb-2">                    Encounter (Visit)
+                  </label>
+                  <select
+                    value={formData.encounter_id}
+                    onChange={(e) => {
+                      const enc = encounters.find(en => en.id === e.target.value)
+                      setFormData({
+                        ...formData,
+                        encounter_id: e.target.value,
+                        patient_id: enc?.patient_id || formData.patient_id
+                      })
+                    }}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">No encounter (standalone)</option>
+                    {encounters.map((enc) => (
+                      <option key={enc.id} value={enc.id}>
+                        {enc.patients?.name} — {enc.encounter_type} — {new Date(enc.started_at).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">                    Ward *
                   </label>
                   <select
                     required

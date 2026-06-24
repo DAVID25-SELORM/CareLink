@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
 import { supabase } from '../supabaseClient'
+import { submitClaimToNhia } from '../services/nhiaService'
 import { generateClaimPDF, downloadPDF, printPDF } from '../services/pdfService'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import PDFButton from '../components/PDFButton'
@@ -76,12 +77,28 @@ const Claims = () => {
   }
 
   const updateClaimStatus = async (claimId, newStatus) => {
+    const claim = claims.find((item) => item.id === claimId)
+
     try {
-      const claim = claims.find((item) => item.id === claimId)
       const updateData = { status: newStatus }
 
       if (newStatus === 'submitted') {
         updateData.submitted_at = new Date().toISOString()
+
+        // Attempt live submission to NHIA eClaims portal
+        if (claim?.insurance_type === 'nhis') {
+          toast.info('Submitting to NHIA portal…')
+          const result = await submitClaimToNhia(claim)
+
+          if (result.success) {
+            if (result.reference) updateData.claim_number = result.reference
+            toast.success(`Submitted to NHIA. Ref: ${result.reference || 'received'}`)
+          } else if (result.localOnly) {
+            toast.info(result.message)
+          } else {
+            toast.warn(`NHIA API: ${result.message}. Claim marked submitted locally.`)
+          }
+        }
       } else if (newStatus === 'approved') {
         updateData.approved_at = new Date().toISOString()
       }
@@ -106,7 +123,7 @@ const Claims = () => {
         newValues: updateData,
       })
 
-      toast.success(`Claim ${newStatus} successfully!`)
+      if (newStatus !== 'submitted') toast.success(`Claim ${newStatus} successfully!`)
       fetchClaims()
     } catch (error) {
       console.error('Error updating claim:', error)

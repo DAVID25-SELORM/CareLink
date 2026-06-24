@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
+import { createEncounter } from '../services/encounterService'
 
 /**
  * Queue Management System
@@ -12,7 +14,9 @@ import { supabase } from '../supabaseClient'
 
 const QueueManagement = () => {
   const { user, userRole } = useAuth()
-  const [activeTab, setActiveTab] = useState('opd') 
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState('opd')
   const [queues, setQueues] = useState([])
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,7 +25,8 @@ const QueueManagement = () => {
   const [formData, setFormData] = useState({
     patient_id: '',
     department: 'opd',
-    priority: 'normal'
+    priority: 'normal',
+    reason: ''
   })
 
   const departments = [
@@ -34,10 +39,18 @@ const QueueManagement = () => {
     { id: 'records', name: 'Records', icon: '📋', color: 'gray' }
   ]
 
+  // Pre-select patient if navigated from Patients page
+  useEffect(() => {
+    if (location.state?.patient_id) {
+      setFormData(prev => ({ ...prev, patient_id: location.state.patient_id }))
+      setShowAddForm(true)
+    }
+  }, [location.state])
+
   useEffect(() => {
     fetchQueues()
     fetchPatients()
-    
+
     // Real-time subscription
     const subscription = supabase
       .channel('queue_changes'    )
@@ -115,7 +128,10 @@ const QueueManagement = () => {
       const { data, error } = await supabase
         .from('queue_management')
         .insert([{
-          ...formData,
+          patient_id: formData.patient_id,
+          department: formData.department,
+          priority: formData.priority,
+          reason: formData.reason || null,
           queue_number: queueNumber,
           status: 'waiting',
           checked_in_at: new Date().toISOString()
@@ -127,7 +143,7 @@ const QueueManagement = () => {
 
       toast.success(`Patient added to queue #${queueNumber}`)
       setShowAddForm(false)
-      setFormData({ patient_id: '', department: activeTab, priority: 'normal' })
+      setFormData({ patient_id: '', department: activeTab, priority: 'normal', reason: '' })
       fetchQueues()
     } catch (error) {
       console.error('Error adding to queue:', error)
@@ -187,6 +203,41 @@ const QueueManagement = () => {
     } catch (error) {
       console.error('Error updating queue:', error)
       toast.error('Failed to update queue status')
+    }
+  }
+
+  const startWithEncounter = async (queue) => {
+    try {
+      const dept = queue.department?.toLowerCase()
+      if (dept === 'opd' || dept === 'emergency') {
+        const { data: encounter, error: encError } = await createEncounter({
+          patientId: queue.patient_id,
+          doctorId: user.id,
+          encounterType: dept === 'emergency' ? 'emergency' : 'outpatient',
+          department: queue.department,
+          chiefComplaint: queue.reason || null,
+          priority: queue.priority || 'normal'
+        })
+        if (encError) {
+          console.error('Encounter creation failed:', encError)
+          toast.warn('Queue started but encounter creation failed')
+        } else if (encounter) {
+          // Link encounter back to queue entry so it can be traced
+          await supabase
+            .from('queue_management')
+            .update({ encounter_id: encounter.id })
+            .eq('id', queue.id)
+
+          toast.success('Encounter started!')
+          await updateQueueStatus(queue.id, 'in_progress')
+          navigate(`/encounter/${encounter.id}`)
+          return
+        }
+      }
+      await updateQueueStatus(queue.id, 'in_progress')
+    } catch (error) {
+      console.error('Error starting encounter:', error)
+      toast.error('Failed to start')
     }
   }
 
@@ -360,10 +411,10 @@ const QueueManagement = () => {
                             )}
                             {queue.status === 'called' && (
                               <button
-                                onClick={() => updateQueueStatus(queue.id, 'in_progress')}
+                                onClick={() => startWithEncounter(queue)}
                                 className="text-green-600 hover:text-green-800 text-sm font-medium"
                               >
-                                Start
+                                Start Encounter
                               </button>
                             )}
                             {queue.status === 'in_progress' && (
@@ -449,6 +500,19 @@ const QueueManagement = () => {
                     <option value="urgent">Urgent</option>
                     <option value="emergency">Emergency</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for Visit
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.reason}
+                    onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Fever and headache, Follow-up, Chest pain..."
+                  />
                 </div>
 
                 <div className="flex gap-2">

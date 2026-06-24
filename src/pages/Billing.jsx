@@ -138,6 +138,7 @@ const Billing = () => {
           {
             patient_id: selectedPrescription.patient_id,
             prescription_id: selectedPrescription.id,
+            encounter_id: selectedPrescription.encounter_id || null,
             amount: totalAmount,
             payment_method: paymentMethod,
             status: 'completed',
@@ -171,6 +172,7 @@ const Billing = () => {
           patient_id: selectedPrescription.patient_id,
           payment_id: paymentRecord.id,
           prescription_id: selectedPrescription.id,
+          encounter_id: selectedPrescription.encounter_id || null,
           insurance_type: insuranceType,
           insurance_name: selectedPrescription.patients?.insurance_name || null,
           amount: totalAmount,

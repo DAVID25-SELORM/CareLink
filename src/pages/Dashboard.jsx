@@ -27,6 +27,13 @@ const roleMessages = {
   default: 'Access your healthcare management tools from one place.',
 }
 
+const ROLE_REDIRECTS = {
+  doctor: '/doctor-dashboard',
+  nurse: '/nurse-dashboard',
+  records_officer: '/records',
+  lab_tech: '/laboratory',
+}
+
 const sampleActivities = [
   { icon: '◉', iconColor: 'text-[#2f74c7]', iconBg: 'bg-[#eaf3ff]', title: 'John Doe registered as new patient.', time: '5m ago' },
   { icon: '▤', iconColor: 'text-[#1f9d9a]', iconBg: 'bg-[#e8fbfb]', title: 'Claim submitted to NHIS.', time: '20m ago' },
@@ -34,7 +41,7 @@ const sampleActivities = [
 ]
 
 const visitTrend = [
-  { day: 'Mon', visits: 65 },
+  { day: 'Sun', visits: 65 },
   { day: 'Mon', visits: 100 },
   { day: 'Tue', visits: 82 },
   { day: 'Wed', visits: 132 },
@@ -118,9 +125,10 @@ const ActionButton = ({ to, label, icon, colorClass }) => (
 
 const Dashboard = () => {
   const navigate = useNavigate()
-  const { user, userRole } = useAuth()
+  const { user, userRole, loading: authLoading } = useAuth()
   const { branding, hospitalDisplayName } = useHospitalBranding()
   const showPlatformOnboarding = canAccessPlatformOnboarding(user, userRole)
+  const redirectTarget = userRole ? ROLE_REDIRECTS[userRole] : null
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalPrescriptions: 0,
@@ -134,21 +142,19 @@ const Dashboard = () => {
   const [recentActivities, setRecentActivities] = useState([])
 
   useEffect(() => {
-    if (userRole === 'doctor') {
-      navigate('/doctor-dashboard', { replace: true })
-    } else if (userRole === 'nurse') {
-      navigate('/nurse-dashboard', { replace: true })
-    } else if (userRole === 'records_officer') {
-      navigate('/records', { replace: true })
-    } else if (userRole === 'lab_tech') {
-      navigate('/laboratory', { replace: true })
+    if (!authLoading && redirectTarget) {
+      navigate(redirectTarget, { replace: true })
     }
-  }, [userRole, navigate])
+  }, [authLoading, navigate, redirectTarget])
 
   useEffect(() => {
+    if (authLoading || redirectTarget) {
+      return
+    }
+
     fetchDashboardStats()
     fetchRecentActivities()
-  }, [])
+  }, [authLoading, redirectTarget])
 
   const fetchDashboardStats = async () => {
     try {
@@ -261,14 +267,16 @@ const Dashboard = () => {
   const pendingDelta = `-${Math.max(1, Math.round(stats.pendingClaims * 0.2) || 3)}`
   const revenueDelta = `+${Math.max(50, Math.round(stats.totalRevenue * 0.14) || 525)}`
 
-  if (loading) {
+  if (authLoading || redirectTarget || loading) {
     return (
       <DashboardLayout>
         <div className="flex min-h-[420px] items-center justify-center rounded-xl bg-white shadow-sm">
           <div className="text-center">
             <div className="spinner mx-auto mb-4"></div>
             <h2 className="text-lg font-semibold text-slate-900">Loading dashboard</h2>
-            <p className="mt-2 text-sm font-medium text-slate-600">Fetching live statistics from CareLink.</p>
+            <p className="mt-2 text-sm font-medium text-slate-600">
+              {redirectTarget ? 'Opening your workspace.' : 'Fetching live statistics from CareLink.'}
+            </p>
           </div>
         </div>
       </DashboardLayout>

@@ -114,6 +114,7 @@ const Cashier = () => {
       const paymentPayload = {
         patient_id: selectedBill.patient_id,
         prescription_id: selectedBill.id,
+        encounter_id: selectedBill.encounter_id || null,
         amount: selectedBill.total_amount,
         payment_method: paymentData.payment_method,
         momo_provider: paymentData.payment_method === 'momo' ? paymentData.momo_provider : null,

@@ -4,6 +4,12 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
 import { supabase } from '../supabaseClient'
+import {
+  pingHealthFlow,
+  searchHealthFlowInventory,
+  submitNhisClaimViaHealthFlow,
+  lookupNhisMemberViaHealthFlow,
+} from '../services/healthflowService'
 
 /**
  * Comprehensive Pharmacy Dashboard
@@ -24,6 +30,16 @@ const Pharmacy = () => {
   const [loading, setLoading] = useState(true)
   const [showAddDrugForm, setShowAddDrugForm] = useState(false)
   const [editingDrug, setEditingDrug] = useState(null)
+
+  // HealthFlow POS integration state
+  const [hfStatus, setHfStatus] = useState(null) // null | { reachable, mode, baseUrl }
+  const [hfStockMap, setHfStockMap] = useState({}) // drugName → [{ name, stock, price }]
+  const [hfStockLoading, setHfStockLoading] = useState(false)
+  const [hfClaimLoading, setHfClaimLoading] = useState(false)
+  const [showNhisClaimModal, setShowNhisClaimModal] = useState(false)
+  const [nhisClaimForm, setNhisClaimForm] = useState({
+    memberNumber: '', patientName: '', diagnosis: '', dispensingDate: new Date().toISOString().split('T')[0],
+  })
   const [drugFormData, setDrugFormData] = useState({
     name: '',
     category: '',
@@ -38,6 +54,8 @@ const Pharmacy = () => {
 
   useEffect(() => {
     fetchAllData()
+    // Quietly check HealthFlow connectivity on mount
+    pingHealthFlow().then(setHfStatus)
   }, [])
 
   const fetchAllData = async () => {
@@ -109,7 +127,101 @@ const Pharmacy = () => {
 
   const handleSelectPrescription = async (prescription) => {
     setSelectedPrescription(prescription)
+    setHfStockMap({})
     await fetchPrescriptionItems(prescription.id)
+  }
+
+  // ── HealthFlow: check live POS stock for all items in selected prescription ──
+  const checkHealthFlowStock = async () => {
+    if (!prescriptionItems.length) return
+    setHfStockLoading(true)
+    const results = {}
+    for (const item of prescriptionItems) {
+      const name = item.drugs?.name || item.drug_name
+      if (name) {
+        const hits = await searchHealthFlowInventory(name)
+        results[name] = hits
+      }
+    }
+    setHfStockMap(results)
+    setHfStockLoading(false)
+    toast.info('HealthFlow POS stock levels loaded')
+  }
+
+  // ── HealthFlow: open NHIS claim modal pre-filled from prescription ──
+  const openNhisClaimModal = () => {
+    setNhisClaimForm({
+      memberNumber: selectedPrescription?.patients?.nhis_number || '',
+      patientName: selectedPrescription?.patients?.name || '',
+      diagnosis: selectedPrescription?.diagnosis || '',
+      dispensingDate: new Date().toISOString().split('T')[0],
+    })
+    setShowNhisClaimModal(true)
+  }
+
+  // ── HealthFlow: submit the hospital NHIS claim ──
+  const submitNhisClaim = async () => {
+    if (!nhisClaimForm.memberNumber || !nhisClaimForm.patientName) {
+      toast.error('Patient name and NHIS number are required')
+      return
+    }
+    setHfClaimLoading(true)
+    try {
+      // Build medicines list from prescription items
+      const medicines = prescriptionItems.map((item) => ({
+        name: item.drugs?.name || item.drug_name || '',
+        nhiaCode: item.drugs?.nhia_code || item.nhia_code || null,
+        quantity: Number(item.quantity || 1),
+        unitPrice: Number(item.drugs?.price || 0),
+        totalPrice: Number(item.drugs?.price || 0) * Number(item.quantity || 1),
+      }))
+
+      const result = await submitNhisClaimViaHealthFlow({
+        patientName: nhisClaimForm.patientName,
+        memberNumber: nhisClaimForm.memberNumber,
+        diagnosis: nhisClaimForm.diagnosis,
+        dispensingDate: nhisClaimForm.dispensingDate,
+        medicines,
+      })
+
+      if (result.success) {
+        toast.success(`NHIS claim submitted! CC Code: ${result.ccCode || 'N/A'}`)
+        // Store reference on the prescription
+        if (selectedPrescription?.id) {
+          await supabase
+            .from('prescriptions')
+            .update({
+              nhis_claim_id: result.claimId || null,
+              nhis_cc_code: result.ccCode || null,
+            })
+            .eq('id', selectedPrescription.id)
+        }
+        setShowNhisClaimModal(false)
+      } else {
+        toast.error(result.message || 'NHIS claim submission failed')
+      }
+    } catch (err) {
+      toast.error(err.message || 'Unexpected error submitting NHIS claim')
+    } finally {
+      setHfClaimLoading(false)
+    }
+  }
+
+  // ── HealthFlow: lookup NHIS member before dispensing ──
+  const lookupNhisMember = async () => {
+    const nhisNum = selectedPrescription?.patients?.nhis_number
+    if (!nhisNum) {
+      toast.warning('No NHIS number on this patient record')
+      return
+    }
+    const result = await lookupNhisMemberViaHealthFlow(nhisNum)
+    if (result.success) {
+      toast.success(`NHIS valid: ${result.memberName || nhisNum} — CC: ${result.ccCode || 'N/A'}`)
+    } else if (result.localOnly) {
+      toast.info(result.message)
+    } else {
+      toast.error(result.message || 'NHIS lookup failed')
+    }
   }
 
   const handleDispense = async () => {
@@ -143,10 +255,31 @@ const Pharmacy = () => {
 
       const { error: updateError } = await supabase
         .from('prescriptions')
-        .update({ status: 'dispensed' })
+        .update({ status: 'dispensed', dispensed_by: user.id, dispensed_at: new Date().toISOString() })
         .eq('id', selectedPrescription.id)
 
       if (updateError) throw updateError
+
+      // Create MAR records so nurses can track administration
+      const marRecords = prescriptionItems.map((item) => ({
+        patient_id: selectedPrescription.patient_id,
+        encounter_id: selectedPrescription.encounter_id || null,
+        prescription_id: selectedPrescription.id,
+        drug_id: item.drug_id,
+        drug_name: item.drugs?.name || item.drug_name,
+        dose: item.dosage || null,
+        route: 'oral',
+        frequency: item.frequency || null,
+        start_date: new Date().toISOString().split('T')[0],
+        status: 'scheduled',
+        dispensed_by: user.id,
+      }))
+      const { error: marError } = await supabase
+        .from('medication_administration_records')
+        .insert(marRecords)
+      if (marError) {
+        console.error('MAR creation failed (non-fatal):', marError)
+      }
 
       await logAuditEvent({
         user,
@@ -356,6 +489,30 @@ const Pharmacy = () => {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Pharmacy Dashboard</h1>
             <p className="text-gray-600 mt-1">Complete pharmacy management and dispensing</p>
+          </div>
+          {/* HealthFlow POS connection badge */}
+          <div className="flex items-center gap-2">
+            {hfStatus === null ? (
+              <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">Checking POS...</span>
+            ) : hfStatus.reachable ? (
+              <a
+                href={hfStatus.baseUrl ? `${hfStatus.baseUrl}/pharmacydashboard` : '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-medium hover:bg-green-200 transition"
+              >
+                <span className="w-2 h-2 bg-green-500 rounded-full inline-block"></span>
+                HealthFlow POS Connected
+              </a>
+            ) : (
+              <span
+                title={hfStatus.reason}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-600 rounded-full text-xs cursor-help"
+              >
+                <span className="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
+                POS Offline
+              </span>
+            )}
           </div>
         </div>
 
@@ -578,20 +735,74 @@ const Pharmacy = () => {
                         )}
                       </div>
 
+                      {/* HealthFlow POS stock levels */}
+                      {Object.keys(hfStockMap).length > 0 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <h6 className="text-xs font-semibold text-blue-700 mb-2">HealthFlow POS Live Stock</h6>
+                          {prescriptionItems.map((item) => {
+                            const name = item.drugs?.name || item.drug_name
+                            const hits = hfStockMap[name] || []
+                            const best = hits[0]
+                            return (
+                              <div key={item.id} className="flex items-center justify-between text-xs py-1 border-b border-blue-100 last:border-0">
+                                <span className="text-gray-700 truncate max-w-[60%]">{name}</span>
+                                {best ? (
+                                  <span className={`font-medium ${best.stock > 0 ? 'text-green-700' : 'text-red-600'}`}>
+                                    POS: {best.stock} {best.unit || 'units'}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">Not in POS</span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+
                       {prescriptionItems.length > 0 && (
-                        <div className="pt-4 border-t">
-                          <div className="flex items-center justify-between mb-4">
+                        <div className="pt-4 border-t space-y-3">
+                          <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold">Total Amount:</span>
                             <span className="text-2xl font-bold text-blue-600">
                               ₵{totalAmount.toFixed(2)}
                             </span>
                           </div>
+
+                          {/* HealthFlow action buttons */}
+                          {hfStatus?.reachable && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={checkHealthFlowStock}
+                                disabled={hfStockLoading}
+                                className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 py-2 rounded-lg transition text-sm font-medium"
+                              >
+                                {hfStockLoading ? '...' : '🔍 Check POS Stock'}
+                              </button>
+                              <button
+                                onClick={lookupNhisMember}
+                                className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 py-2 rounded-lg transition text-sm font-medium"
+                              >
+                                NHIS Verify
+                              </button>
+                            </div>
+                          )}
+
                           <button
                             onClick={handleDispense}
                             className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition font-semibold"
                           >
                             ✓ Dispense Prescription
                           </button>
+
+                          {/* Submit NHIS claim via HealthFlow */}
+                          {hfStatus?.reachable && (
+                            <button
+                              onClick={openNhisClaimModal}
+                              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg transition text-sm font-medium"
+                            >
+                              Submit NHIS Claim via HealthFlow POS
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -976,6 +1187,96 @@ const Pharmacy = () => {
             </div>
           )}
         </div>
+
+        {/* ── NHIS Claim Modal (via HealthFlow) ── */}
+        {showNhisClaimModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-800">Submit NHIS Claim via HealthFlow</h3>
+                  <button onClick={() => setShowNhisClaimModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-xs text-blue-700">
+                  This sends the claim through the Westpoint HealthFlow CLAIM-it bridge.
+                  The CC code will be auto-generated using your existing NHIA credentials.
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Patient Name *</label>
+                    <input
+                      type="text"
+                      value={nhisClaimForm.patientName}
+                      onChange={(e) => setNhisClaimForm({ ...nhisClaimForm, patientName: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">NHIS Number *</label>
+                    <input
+                      type="text"
+                      value={nhisClaimForm.memberNumber}
+                      onChange={(e) => setNhisClaimForm({ ...nhisClaimForm, memberNumber: e.target.value })}
+                      placeholder="e.g. P/NHF/12345/25"
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Diagnosis</label>
+                    <input
+                      type="text"
+                      value={nhisClaimForm.diagnosis}
+                      onChange={(e) => setNhisClaimForm({ ...nhisClaimForm, diagnosis: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dispensing Date</label>
+                    <input
+                      type="date"
+                      value={nhisClaimForm.dispensingDate}
+                      onChange={(e) => setNhisClaimForm({ ...nhisClaimForm, dispensingDate: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Medicines summary */}
+                  <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600">
+                    <p className="font-medium mb-1">Medicines ({prescriptionItems.length}):</p>
+                    {prescriptionItems.map((item) => (
+                      <div key={item.id} className="flex justify-between">
+                        <span>{item.drugs?.name || item.drug_name}</span>
+                        <span>x{item.quantity} — ₵{(Number(item.drugs?.price || 0) * Number(item.quantity || 0)).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="border-t mt-2 pt-2 font-semibold flex justify-between">
+                      <span>Total</span>
+                      <span>₵{totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => setShowNhisClaimModal(false)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg transition font-medium text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitNhisClaim}
+                    disabled={hfClaimLoading}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg transition font-semibold text-sm disabled:opacity-60"
+                  >
+                    {hfClaimLoading ? 'Submitting...' : 'Submit Claim'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

@@ -39,6 +39,7 @@ const PatientRegistration = () => {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
+    date_of_birth: '',
     age: '',
     gender: '',
     phone: '',
@@ -62,9 +63,17 @@ const PatientRegistration = () => {
     setLoading(true)
 
     try {
+      // Auto-calculate age from DOB if provided
+      let age = parseInt(formData.age) || null
+      if (formData.date_of_birth) {
+        const dob = new Date(formData.date_of_birth)
+        age = Math.floor((new Date() - dob) / (365.25 * 24 * 60 * 60 * 1000))
+      }
+
       const patientPayload = {
         name: formData.name,
-        age: parseInt(formData.age),
+        date_of_birth: formData.date_of_birth || null,
+        age,
         gender: formData.gender,
         phone: formData.phone,
         nhis_number: formData.nhis_number || null,
@@ -126,6 +135,21 @@ const PatientRegistration = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  name="date_of_birth"
+                  value={formData.date_of_birth}
+                  onChange={handleChange}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
+                />
+                <p className="text-xs text-gray-400 mt-1">Age auto-calculated from DOB</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Age <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -137,7 +161,7 @@ const PatientRegistration = () => {
                   min="0"
                   max="150"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
-                  placeholder="Age"
+                  placeholder="Age (or enter DOB above)"
                 />
               </div>
 

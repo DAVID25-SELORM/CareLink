@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
@@ -14,6 +14,48 @@ import FileUpload from '../components/FileUpload'
  * Manage lab tests and results
  */
 
+const normalize = (value) => String(value || '').trim().toLowerCase()
+
+const getAnalyteKey = (catalog, analyte) => `${catalog?.code || catalog?.name || 'LAB'}::${analyte.name}`
+
+const formatAnalyteRange = (analyte) => {
+  if (analyte.qualitativeRef) return analyte.qualitativeRef
+  const low = analyte.refLow ?? ''
+  const high = analyte.refHigh ?? ''
+  if (low === '' && high === '') return ''
+  if (low === '') return `<= ${high}${analyte.unit ? ` ${analyte.unit}` : ''}`
+  if (high === '') return `>= ${low}${analyte.unit ? ` ${analyte.unit}` : ''}`
+  return `${low} - ${high}${analyte.unit ? ` ${analyte.unit}` : ''}`
+}
+
+const flagAnalyteValue = (analyte, value) => {
+  if (value === '' || value == null) return null
+  if (analyte.qualitativeRef) {
+    return normalize(value) === normalize(analyte.qualitativeRef) ? 'NORMAL' : 'ABNORMAL'
+  }
+
+  const numericValue = Number(value)
+  if (Number.isNaN(numericValue)) return null
+  if (analyte.refHigh != null && numericValue > Number(analyte.refHigh)) return 'HIGH'
+  if (analyte.refLow != null && numericValue < Number(analyte.refLow)) return 'LOW'
+  return 'NORMAL'
+}
+
+const FlagBadge = ({ flag }) => {
+  if (!flag) return <span className="text-xs text-gray-300">-</span>
+  const styles = {
+    HIGH: 'bg-red-100 text-red-700 border-red-200',
+    LOW: 'bg-orange-100 text-orange-700 border-orange-200',
+    NORMAL: 'bg-green-100 text-green-700 border-green-200',
+    ABNORMAL: 'bg-red-100 text-red-700 border-red-200',
+  }
+  return (
+    <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${styles[flag] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+      {flag}
+    </span>
+  )
+}
+
 const Laboratory = () => {
   const { user, userRole } = useAuth()
   const isAdmin = userRole === 'admin'
@@ -24,23 +66,60 @@ const Laboratory = () => {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('orders')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [encounters, setEncounters] = useState([])
   const [formData, setFormData] = useState({
     patient_id: '',
+    encounter_id: '',
     test_name: '',
     test_type: '',
     notes: '',
   })
   const [selectedTest, setSelectedTest] = useState(null)
   const [testResult, setTestResult] = useState('')
+  const [resultValues, setResultValues] = useState({})
+  const [resultNotes, setResultNotes] = useState('')
   const [uploadedFile, setUploadedFile] = useState(null)
   const [catalogSearch, setCatalogSearch] = useState('')
   const [catalogCategory, setCatalogCategory] = useState('')
   const [editingCatalogId, setEditingCatalogId] = useState(null)
   const [editCatalogPrice, setEditCatalogPrice] = useState('')
 
+  const selectedCatalogTest = useMemo(() => {
+    if (!selectedTest) return null
+    const testName = normalize(selectedTest.test_name)
+    const testType = normalize(selectedTest.test_type)
+
+    return catalogTests.find((catalog) => {
+      const code = normalize(catalog.code)
+      const name = normalize(catalog.name)
+      return (
+        (selectedTest.catalog_id && catalog.id === selectedTest.catalog_id) ||
+        (code && code === testType) ||
+        (code && testName.includes(code)) ||
+        (name && name === testName)
+      )
+    }) || null
+  }, [catalogTests, selectedTest])
+
+  const selectedAnalytes = Array.isArray(selectedCatalogTest?.analytes)
+    ? selectedCatalogTest.analytes
+    : []
+
+  const resultFlags = useMemo(() => {
+    if (!selectedCatalogTest || selectedAnalytes.length === 0) return {}
+    return selectedAnalytes.reduce((acc, analyte) => {
+      const key = getAnalyteKey(selectedCatalogTest, analyte)
+      acc[key] = flagAnalyteValue(analyte, resultValues[key])
+      return acc
+    }, {})
+  }, [resultValues, selectedAnalytes, selectedCatalogTest])
+
+  const abnormalCount = Object.values(resultFlags).filter((flag) => flag && flag !== 'NORMAL').length
+
   useEffect(() => {
     fetchLabTests()
     fetchPatients()
+    fetchEncounters()
     fetchCatalog()
   }, [])
 
@@ -78,6 +157,21 @@ const Laboratory = () => {
     }
   }
 
+  const fetchEncounters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('encounters')
+        .select('id, patient_id, encounter_type, chief_complaint, started_at, patients:patient_id(name)')
+        .in('status', ['registered', 'in_progress'])
+        .order('started_at', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      setEncounters(data || [])
+    } catch (error) {
+      console.error('Error fetching encounters:', error)
+    }
+  }
+
   const fetchCatalog = async () => {
     const { data } = await supabase
       .from('lab_test_catalog')
@@ -106,6 +200,7 @@ const Laboratory = () => {
     try {
       const labTestPayload = {
         patient_id: formData.patient_id,
+        encounter_id: formData.encounter_id || null,
         test_name: formData.test_name,
         test_type: formData.test_type,
         notes: formData.notes,
@@ -129,7 +224,7 @@ const Laboratory = () => {
       })
 
       toast.success('Lab test requested successfully!')
-      setFormData({ patient_id: '', test_name: '', test_type: '', notes: '' })
+      setFormData({ patient_id: '', encounter_id: '', test_name: '', test_type: '', notes: '' })
       setShowAddForm(false)
       fetchLabTests()
     } catch (error) {
@@ -138,15 +233,83 @@ const Laboratory = () => {
     }
   }
 
+  const openResultModal = (test) => {
+    setSelectedTest(test)
+    setTestResult(test.result || '')
+    setResultNotes(test.result_details?.notes || '')
+
+    const values = {}
+    if (Array.isArray(test.result_details?.analytes)) {
+      test.result_details.analytes.forEach((result) => {
+        const key = `${result.testCode || test.test_type || test.test_name}::${result.analyte}`
+        values[key] = result.value ?? ''
+      })
+    }
+    setResultValues(values)
+  }
+
   const handleAddResult = async () => {
-    if (!selectedTest || !testResult) {
+    if (!selectedTest) return
+
+    const hasStructuredCatalog = selectedAnalytes.length > 0
+    const hasStructuredValue = Object.values(resultValues).some((value) => value !== '' && value != null)
+    const hasFreeTextValue = testResult.trim().length > 0
+
+    if (hasStructuredCatalog && !hasStructuredValue) {
+      toast.error('Please enter at least one result value')
+      return
+    }
+
+    if (!hasStructuredCatalog && !hasFreeTextValue) {
       toast.error('Please enter test result')
       return
     }
 
     try {
+      const analyteResults = hasStructuredCatalog
+        ? selectedAnalytes.map((analyte) => {
+          const key = getAnalyteKey(selectedCatalogTest, analyte)
+          const value = resultValues[key] ?? ''
+          const flag = resultFlags[key] ?? null
+          return {
+            testCode: selectedCatalogTest.code || selectedTest.test_type || '',
+            testName: selectedCatalogTest.name || selectedTest.test_name,
+            analyte: analyte.name,
+            value,
+            unit: analyte.unit || '',
+            refRange: formatAnalyteRange(analyte),
+            flag,
+          }
+        }).filter((row) => row.value !== '' && row.value != null)
+        : []
+
+      const resultSummary = hasStructuredCatalog
+        ? analyteResults
+          .map((row) => `${row.analyte}: ${row.value}${row.unit ? ` ${row.unit}` : ''}${row.flag && row.flag !== 'NORMAL' ? ` [${row.flag}]` : ''}`)
+          .join(' | ')
+        : testResult
+
+      const resultDetails = hasStructuredCatalog
+        ? {
+          testCode: selectedCatalogTest.code || selectedTest.test_type || '',
+          testName: selectedCatalogTest.name || selectedTest.test_name,
+          analytes: analyteResults,
+          notes: resultNotes,
+          enteredBy: user?.email || user?.id,
+          enteredAt: new Date().toISOString(),
+        }
+        : {
+          notes: resultNotes,
+          enteredBy: user?.email || user?.id,
+          enteredAt: new Date().toISOString(),
+        }
+
       const labResultPayload = {
-        result: testResult,
+        result: resultSummary,
+        result_details: resultDetails,
+        is_abnormal: abnormalCount > 0,
+        completed_by: user?.id || null,
+        result_flag: hasStructuredCatalog ? (abnormalCount > 0 ? 'abnormal' : 'normal') : null,
         status: 'completed',
         completed_at: new Date().toISOString(),
       }
@@ -170,9 +333,35 @@ const Laboratory = () => {
         newValues: labResultPayload,
       })
 
-      toast.success('Test result added successfully!')
+      // Notify the ordering doctor that results are ready
+      if (selectedTest.encounter_id) {
+        const { data: enc } = await supabase
+          .from('encounters')
+          .select('doctor_id')
+          .eq('id', selectedTest.encounter_id)
+          .single()
+
+        if (enc?.doctor_id) {
+          const { error: notificationError } = await supabase.from('notifications').insert({
+            user_id: enc.doctor_id,
+            patient_id: selectedTest.patient_id,
+            type: 'lab_result',
+            channel: 'in_app',
+            title: abnormalCount > 0 ? 'Abnormal Lab Result' : 'Lab Result Ready',
+            message: `${selectedTest.test_name} results for ${selectedTest.patients?.name} are ready for review`,
+            priority: 'normal',
+            status: 'unread',
+            link: `/laboratory?test=${selectedTest.id}`,
+          })
+          if (notificationError) console.warn('Lab result saved, but notification failed:', notificationError)
+        }
+      }
+
+      toast.success(abnormalCount > 0 ? 'Result saved with abnormal flags' : 'Test result added successfully!')
       setSelectedTest(null)
       setTestResult('')
+      setResultValues({})
+      setResultNotes('')
       setUploadedFile(null)
       fetchLabTests()
     } catch (error) {
@@ -263,6 +452,31 @@ const Laboratory = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Encounter (Visit)
+                  </label>
+                  <select
+                    value={formData.encounter_id}
+                    onChange={(e) => {
+                      const enc = encounters.find(en => en.id === e.target.value)
+                      setFormData({
+                        ...formData,
+                        encounter_id: e.target.value,
+                        patient_id: enc?.patient_id || formData.patient_id
+                      })
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">No encounter (standalone)</option>
+                    {encounters.map((enc) => (
+                      <option key={enc.id} value={enc.id}>
+                        {enc.patients?.name} — {enc.encounter_type} — {new Date(enc.started_at).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Test Type
                   </label>
                   <select
@@ -272,6 +486,9 @@ const Laboratory = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select test type</option>
+                    {formData.test_type && !['blood', 'urine', 'xray', 'ultrasound', 'other'].includes(formData.test_type) && (
+                      <option value={formData.test_type}>{formData.test_type}</option>
+                    )}
                     <option value="blood">Blood Test</option>
                     <option value="urine">Urine Test</option>
                     <option value="xray">X-Ray</option>
@@ -287,13 +504,20 @@ const Laboratory = () => {
                   {catalogTests.length > 0 ? (
                     <select
                       value={formData.test_name}
-                      onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
+                      onChange={(e) => {
+                        const catalog = catalogTests.find((test) => test.name === e.target.value)
+                        setFormData({
+                          ...formData,
+                          test_name: e.target.value,
+                          test_type: catalog?.code || catalog?.category || formData.test_type,
+                        })
+                      }}
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Select test from catalog</option>
                       {catalogTests.map((t) => (
-                        <option key={t.id} value={t.name}>{t.name} — GH₵{Number(t.price).toFixed(2)}</option>
+                        <option key={t.id} value={t.name}>{t.code ? `${t.code} - ` : ''}{t.name} - GHS {Number(t.price).toFixed(2)}</option>
                       ))}
                     </select>
                   ) : (
@@ -396,12 +620,9 @@ const Laboratory = () => {
                       {new Date(test.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
-                      {test.status === 'pending' && (
+                      {!['completed', 'cancelled'].includes(test.status) && (
                         <button
-                          onClick={() => {
-                            setSelectedTest(test)
-                            setTestResult('')
-                          }}
+                          onClick={() => openResultModal(test)}
                           className="text-primary hover:text-blue-800 text-sm font-medium"
                         >
                           Add Result
@@ -409,10 +630,7 @@ const Laboratory = () => {
                       )}
                       {test.status === 'completed' && test.result && (
                         <button
-                          onClick={() => {
-                            setSelectedTest(test)
-                            setTestResult(test.result)
-                          }}
+                          onClick={() => openResultModal(test)}
                           className="text-green-600 hover:text-green-800 text-sm font-medium"
                         >
                           View Result
@@ -536,24 +754,98 @@ const Laboratory = () => {
 
         {selectedTest && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50 p-4 sm:items-center">
-            <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6">
+            <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6">
               <h3 className="text-lg font-semibold mb-4">
-                {selectedTest.status === 'pending' ? 'Add Test Result' : 'Test Result'}
+                {selectedTest.status === 'completed' ? 'Test Result' : 'Add Test Result'}
               </h3>
               <div className="mb-4">
                 <p className="text-sm text-gray-600">Patient: {selectedTest.patients?.name}</p>
                 <p className="text-sm text-gray-600">Test: {selectedTest.test_name}</p>
+                {selectedCatalogTest?.code && (
+                  <p className="text-xs text-gray-500">Catalog: {selectedCatalogTest.code} - {selectedCatalogTest.category}</p>
+                )}
               </div>
-              <textarea
-                value={testResult}
-                onChange={(e) => setTestResult(e.target.value)}
-                disabled={selectedTest.status === 'completed'}
-                rows="6"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary mb-4"
-                placeholder="Enter test result details..."
-              />
+
+              {selectedAnalytes.length > 0 ? (
+                <div className="mb-4 overflow-hidden rounded-lg border border-gray-200">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Parameter</th>
+                        <th className="px-3 py-2 text-left">Value</th>
+                        <th className="px-3 py-2 text-left">Unit</th>
+                        <th className="px-3 py-2 text-left">Reference</th>
+                        <th className="px-3 py-2 text-center">Flag</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {selectedAnalytes.map((analyte) => {
+                        const key = getAnalyteKey(selectedCatalogTest, analyte)
+                        const flag = resultFlags[key]
+                        const isCompleted = selectedTest.status === 'completed'
+                        return (
+                          <tr key={key} className={flag && flag !== 'NORMAL' ? 'bg-red-50' : ''}>
+                            <td className="px-3 py-2 font-medium text-gray-800">{analyte.name}</td>
+                            <td className="px-3 py-2">
+                              {analyte.qualitativeRef ? (
+                                <input
+                                  type="text"
+                                  value={resultValues[key] ?? ''}
+                                  onChange={(e) => setResultValues((prev) => ({ ...prev, [key]: e.target.value }))}
+                                  disabled={isCompleted}
+                                  placeholder={analyte.qualitativeRef}
+                                  className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-50"
+                                />
+                              ) : (
+                                <input
+                                  type="number"
+                                  step="any"
+                                  value={resultValues[key] ?? ''}
+                                  onChange={(e) => setResultValues((prev) => ({ ...prev, [key]: e.target.value }))}
+                                  disabled={isCompleted}
+                                  className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-50"
+                                />
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-gray-500">{analyte.unit || '-'}</td>
+                            <td className="px-3 py-2 text-gray-500">{formatAnalyteRange(analyte) || '-'}</td>
+                            <td className="px-3 py-2 text-center"><FlagBadge flag={flag} /></td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <textarea
+                  value={testResult}
+                  onChange={(e) => setTestResult(e.target.value)}
+                  disabled={selectedTest.status === 'completed'}
+                  rows="6"
+                  className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
+                  placeholder="Enter test result details..."
+                />
+              )}
+
+              {abnormalCount > 0 && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {abnormalCount} abnormal value{abnormalCount > 1 ? 's' : ''} flagged.
+                </div>
+              )}
+
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-gray-700">Lab Notes / Comments</label>
+                <textarea
+                  value={resultNotes}
+                  onChange={(e) => setResultNotes(e.target.value)}
+                  disabled={selectedTest.status === 'completed'}
+                  rows="2"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
+                  placeholder="Optional comments, specimen quality, or repeat recommendation"
+                />
+              </div>
               
-              {selectedTest.status === 'pending' && (
+              {!['completed', 'cancelled'].includes(selectedTest.status) && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Upload Test Image/Document (Optional)
@@ -570,17 +862,19 @@ const Laboratory = () => {
                   onClick={() => {
                     setSelectedTest(null)
                     setTestResult('')
+                    setResultValues({})
+                    setResultNotes('')
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Close
                 </button>
-                {selectedTest.status === 'pending' && (
+                {!['completed', 'cancelled'].includes(selectedTest.status) && (
                   <button
                     onClick={handleAddResult}
-                    className="px-4 py-2 bg-medical hover:bg-green-600 text-white rounded-lg"
+                    className={`px-4 py-2 text-white rounded-lg ${abnormalCount > 0 ? 'bg-red-600 hover:bg-red-700' : 'bg-medical hover:bg-green-600'}`}
                   >
-                    Save Result
+                    {abnormalCount > 0 ? 'Save & Flag Result' : 'Save Result'}
                   </button>
                 )}
               </div>

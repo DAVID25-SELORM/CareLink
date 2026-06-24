@@ -241,6 +241,34 @@ const NurseDashboard = () => {
 
       if (error) throw error
 
+      // Also write to the encounter-linked vitals table if an active encounter exists
+      const { data: activeEncounter } = await supabase
+        .from('encounters')
+        .select('id')
+        .eq('patient_id', selectedPatient.id)
+        .in('status', ['registered', 'in_progress'])
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (activeEncounter?.id) {
+        await supabase.from('vitals').insert({
+          patient_id: selectedPatient.id,
+          encounter_id: activeEncounter.id,
+          recorded_by: user.id,
+          temperature_c: parseFloat(vitalsForm.temperature) || null,
+          bp_systolic: parseInt(vitalsForm.blood_pressure_systolic) || null,
+          bp_diastolic: parseInt(vitalsForm.blood_pressure_diastolic) || null,
+          pulse_rate: parseInt(vitalsForm.heart_rate) || null,
+          respiratory_rate: parseInt(vitalsForm.respiratory_rate) || null,
+          spo2: parseFloat(vitalsForm.oxygen_saturation) || null,
+          weight_kg: parseFloat(vitalsForm.weight) || null,
+          height_cm: parseFloat(vitalsForm.height) || null,
+          notes: vitalsForm.notes,
+          recorded_at: new Date().toISOString(),
+        })
+      }
+
       toast.success('Vitals recorded successfully!')
       setShowVitalsModal(false)
       resetVitalsForm()

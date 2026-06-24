@@ -1,24 +1,26 @@
 import * as Sentry from '@sentry/react'
-import { BrowserTracing } from '@sentry/tracing'
+import {
+  browserTracingIntegration,
+  replayIntegration,
+} from '@sentry/react'
 
 /**
  * Sentry Error Monitoring Integration
  * Tracks errors, performance, and user sessions
  * Author: David Gabion Selorm
- * 
+ *
  * Setup Instructions:
- * 1. Install Sentry: npm install @sentry/react @sentry/tracing
- * 2. Create a free Sentry account at sentry.io
- * 3. Create a new project for React
- * 4. Copy your DSN from Project Settings > Client Keys (DSN)
- * 5. Add to .env file: VITE_SENTRY_DSN=your_dsn_here
- * 6. Set VITE_SENTRY_ENVIRONMENT=development or production
+ * 1. Create a free Sentry account at sentry.io
+ * 2. Create a new project for React
+ * 3. Copy your DSN from Project Settings > Client Keys (DSN)
+ * 4. Add to .env file: VITE_SENTRY_DSN=your_dsn_here
+ * 5. Set VITE_SENTRY_ENVIRONMENT=development or production
  */
 
 export const initSentry = () => {
   const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
   const ENVIRONMENT = import.meta.env.VITE_SENTRY_ENVIRONMENT || 'development'
-  
+
   // Only initialize Sentry if DSN is configured
   if (!SENTRY_DSN) {
     console.warn('Sentry DSN not configured. Error monitoring is disabled.')
@@ -31,8 +33,8 @@ export const initSentry = () => {
       dsn: SENTRY_DSN,
       environment: ENVIRONMENT,
       integrations: [
-        new BrowserTracing(),
-        new Sentry.Replay({
+        browserTracingIntegration(),
+        replayIntegration({
           maskAllText: true,
           blockAllMedia: true,
         }),
@@ -46,7 +48,7 @@ export const initSentry = () => {
       replaysOnErrorSampleRate: 1.0,
       
       // Filter out sensitive data
-      beforeSend(event, hint) {
+      beforeSend(event, _hint) {
         // Remove passwords and tokens from error data
         if (event.request) {
           if (event.request.data) {
@@ -69,7 +71,7 @@ export const initSentry = () => {
       ],
     })
 
-    console.log(`✅ Sentry initialized for ${ENVIRONMENT} environment`)
+    console.warn(`Sentry initialized for ${ENVIRONMENT} environment`)
     return true
   } catch (error) {
     console.error('Failed to initialize Sentry:', error)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { withTimeout } from '../services/queryTimeout'
@@ -15,6 +15,7 @@ import { toast } from 'react-toastify'
  */
 
 const Patients = () => {
+  const navigate = useNavigate()
   const { branding } = useHospitalBranding()
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -205,6 +206,12 @@ const Patients = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => navigate('/queue-management', { state: { patient_id: patient.id } })}
+                          className="text-xs bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition font-medium"
+                        >
+                          + Add to Queue
+                        </button>
                         <PDFButton
                           onDownload={() => handleDownloadPatientRecord(patient)}
                           onPrint={() => handlePrintPatientRecord(patient)}

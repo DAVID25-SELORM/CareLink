@@ -15,10 +15,12 @@ const EmergencyTriage = () => {
   const { user } = useAuth()
   const [patients, setPatients] = useState([])
   const [assessments, setAssessments] = useState([])
+  const [encounters, setEncounters] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     patient_id: '',
+    encounter_id: '',
     chief_complaint: '',
     vital_signs: {
       blood_pressure: '',
@@ -38,15 +40,21 @@ const EmergencyTriage = () => {
 
   const fetchData = async () => {
     setLoading(true)
-    const [patientsData, assessmentsData] = await Promise.all([
+    const [patientsData, assessmentsData, encountersData] = await Promise.all([
       supabase.from('patients').select('*').order('name'),
       supabase.from('triage_assessments')
         .select('*, patients(name, patient_id, phone), users(full_name, email)')
         .order('created_at', { ascending: false })
+        .limit(50),
+      supabase.from('encounters')
+        .select('id, patient_id, encounter_type, chief_complaint, started_at, patients:patient_id(name)')
+        .in('status', ['registered', 'in_progress'])
+        .order('started_at', { ascending: false })
         .limit(50)
     ])
     setPatients(patientsData.data || [])
     setAssessments(assessmentsData.data || [])
+    setEncounters(encountersData.data || [])
     setLoading(false)
   }
 
@@ -54,7 +62,14 @@ const EmergencyTriage = () => {
     e.preventDefault()
     try {
       const { error } = await supabase.from('triage_assessments').insert([{
-        ...formData,
+        patient_id: formData.patient_id,
+        encounter_id: formData.encounter_id || null,
+        chief_complaint: formData.chief_complaint,
+        vital_signs: formData.vital_signs,
+        severity: formData.severity,
+        triage_level: formData.severity,       // satisfies NOT NULL constraint on legacy column
+        pain_score: formData.pain_score,
+        assessment_notes: formData.notes,      // maps to correct column name
         assessed_by: user.id
       }])
 
@@ -74,13 +89,14 @@ const EmergencyTriage = () => {
           title: 'Critical Patient Triaged',
           message: `RED severity: ${formData.chief_complaint}`,
           type: 'urgent_referral',
+          channel: 'in_app',
           priority: 'urgent'
         }])
       }
 
       toast.success('Triage assessment completed!')
       setShowForm(false)
-      setFormData({ patient_id: '', chief_complaint: '', vital_signs: { blood_pressure: '', heart_rate: '', respiratory_rate: '', temperature: '', oxygen_saturation: '' }, severity: 'yellow', pain_score: '0', notes: '' })
+      setFormData({ patient_id: '', encounter_id: '', chief_complaint: '', vital_signs: { blood_pressure: '', heart_rate: '', respiratory_rate: '', temperature: '', oxygen_saturation: '' }, severity: 'yellow', pain_score: '0', notes: '' })
       fetchData()
     } catch (error) {
       toast.error('Failed to submit assessment')
@@ -195,6 +211,19 @@ const EmergencyTriage = () => {
                     <option value="">Select Patient</option>
                     {patients.map(p => (
                       <option key={p.id} value={p.id}>{p.name} - {p.patient_id}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Encounter (Visit)</label>
+                  <select value={formData.encounter_id} onChange={(e) => {
+                    const enc = encounters.find(en => en.id === e.target.value)
+                    setFormData({...formData, encounter_id: e.target.value, patient_id: enc?.patient_id || formData.patient_id})
+                  }} className="w-full px-4 py-2 border rounded-lg">
+                    <option value="">No encounter (standalone)</option>
+                    {encounters.map(enc => (
+                      <option key={enc.id} value={enc.id}>{enc.patients?.name} — {enc.encounter_type} — {new Date(enc.started_at).toLocaleDateString()}</option>
                     ))}
                   </select>
                 </div>
