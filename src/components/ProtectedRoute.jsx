@@ -1,5 +1,6 @@
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { isPlatformRole } from '../platform/domain'
 
 /**
  * Protected Route Component
@@ -38,8 +39,8 @@ const ProtectedRoute = ({ children, allowedRoles = [], platformOnly = false }) =
     </div>
   }
 
-  if (!platformOnly && userRole === 'platform_owner') return <Navigate to="/platform" replace />
-  if (platformOnly && userRole !== 'platform_owner') return <Navigate to="/dashboard" replace />
+  if (!platformOnly && isPlatformRole(userRole)) return <Navigate to="/platform" replace />
+  if (platformOnly && !isPlatformRole(userRole)) return <Navigate to="/dashboard" replace />
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
     return (

@@ -28,6 +28,9 @@ const Referrals = lazy(() => import('./pages/Referrals'))
 const Reports = lazy(() => import('./pages/Reports'))
 const RecordsDashboard = lazy(() => import('./pages/RecordsDashboard'))
 const HospitalOnboarding = lazy(() => import('./pages/HospitalOnboarding'))
+const PlatformOverview = lazy(() => import('./pages/PlatformOverview'))
+const PlatformHospitals = lazy(() => import('./pages/PlatformHospitals'))
+const PlatformModulePage = lazy(() => import('./pages/PlatformModulePage'))
 const HospitalProfile = lazy(() => import('./pages/HospitalProfile'))
 const QueueManagement = lazy(() => import('./pages/QueueManagement'))
 const Telemedicine = lazy(() => import('./pages/Telemedicine'))
@@ -84,7 +87,12 @@ function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/platform/login" element={<Login platform />} />
-              <Route path="/platform" element={<ProtectedRoute platformOnly><HospitalOnboarding /></ProtectedRoute>} />
+              <Route path="/platform" element={<ProtectedRoute platformOnly><PlatformOverview /></ProtectedRoute>} />
+              <Route path="/platform/hospitals" element={<ProtectedRoute platformOnly><PlatformHospitals /></ProtectedRoute>} />
+              <Route path="/platform/onboarding" element={<ProtectedRoute platformOnly><HospitalOnboarding /></ProtectedRoute>} />
+              {['subscriptions','plans','billing','support','monitoring','integrations','backups','team','notifications','audit','analytics','settings'].map((module) => (
+                <Route key={module} path={`/platform/${module}`} element={<ProtectedRoute platformOnly><PlatformModulePage module={module} /></ProtectedRoute>} />
+              ))}
               
               {/* Protected Routes */}
             <Route

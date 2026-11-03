@@ -5,6 +5,7 @@ import { setSentryUser } from '../services/sentry'
 import { withTimeout } from '../services/queryTimeout'
 import { startAutoSync, stopAutoSync } from '../services/syncEngine'
 import { logAuditEvent } from '../services/auditLog'
+import { isPlatformRole } from '../platform/domain'
 
 const AuthContext = createContext(null)
 
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }) => {
   const generation = useRef(0)
 
   useEffect(() => {
-    if (userRole && userRole !== 'platform_owner') startAutoSync()
+    if (userRole && !isPlatformRole(userRole)) startAutoSync()
     return () => stopAutoSync()
   }, [userRole])
 
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const signOut = async () => {
-    if (userRole && userRole !== 'platform_owner') {
+    if (userRole && !isPlatformRole(userRole)) {
       await logAuditEvent({ user, action: 'sign_out', tableName: 'auth', recordId: user?.id })
     }
     const { error } = await supabase.auth.signOut()

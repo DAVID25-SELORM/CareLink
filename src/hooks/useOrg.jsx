@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from './useAuth'
+import { isPlatformRole } from '../platform/domain'
 
 const OrgContext = createContext(null)
 
@@ -10,7 +11,7 @@ export function OrgProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user && userRole && userRole !== 'platform_owner') {
+    if (user && userRole && !isPlatformRole(userRole)) {
       loadOrganization()
     } else {
       setOrg(null)
