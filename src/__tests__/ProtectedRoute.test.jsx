@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
 
 // Mock useAuth so tests control the auth state
@@ -18,6 +18,38 @@ const renderWithRouter = (ui, { initialEntries = ['/'] } = {}) =>
   render(<MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>)
 
 describe('ProtectedRoute', () => {
+  it('redirects platform owners away from unrestricted clinical routes', () => {
+    useAuth.mockReturnValue({ user: { id: 'owner' }, userRole: 'platform_owner', loading: false })
+    renderWithRouter(<Routes>
+      <Route path="/" element={<ProtectedRoute><p>Clinical data</p></ProtectedRoute>} />
+      <Route path="/platform" element={<p>Platform home</p>} />
+    </Routes>)
+    expect(screen.getByText('Platform home')).toBeInTheDocument()
+    expect(screen.queryByText('Clinical data')).not.toBeInTheDocument()
+  })
+
+  it('redirects tenant admins away from platform routes', () => {
+    useAuth.mockReturnValue({ user: { id: 'admin' }, userRole: 'admin', loading: false })
+    renderWithRouter(<Routes>
+      <Route path="/" element={<ProtectedRoute platformOnly><p>Tenant directory</p></ProtectedRoute>} />
+      <Route path="/dashboard" element={<p>Hospital home</p>} />
+    </Routes>)
+    expect(screen.getByText('Hospital home')).toBeInTheDocument()
+    expect(screen.queryByText('Tenant directory')).not.toBeInTheDocument()
+  })
+
+  it('renders the platform workspace without requiring a hospital admin role', () => {
+    useAuth.mockReturnValue({ user: { id: 'owner' }, userRole: 'platform_owner', loading: false })
+    renderWithRouter(<ProtectedRoute platformOnly><p>Tenant directory</p></ProtectedRoute>)
+    expect(screen.getByText('Tenant directory')).toBeInTheDocument()
+  })
+
+  it('fails closed when database role verification fails', () => {
+    useAuth.mockReturnValue({ user: { id: '1', user_metadata: { role: 'admin' } }, userRole: null, loading: false, accessError: 'Verification failed' })
+    renderWithRouter(<ProtectedRoute><p>Clinical data</p></ProtectedRoute>)
+    expect(screen.getByText('Verification failed')).toBeInTheDocument()
+    expect(screen.queryByText('Clinical data')).not.toBeInTheDocument()
+  })
   it('shows a loading state while auth is being resolved', () => {
     useAuth.mockReturnValue({ user: null, userRole: null, loading: true })
     renderWithRouter(<ProtectedRoute><p>Protected content</p></ProtectedRoute>)

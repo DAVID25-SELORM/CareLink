@@ -11,7 +11,7 @@ import carelinkLogo from '../assets/carelink-logo.svg'
  * User authentication for CareLink HMS
  */
 
-const Login = () => {
+const Login = ({ platform = false }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -67,10 +67,10 @@ const Login = () => {
             {branding.platformName}
           </p>
           <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-            {hospitalDisplayName}
+            {platform ? 'Platform owner sign in' : hospitalDisplayName}
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm mt-3 sm:mt-4">
-            Secure staff access for {branding.hospitalName || 'your hospital'} on the CareLink platform.
+            {platform ? 'Manage hospital onboarding and the CareLink platform.' : `Secure staff access for ${branding.hospitalName || 'your hospital'} on the CareLink platform.`}
           </p>
           <p className="text-slate-500 text-xs mt-2">
             {branding.tagline || 'Powered by CareLink'}

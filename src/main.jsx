@@ -4,7 +4,6 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App.jsx'
 import './index.css'
 import { initSentry } from './services/sentry'
-import { startAutoSync } from './services/syncEngine'
 
 /**
  * CareLink Hospital Management System
@@ -14,9 +13,6 @@ import { startAutoSync } from './services/syncEngine'
 
 // Initialize Sentry error monitoring (optional - requires VITE_SENTRY_DSN in .env)
 initSentry()
-
-// Start offline-first auto-sync engine (syncs every 5 minutes + on reconnect)
-startAutoSync(5 * 60 * 1000)
 
 // Register the PWA service worker once in production.
 if (import.meta.env.PROD) {

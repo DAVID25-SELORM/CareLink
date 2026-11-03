@@ -15,14 +15,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         runtimeCaching: [
           {
-            // Cache Supabase API calls with network-first strategy
+            // Authorization responses and clinical data must never use a shared cache.
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api-cache',
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 },
-              networkTimeoutSeconds: 5,
-            },
+            handler: 'NetworkOnly',
           },
           {
             // Cache Google Fonts

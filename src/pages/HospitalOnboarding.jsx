@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
-import DashboardLayout from '../layouts/DashboardLayout'
+import PlatformLayout from '../layouts/PlatformLayout'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../supabaseClient'
 import { withTimeout } from '../services/queryTimeout'
-import { logAuditEvent } from '../services/auditLog'
 import { canAccessPlatformOnboarding } from '../constants/platformAccess'
 
 const HOSPITAL_STATUSES = ['lead', 'intake', 'provisioning', 'training', 'ready_for_go_live', 'live', 'paused']
@@ -17,11 +16,11 @@ const DEFAULT_TASK_TEMPLATE = [
   { phase: 'technical', task_name: 'Provision dedicated Vercel deployment', task_details: 'Create a new Vercel project and add the hospital-specific Supabase environment variables.' },
   { phase: 'database', task_name: 'Run base CareLink schema', task_details: 'Execute database-setup.sql before any module scripts or production data entry.' },
   { phase: 'database', task_name: 'Enable requested modules', task_details: 'Run nurse-system-setup.sql, records-system-setup.sql, and referrals-setup.sql only when requested.' },
-  { phase: 'accounts', task_name: 'Create owner account and sync public.users', task_details: 'Create the owner in Supabase Auth, update setup-users.sql first row, and run setup-users.sql.' },
+  { phase: 'accounts', task_name: 'Create tenant administrator account', task_details: 'Assign the hospital administrator in this hospital workspace. Platform ownership is managed separately.' },
   { phase: 'accounts', task_name: 'Create real hospital staff', task_details: 'Use the in-app User Management page after owner login; remove any test accounts before go-live.' },
   { phase: 'branding', task_name: 'Apply hospital branding', task_details: 'Update title, logo, favicon, colors, and agreed CareLink versus hospital branding treatment.' },
   { phase: 'go_live', task_name: 'Run full functional smoke test', task_details: 'Verify patients, appointments, prescriptions, pharmacy, billing, claims, and enabled specialty dashboards.' },
-  { phase: 'security', task_name: 'Review data and security controls', task_details: 'Confirm no sample data remains, RLS is active, and only real staff have production access.' },
+  { phase: 'security', task_name: 'Verify tenant access separation', task_details: 'Confirm only assigned hospital staff have access and hospital administrators cannot enter platform administration.' },
   { phase: 'handover', task_name: 'Train hospital staff and sign off', task_details: 'Train the owner plus enabled roles, share the user guide, and confirm first support review date.' },
 ]
 
@@ -69,7 +68,7 @@ const EMPTY_FORM = {
 }
 
 const normalizeStatusLabel = (value) => value.replaceAll('_', ' ').replace(/\b\w/g, (match) => match.toUpperCase())
-const isMissingOnboardingTableError = (message = '') => /hospitals|hospital_onboarding_tasks/i.test(message) && /(does not exist|could not find the table|relation .* does not exist)/i.test(message)
+const isMissingOnboardingTableError = (message = '') => /platform_tenants|platform_onboarding_tasks/i.test(message) && /(does not exist|could not find the table|relation .* does not exist)/i.test(message)
 const getNullableText = (value) => (value.trim() ? value.trim() : null)
 const getHospitalTaskStats = (hospitalTasks) => {
   const total = hospitalTasks.length
@@ -129,9 +128,9 @@ const HospitalOnboarding = () => {
       setLoading(true)
       setLoadError('')
       const [hospitalsResult, tasksResult] = await Promise.allSettled([
-        withTimeout(supabase.from('hospitals').select('*').order('created_at', { ascending: false }), 'Hospital onboarding records'),
+        withTimeout(supabase.from('platform_tenants').select('*').order('created_at', { ascending: false }), 'Hospital onboarding records'),
         withTimeout(
-          supabase.from('hospital_onboarding_tasks').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
+          supabase.from('platform_onboarding_tasks').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
           'Hospital onboarding tasks',
         ),
       ])
@@ -208,7 +207,7 @@ const HospitalOnboarding = () => {
       }
 
       const { data: hospital, error: hospitalError } = await withTimeout(
-        supabase.from('hospitals').insert([hospitalPayload]).select().single(),
+        supabase.from('platform_tenants').insert([hospitalPayload]).select().single(),
         'Create hospital onboarding record',
       )
       if (hospitalError) throw hospitalError
@@ -222,18 +221,10 @@ const HospitalOnboarding = () => {
       }))
 
       const { error: taskError } = await withTimeout(
-        supabase.from('hospital_onboarding_tasks').insert(taskRows),
+        supabase.from('platform_onboarding_tasks').insert(taskRows),
         'Create hospital onboarding task list',
       )
       if (taskError) throw taskError
-
-      await logAuditEvent({
-        user,
-        action: 'create_hospital_onboarding',
-        tableName: 'hospitals',
-        recordId: hospital.id,
-        newValues: hospitalPayload,
-      })
 
       toast.success(`${hospital.hospital_name} added to the onboarding pipeline`)
       setShowCreateForm(false)
@@ -252,7 +243,7 @@ const HospitalOnboarding = () => {
     try {
       setUpdatingHospitalId(hospitalId)
       const { error } = await withTimeout(
-        supabase.from('hospitals').update({ status: nextStatus }).eq('id', hospitalId),
+        supabase.from('platform_tenants').update({ status: nextStatus }).eq('id', hospitalId),
         'Update hospital status',
       )
       if (error) throw error
@@ -278,7 +269,7 @@ const HospitalOnboarding = () => {
         completed_by: nextStatus === 'completed' ? user?.id || null : null,
       }
       const { error } = await withTimeout(
-        supabase.from('hospital_onboarding_tasks').update(payload).eq('id', taskId),
+        supabase.from('platform_onboarding_tasks').update(payload).eq('id', taskId),
         'Update onboarding task',
       )
       if (error) throw error
@@ -297,7 +288,7 @@ const HospitalOnboarding = () => {
 
   if (!hasPlatformAccess) {
     return (
-      <DashboardLayout>
+      <PlatformLayout>
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">Platform Onboarding</p>
           <h1 className="mt-3 text-3xl font-semibold text-slate-900">Hospital onboarding is reserved for the CareLink owner account</h1>
@@ -305,33 +296,33 @@ const HospitalOnboarding = () => {
             This area manages new client hospitals, not the day-to-day operations of a live hospital deployment.
           </p>
         </div>
-      </DashboardLayout>
+      </PlatformLayout>
     )
   }
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <PlatformLayout>
         <div className="min-h-[320px] flex flex-col items-center justify-center text-center">
           <div className="spinner mb-4"></div>
           <h2 className="mb-2 text-xl font-semibold text-slate-800">Loading hospital onboarding hub</h2>
           <p className="text-slate-600">Fetching implementation pipeline data from CareLink.</p>
         </div>
-      </DashboardLayout>
+      </PlatformLayout>
     )
   }
 
   return (
-    <DashboardLayout>
+    <PlatformLayout>
       <div className="space-y-6">
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-900 to-emerald-700 px-6 py-7 text-white shadow-xl">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100">CareLink Platform</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Hospital onboarding hub</h1>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Platform owner dashboard</h1>
               <p className="mt-3 text-sm leading-6 text-blue-50 sm:text-base">
                 Track client intake, provisioning, go-live readiness, and handover from one owner-controlled dashboard.
-                Each live hospital still gets its own dedicated Supabase and Vercel deployment.
+                Each hospital has a separate workspace for its staff and patient records.
               </p>
             </div>
             <button
@@ -344,9 +335,11 @@ const HospitalOnboarding = () => {
           </div>
         </section>
 
+        <p className="text-sm text-slate-600">Onboarding statuses track rollout progress. Pausing a record here does not disable the hospital workspace.</p>
+
         {setupRequired ? (
           <section className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900 shadow-sm">
-            Run <code>hospital-onboarding-setup.sql</code> in Supabase for this CareLink owner instance, then reload this page.
+            Platform setup is incomplete. Contact your deployment administrator to finish workspace setup.
           </section>
         ) : null}
 
@@ -537,7 +530,7 @@ const HospitalOnboarding = () => {
           </section>
         </div>
       </div>
-    </DashboardLayout>
+    </PlatformLayout>
   )
 }
 

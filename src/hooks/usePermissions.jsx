@@ -6,6 +6,7 @@ const PermissionsContext = createContext(null)
 
 // Permission definitions keyed by role
 const ROLE_PERMISSIONS = {
+  platform_owner: [],
   admin: ['*'],
   doctor: [
     'encounter.create', 'encounter.read', 'encounter.update',
@@ -77,7 +78,9 @@ export const PermissionsProvider = ({ children }) => {
 
   useEffect(() => {
     if (userRole) {
-      setPermissions(ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS.staff)
+      setPermissions(ROLE_PERMISSIONS[userRole] || [])
+    } else {
+      setPermissions([])
     }
   }, [userRole])
 
@@ -103,7 +106,7 @@ export const usePermissions = () => {
   if (!context) {
     // Fallback when used outside provider — derive from useAuth directly
     const { userRole } = useAuth()
-    const perms = ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS.staff
+    const perms = ROLE_PERMISSIONS[userRole] || []
     return {
       permissions: perms,
       hasPermission: (p) => perms.includes('*') || perms.includes(p),

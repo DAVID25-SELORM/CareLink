@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { supabase } from '../supabaseClient'
+import { supabase, createStaffSignupClient } from '../supabaseClient'
 import { toast } from 'react-toastify'
 
 /**
@@ -97,7 +97,8 @@ const UserManagement = () => {
 
     try {
       // Step 1: Create authentication user using regular signup
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const signupClient = createStaffSignupClient()
+      const { data: authData, error: authError } = await signupClient.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {

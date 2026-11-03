@@ -1,70 +1,16 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { supabase } from '../supabaseClient'
-import { logAuditEvent } from '../services/auditLog'
 import { setSentryUser } from '../services/sentry'
-
-/**
- * Authentication Hook
- * Manages user authentication state and operations
- *
- * Supported Roles:
- * - Admin: Full system access
- * - Doctor: Patient & prescription management
- * - Pharmacist: Pharmacy & dispensing
- * - Cashier: Payment processing
- */
+import { withTimeout } from '../services/queryTimeout'
+import { startAutoSync, stopAutoSync } from '../services/syncEngine'
+import { logAuditEvent } from '../services/auditLog'
 
 const AuthContext = createContext(null)
-const ROLE_CACHE_PREFIX = 'carelink-role:'
-
-const getRoleCacheKey = (authUser) => {
-  if (!authUser) return null
-  return `${ROLE_CACHE_PREFIX}${authUser.id || authUser.email || 'anonymous'}`
-}
-
-const getCachedRole = (authUser) => {
-  const cacheKey = getRoleCacheKey(authUser)
-  if (!cacheKey) return null
-
-  try {
-    return window.localStorage.getItem(cacheKey)
-  } catch (error) {
-    console.warn('Unable to read cached role:', error)
-    return null
-  }
-}
-
-const cacheRole = (authUser, role) => {
-  const cacheKey = getRoleCacheKey(authUser)
-  if (!cacheKey || !role) return
-
-  try {
-    window.localStorage.setItem(cacheKey, role)
-  } catch (error) {
-    console.warn('Unable to cache role:', error)
-  }
-}
-
-const getFallbackRole = (authUser) =>
-  authUser?.user_metadata?.role ||
-  authUser?.app_metadata?.role ||
-  getCachedRole(authUser) ||
-  'staff'
-
-const withTimeout = (promise, timeoutMs = 3000) =>
-  Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Request timed out after ${Math.round(timeoutMs / 1000)} seconds`)), timeoutMs)
-    }),
-  ])
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider')
   return context
 }
 
@@ -72,158 +18,89 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [userRole, setUserRole] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [accessError, setAccessError] = useState('')
+  const generation = useRef(0)
 
   useEffect(() => {
-    checkUser()
+    if (userRole && userRole !== 'platform_owner') startAutoSync()
+    return () => stopAutoSync()
+  }, [userRole])
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        setUser(session.user)
-        setUserRole(getFallbackRole(session.user))
+  useEffect(() => {
+    let active = true
+    let eventReceived = false
+    const resolveSession = async (session, event) => {
+      const request = ++generation.current
+      setUser(session?.user || null)
+      setUserRole(null)
+      setAccessError('')
+      setLoading(Boolean(session))
+      setSentryUser(session?.user || null)
+      if (!session) return
+      try {
+        const { data, error } = await withTimeout(supabase.rpc('get_carelink_access'), 'Verify workspace access')
+        if (error) throw error
+        if (!data?.role) throw new Error('Your account has not been assigned access to this workspace. Contact your administrator.')
+        if (active && request === generation.current) {
+          setUserRole(data.role)
+          if (event === 'SIGNED_IN' && data.scope === 'tenant') {
+            void logAuditEvent({ user: session.user, action: 'sign_in', tableName: 'auth', recordId: session.user.id })
+          }
+        }
+      } catch (error) {
+        if (active && request === generation.current) {
+          setAccessError(error.message || 'Unable to verify workspace access. Please try signing in again.')
+        }
+      } finally {
+        if (active && request === generation.current) setLoading(false)
+      }
+    }
+    // Defer queries until outside Supabase's auth callback/lock.
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      eventReceived = true
+      ++generation.current
+      setUserRole(null)
+      setLoading(true)
+      setTimeout(() => { if (active) resolveSession(session, event) }, 0)
+    })
+    withTimeout(supabase.auth.getSession(), 'Load session').then(({ data, error }) => {
+      if (!active || eventReceived) return
+      if (error) throw error
+      return resolveSession(data.session)
+    }).catch((error) => {
+      if (active && !eventReceived) {
+        setAccessError(error.message)
         setLoading(false)
-        fetchUserRole(session.user)
-        setSentryUser(session.user) // Track user in Sentry
-      } else {
-        setUser(null)
-        setUserRole(null)
-        setLoading(false)
-        setSentryUser(null) // Clear Sentry user on logout
       }
     })
-
     return () => {
-      authListener?.subscription?.unsubscribe()
+      active = false
+      ++generation.current
+      listener.subscription.unsubscribe()
     }
   }, [])
 
-  const checkUser = async () => {
-    try {
-      const {
-        data: { session },
-      } = await withTimeout(supabase.auth.getSession(), 3000)
-
-      if (session) {
-        setUser(session.user)
-        setUserRole(getFallbackRole(session.user))
-        fetchUserRole(session.user)
-        setSentryUser(session.user) // Track user in Sentry
-      }
-    } catch (error) {
-      console.error('Error checking user:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchUserRole = async (authUser) => {
-    if (!authUser) {
-      setUserRole(null)
-      return
-    }
-
-    try {
-      let roleRecord = null
-
-      if (authUser.id) {
-        const { data, error } = await withTimeout(
-          supabase
-            .from('users')
-            .select('role')
-            .eq('id', authUser.id)
-            .maybeSingle(),
-          3000,
-        )
-
-        if (error) throw error
-        roleRecord = data
-      }
-
-      // The setup docs create users by email, so support that path too.
-      if (!roleRecord && authUser.email) {
-        const { data, error } = await withTimeout(
-          supabase
-            .from('users')
-            .select('role')
-            .eq('email', authUser.email)
-            .maybeSingle(),
-          3000,
-        )
-
-        if (error) throw error
-        roleRecord = data
-      }
-
-      const resolvedRole = roleRecord?.role || getFallbackRole(authUser)
-      setUserRole(resolvedRole)
-      cacheRole(authUser, resolvedRole)
-      return resolvedRole
-    } catch (error) {
-      console.error('Error fetching user role:', error)
-      const fallbackRole = getFallbackRole(authUser)
-      setUserRole(fallbackRole)
-      return fallbackRole
-    }
-  }
-
   const signIn = async (email, password) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) throw error
-
-      await fetchUserRole(data.user)
-      await logAuditEvent({
-        user: data.user,
-        action: 'sign_in',
-        tableName: 'auth',
-        recordId: data.user.id,
-        newValues: { email: data.user.email },
-      })
-      toast.success('Login successful!')
-      return { data, error: null }
-    } catch (error) {
-      toast.error(error.message || 'Login failed')
-      return { data: null, error }
-    }
+    const result = await supabase.auth.signInWithPassword({ email, password })
+    if (result.error) toast.error(result.error.message || 'Login failed')
+    return result
   }
 
   const signOut = async () => {
-    try {
-      const currentUser = user
-      await logAuditEvent({
-        user: currentUser,
-        action: 'sign_out',
-        tableName: 'auth',
-        recordId: currentUser?.id || null,
-        oldValues: { email: currentUser?.email || null },
-      })
-
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-
-      setUser(null)
-      setUserRole(null)
-      toast.success('Logged out successfully')
-    } catch (error) {
-      toast.error('Error logging out')
-      console.error('Error signing out:', error)
+    if (userRole && userRole !== 'platform_owner') {
+      await logAuditEvent({ user, action: 'sign_out', tableName: 'auth', recordId: user?.id })
     }
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      toast.error('Unable to sign out. Please try again.')
+      return
+    }
+    ++generation.current
+    setUser(null)
+    setUserRole(null)
+    setAccessError('')
+    toast.success('Logged out successfully')
   }
 
-  const value = {
-    user,
-    userRole,
-    loading,
-    signIn,
-    signOut,
-  }
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={{ user, userRole, loading, accessError, signIn, signOut }}>{children}</AuthContext.Provider>
 }

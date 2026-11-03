@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { onSyncStatusChange, syncAll } from '../services/syncEngine'
 import { getCacheStats } from '../services/offlineDB'
+import { useAuth } from '../hooks/useAuth'
 
 const OfflineIndicator = () => {
+  const { userRole } = useAuth()
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [syncStatus, setSyncStatus] = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
@@ -50,7 +52,7 @@ const OfflineIndicator = () => {
   }
 
   // Don't show anything if online and no pending items
-  if (isOnline && pendingCount === 0 && !syncing) return null
+  if (!userRole || userRole === 'platform_owner' || (isOnline && pendingCount === 0 && !syncing)) return null
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

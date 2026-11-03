@@ -7,8 +7,8 @@ import { useAuth } from '../hooks/useAuth'
  * and optionally restricts access by role.
  */
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { user, userRole, loading } = useAuth()
+const ProtectedRoute = ({ children, allowedRoles = [], platformOnly = false }) => {
+  const { user, userRole, loading, accessError, signOut } = useAuth()
 
   if (loading) {
     return (
@@ -25,8 +25,21 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to={platformOnly ? '/platform/login' : '/login'} replace />
   }
+
+  if (accessError || !userRole) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+      <div className="max-w-md rounded-xl bg-white p-8 shadow">
+        <h1 className="text-xl font-semibold">Workspace access unavailable</h1>
+        <p className="my-4">{accessError || 'Your workspace access could not be verified.'}</p>
+        <button onClick={signOut} className="rounded bg-blue-600 px-4 py-2 text-white">Sign out</button>
+      </div>
+    </div>
+  }
+
+  if (!platformOnly && userRole === 'platform_owner') return <Navigate to="/platform" replace />
+  if (platformOnly && userRole !== 'platform_owner') return <Navigate to="/dashboard" replace />
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
     return (

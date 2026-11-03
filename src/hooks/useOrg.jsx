@@ -5,18 +5,18 @@ import { useAuth } from './useAuth'
 const OrgContext = createContext(null)
 
 export function OrgProvider({ children }) {
-  const { user } = useAuth()
+  const { user, userRole } = useAuth()
   const [org, setOrg] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user) {
+    if (user && userRole && userRole !== 'platform_owner') {
       loadOrganization()
     } else {
       setOrg(null)
       setLoading(false)
     }
-  }, [user])
+  }, [user, userRole])
 
   async function loadOrganization() {
     try {

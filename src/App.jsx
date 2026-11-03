@@ -83,6 +83,8 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/platform/login" element={<Login platform />} />
+              <Route path="/platform" element={<ProtectedRoute platformOnly><HospitalOnboarding /></ProtectedRoute>} />
               
               {/* Protected Routes */}
             <Route
@@ -240,7 +242,7 @@ function App() {
               <Route
                 path="/hospital-onboarding"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute platformOnly>
                     <HospitalOnboarding />
                   </ProtectedRoute>
                 }
