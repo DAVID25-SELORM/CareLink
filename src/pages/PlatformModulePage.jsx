@@ -1,6 +1,7 @@
+import { useCallback } from 'react'
 import PlatformLayout from '../layouts/PlatformLayout'
 import { fetchAll } from '../platform/api'
-import { Badge, PageHeader, ResourceState, Table, dateLabel, titleCase } from '../platform/ui'
+import { Badge, PageHeader, ResourceState, Table, dateLabel } from '../platform/ui'
 import { useResource } from '../platform/useResource'
 
 const MODULES = {
@@ -27,6 +28,7 @@ function renderValue(key, row) {
 }
 export default function PlatformModulePage({ module }) {
   const config = MODULES[module] || MODULES.analytics
-  const resource = useResource(() => fetchAll(config.table))
+  const load = useCallback(() => fetchAll(config.table), [config.table])
+  const resource = useResource(load)
   return <PlatformLayout><PageHeader title={config.title} description={config.description} /><ResourceState resource={resource}><section className="pc-panel"><Table rows={resource.data || []} columns={config.columns.map(([key,label]) => ({ key, label, render: row => renderValue(key,row) }))} /></section></ResourceState></PlatformLayout>
 }
