@@ -1,28 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import PlatformLayout from '../layouts/PlatformLayout'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../supabaseClient'
 import { withTimeout } from '../services/queryTimeout'
-import { canAccessPlatformOnboarding } from '../constants/platformAccess'
+import { can } from '../platform/domain'
 
-const HOSPITAL_STATUSES = ['lead', 'intake', 'provisioning', 'training', 'ready_for_go_live', 'live', 'paused']
-const MODULE_OPTIONS = ['patients', 'appointments', 'laboratory', 'pharmacy', 'drug_management', 'billing', 'claims', 'reports', 'nurse_dashboard', 'records_dashboard', 'referrals']
 const TASK_PHASE_ORDER = ['intake', 'technical', 'database', 'accounts', 'branding', 'go_live', 'security', 'handover']
-
-const DEFAULT_TASK_TEMPLATE = [
-  { phase: 'intake', task_name: 'Complete hospital intake form', task_details: 'Confirm owner email, hospital contact, branding assets, public URL, and launch modules.' },
-  { phase: 'technical', task_name: 'Provision dedicated Supabase project', task_details: 'Create a fresh hospital database and confirm Auth email provider plus redirect URLs.' },
-  { phase: 'technical', task_name: 'Provision dedicated Vercel deployment', task_details: 'Create a new Vercel project and add the hospital-specific Supabase environment variables.' },
-  { phase: 'database', task_name: 'Run base CareLink schema', task_details: 'Execute database-setup.sql before any module scripts or production data entry.' },
-  { phase: 'database', task_name: 'Enable requested modules', task_details: 'Run nurse-system-setup.sql, records-system-setup.sql, and referrals-setup.sql only when requested.' },
-  { phase: 'accounts', task_name: 'Create tenant administrator account', task_details: 'Assign the hospital administrator in this hospital workspace. Platform ownership is managed separately.' },
-  { phase: 'accounts', task_name: 'Create real hospital staff', task_details: 'Use the in-app User Management page after owner login; remove any test accounts before go-live.' },
-  { phase: 'branding', task_name: 'Apply hospital branding', task_details: 'Update title, logo, favicon, colors, and agreed CareLink versus hospital branding treatment.' },
-  { phase: 'go_live', task_name: 'Run full functional smoke test', task_details: 'Verify patients, appointments, prescriptions, pharmacy, billing, claims, and enabled specialty dashboards.' },
-  { phase: 'security', task_name: 'Verify tenant access separation', task_details: 'Confirm only assigned hospital staff have access and hospital administrators cannot enter platform administration.' },
-  { phase: 'handover', task_name: 'Train hospital staff and sign off', task_details: 'Train the owner plus enabled roles, share the user guide, and confirm first support review date.' },
-]
 
 const STATUS_STYLES = {
   lead: 'bg-slate-100 text-slate-700',
@@ -49,27 +34,8 @@ const PHASE_LABELS = {
   handover: 'Training and Handover',
 }
 
-const EMPTY_FORM = {
-  hospital_name: '',
-  branch_location: '',
-  contact_person: '',
-  contact_phone: '',
-  contact_email: '',
-  owner_full_name: '',
-  owner_email: '',
-  owner_phone: '',
-  public_url: '',
-  primary_color: '',
-  secondary_color: '',
-  status: 'lead',
-  go_live_date: '',
-  notes: '',
-  enabled_modules: ['patients', 'appointments', 'pharmacy', 'billing'],
-}
-
 const normalizeStatusLabel = (value) => value.replaceAll('_', ' ').replace(/\b\w/g, (match) => match.toUpperCase())
 const isMissingOnboardingTableError = (message = '') => /platform_tenants|platform_onboarding_tasks/i.test(message) && /(does not exist|could not find the table|relation .* does not exist)/i.test(message)
-const getNullableText = (value) => (value.trim() ? value.trim() : null)
 const getHospitalTaskStats = (hospitalTasks) => {
   const total = hospitalTasks.length
   const completed = hospitalTasks.filter((task) => task.status === 'completed').length
@@ -85,17 +51,16 @@ const formatDate = (value) => {
 
 const HospitalOnboarding = () => {
   const { user, userRole } = useAuth()
-  const hasPlatformAccess = canAccessPlatformOnboarding(user, userRole)
+  const hasPlatformAccess = can(userRole, 'hospitals.read')
+  const canEditTasks = can(userRole, 'onboarding.write')
+  const [searchParams] = useSearchParams()
+  const requestedHospitalId = searchParams.get('hospital')
   const [hospitals, setHospitals] = useState([])
   const [tasks, setTasks] = useState([])
-  const [selectedHospitalId, setSelectedHospitalId] = useState(null)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [selectedHospitalId, setSelectedHospitalId] = useState(requestedHospitalId)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [setupRequired, setSetupRequired] = useState(false)
   const [loadError, setLoadError] = useState('')
-  const [updatingHospitalId, setUpdatingHospitalId] = useState(null)
   const [updatingTaskId, setUpdatingTaskId] = useState(null)
 
   useEffect(() => {
@@ -160,106 +125,6 @@ const HospitalOnboarding = () => {
     }
   }
 
-  const resetForm = () => setFormData(EMPTY_FORM)
-
-  const handleModuleToggle = (moduleName) => {
-    setFormData((currentForm) => {
-      const exists = currentForm.enabled_modules.includes(moduleName)
-      return {
-        ...currentForm,
-        enabled_modules: exists
-          ? currentForm.enabled_modules.filter((module) => module !== moduleName)
-          : [...currentForm.enabled_modules, moduleName],
-      }
-    })
-  }
-
-  const handleCreateHospital = async (event) => {
-    event.preventDefault()
-    if (!formData.hospital_name.trim()) {
-      toast.error('Hospital name is required')
-      return
-    }
-    if (!formData.owner_email.trim()) {
-      toast.error('Owner email is required')
-      return
-    }
-
-    try {
-      setSaving(true)
-      const hospitalPayload = {
-        hospital_name: formData.hospital_name.trim(),
-        branch_location: getNullableText(formData.branch_location),
-        contact_person: getNullableText(formData.contact_person),
-        contact_phone: getNullableText(formData.contact_phone),
-        contact_email: getNullableText(formData.contact_email),
-        owner_full_name: getNullableText(formData.owner_full_name),
-        owner_email: formData.owner_email.trim().toLowerCase(),
-        owner_phone: getNullableText(formData.owner_phone),
-        public_url: getNullableText(formData.public_url),
-        primary_color: getNullableText(formData.primary_color),
-        secondary_color: getNullableText(formData.secondary_color),
-        status: formData.status,
-        go_live_date: formData.go_live_date || null,
-        notes: getNullableText(formData.notes),
-        enabled_modules: formData.enabled_modules,
-        created_by: user?.id || null,
-      }
-
-      const { data: hospital, error: hospitalError } = await withTimeout(
-        supabase.from('platform_tenants').insert([hospitalPayload]).select().single(),
-        'Create hospital onboarding record',
-      )
-      if (hospitalError) throw hospitalError
-
-      const taskRows = DEFAULT_TASK_TEMPLATE.map((task, index) => ({
-        hospital_id: hospital.id,
-        phase: task.phase,
-        task_name: task.task_name,
-        task_details: task.task_details,
-        sort_order: index + 1,
-      }))
-
-      const { error: taskError } = await withTimeout(
-        supabase.from('platform_onboarding_tasks').insert(taskRows),
-        'Create hospital onboarding task list',
-      )
-      if (taskError) throw taskError
-
-      toast.success(`${hospital.hospital_name} added to the onboarding pipeline`)
-      setShowCreateForm(false)
-      resetForm()
-      await fetchOnboardingData()
-      setSelectedHospitalId(hospital.id)
-    } catch (error) {
-      console.error('Error creating hospital onboarding record:', error)
-      toast.error(error.message || 'Failed to create hospital onboarding record')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const updateHospitalStatus = async (hospitalId, nextStatus) => {
-    try {
-      setUpdatingHospitalId(hospitalId)
-      const { error } = await withTimeout(
-        supabase.from('platform_tenants').update({ status: nextStatus }).eq('id', hospitalId),
-        'Update hospital status',
-      )
-      if (error) throw error
-
-      setHospitals((currentHospitals) =>
-        currentHospitals.map((hospital) => (hospital.id === hospitalId ? { ...hospital, status: nextStatus } : hospital)),
-      )
-      toast.success('Hospital stage updated')
-    } catch (error) {
-      console.error('Error updating hospital status:', error)
-      toast.error(error.message || 'Failed to update hospital stage')
-    } finally {
-      setUpdatingHospitalId(null)
-    }
-  }
-
   const updateTaskStatus = async (taskId, nextStatus) => {
     try {
       setUpdatingTaskId(taskId)
@@ -291,7 +156,7 @@ const HospitalOnboarding = () => {
       <PlatformLayout>
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">Platform Onboarding</p>
-          <h1 className="mt-3 text-3xl font-semibold text-slate-900">Hospital onboarding is reserved for the CareLink owner account</h1>
+          <h1 className="mt-3 text-3xl font-semibold text-slate-900">Hospital onboarding access is required</h1>
           <p className="mt-4 text-sm leading-6 text-slate-600">
             This area manages new client hospitals, not the day-to-day operations of a live hospital deployment.
           </p>
@@ -319,23 +184,17 @@ const HospitalOnboarding = () => {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100">CareLink Platform</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Platform owner dashboard</h1>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Hospital onboarding</h1>
               <p className="mt-3 text-sm leading-6 text-blue-50 sm:text-base">
                 Track client intake, provisioning, go-live readiness, and handover from one owner-controlled dashboard.
                 Each hospital has a separate workspace for its staff and patient records.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowCreateForm((currentState) => !currentState)}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg transition-all-smooth hover:-translate-y-0.5 hover:bg-slate-100"
-            >
-              {showCreateForm ? 'Close hospital form' : 'Onboard new hospital'}
-            </button>
+            <Link to="/platform/hospitals" className="pc-btn">Manage hospitals</Link>
           </div>
         </section>
 
-        <p className="text-sm text-slate-600">Onboarding statuses track rollout progress. Pausing a record here does not disable the hospital workspace.</p>
+        <p className="text-sm text-slate-600">Select a registered hospital to complete its implementation checklist. Manage hospital registration and workspace operations in Hospitals.</p>
 
         {setupRequired ? (
           <section className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900 shadow-sm">
@@ -346,55 +205,6 @@ const HospitalOnboarding = () => {
         {loadError ? (
           <section className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 shadow-sm">
             {loadError}
-          </section>
-        ) : null}
-
-        {showCreateForm ? (
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-5">
-              <h2 className="text-2xl font-semibold text-slate-900">New hospital intake</h2>
-              <p className="mt-1 text-sm text-slate-600">Capture the owner account, launch modules, branding, and target go-live date.</p>
-            </div>
-
-            <form onSubmit={handleCreateHospital} className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Hospital name</span><input type="text" value={formData.hospital_name} onChange={(event) => setFormData((current) => ({ ...current, hospital_name: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Sunrise Specialist Hospital" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Branch or location</span><input type="text" value={formData.branch_location} onChange={(event) => setFormData((current) => ({ ...current, branch_location: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Accra Central" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Status</span><select value={formData.status} onChange={(event) => setFormData((current) => ({ ...current, status: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">{HOSPITAL_STATUSES.map((status) => <option key={status} value={status}>{normalizeStatusLabel(status)}</option>)}</select></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Contact person</span><input type="text" value={formData.contact_person} onChange={(event) => setFormData((current) => ({ ...current, contact_person: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Operations manager" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Contact email</span><input type="email" value={formData.contact_email} onChange={(event) => setFormData((current) => ({ ...current, contact_email: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="ops@hospital.com" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Contact phone</span><input type="text" value={formData.contact_phone} onChange={(event) => setFormData((current) => ({ ...current, contact_phone: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="+233..." /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Owner full name</span><input type="text" value={formData.owner_full_name} onChange={(event) => setFormData((current) => ({ ...current, owner_full_name: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Hospital owner or admin lead" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Owner email</span><input type="email" value={formData.owner_email} onChange={(event) => setFormData((current) => ({ ...current, owner_email: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="owner@hospital.com" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Owner phone</span><input type="text" value={formData.owner_phone} onChange={(event) => setFormData((current) => ({ ...current, owner_phone: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="+233..." /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Target go-live date</span><input type="date" value={formData.go_live_date} onChange={(event) => setFormData((current) => ({ ...current, go_live_date: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Public URL</span><input type="text" value={formData.public_url} onChange={(event) => setFormData((current) => ({ ...current, public_url: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="https://hospital-carelink.vercel.app" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Primary color</span><input type="text" value={formData.primary_color} onChange={(event) => setFormData((current) => ({ ...current, primary_color: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="#1E88E5" /></label>
-                <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Secondary color</span><input type="text" value={formData.secondary_color} onChange={(event) => setFormData((current) => ({ ...current, secondary_color: event.target.value }))} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="#0F766E" /></label>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-slate-800">Modules at launch</h3>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {MODULE_OPTIONS.map((module) => {
-                    const checked = formData.enabled_modules.includes(module)
-                    return (
-                      <label key={module} className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${checked ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
-                        <input type="checkbox" checked={checked} onChange={() => handleModuleToggle(module)} className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                        <span>{normalizeStatusLabel(module)}</span>
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">Implementation notes</span><textarea value={formData.notes} onChange={(event) => setFormData((current) => ({ ...current, notes: event.target.value }))} className="min-h-[120px] w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Special workflows, support constraints, payment preferences, or branding notes" /></label>
-
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <button type="button" onClick={() => { setShowCreateForm(false); resetForm() }} className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700">Cancel</button>
-                <button type="submit" disabled={saving} className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">{saving ? 'Saving hospital...' : 'Create onboarding record'}</button>
-              </div>
-            </form>
           </section>
         ) : null}
 
@@ -416,7 +226,7 @@ const HospitalOnboarding = () => {
             {hospitalsWithStats.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
                 <p className="text-lg font-semibold text-slate-800">No hospitals tracked yet</p>
-                <p className="mt-2 text-sm text-slate-600">Create your first onboarding record to start managing implementations from this dashboard.</p>
+                <p className="mt-2 text-sm text-slate-600">Register a hospital in Hospitals to create its onboarding checklist.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -464,7 +274,7 @@ const HospitalOnboarding = () => {
                   <div className="w-full max-w-xs rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <label className="block">
                       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current stage</span>
-                      <select value={selectedHospital.status} onChange={(event) => updateHospitalStatus(selectedHospital.id, event.target.value)} disabled={updatingHospitalId === selectedHospital.id} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60">{HOSPITAL_STATUSES.map((status) => <option key={status} value={status}>{normalizeStatusLabel(status)}</option>)}</select>
+                      <p>{normalizeStatusLabel(selectedHospital.status)}</p>
                     </label>
                   </div>
                 </div>
@@ -515,7 +325,7 @@ const HospitalOnboarding = () => {
                                     <p className="mt-1 text-sm leading-6 text-slate-600">{task.task_details}</p>
                                     <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{task.completed_at ? `Completed ${formatDate(task.completed_at)}` : 'Not completed yet'}</p>
                                   </div>
-                                  <select value={task.status} onChange={(event) => updateTaskStatus(task.id, event.target.value)} disabled={updatingTaskId === task.id} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 lg:w-44 disabled:cursor-not-allowed disabled:opacity-60">{['pending', 'in_progress', 'completed', 'blocked'].map((status) => <option key={status} value={status}>{normalizeStatusLabel(status)}</option>)}</select>
+                                  <select value={task.status} onChange={(event) => updateTaskStatus(task.id, event.target.value)} disabled={!canEditTasks || updatingTaskId === task.id} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 lg:w-44 disabled:cursor-not-allowed disabled:opacity-60">{['pending', 'in_progress', 'completed', 'blocked'].map((status) => <option key={status} value={status}>{normalizeStatusLabel(status)}</option>)}</select>
                                 </div>
                               </div>
                             ))}
