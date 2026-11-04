@@ -1,19 +1,19 @@
 -- Platform project only. Requires 019. Apply separately from tenant migrations.
 BEGIN;
-ALTER TABLE public.platform_jobs ADD COLUMN next_attempt_at timestamptz NOT NULL DEFAULT now();
-ALTER TABLE public.platform_jobs ADD COLUMN draft_revision integer;
-ALTER TABLE public.platform_jobs ADD COLUMN configuration jsonb NOT NULL DEFAULT '{}';
-CREATE TABLE public.platform_job_steps (
+ALTER TABLE public.platform_jobs ADD COLUMN IF NOT EXISTS next_attempt_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE public.platform_jobs ADD COLUMN IF NOT EXISTS draft_revision integer;
+ALTER TABLE public.platform_jobs ADD COLUMN IF NOT EXISTS configuration jsonb NOT NULL DEFAULT '{}';
+CREATE TABLE IF NOT EXISTS public.platform_job_steps (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), job_id uuid NOT NULL REFERENCES public.platform_jobs(id),
  name text NOT NULL, result jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(job_id,name)
 );
-CREATE TABLE public.platform_launch_evidence (
+CREATE TABLE IF NOT EXISTS public.platform_launch_evidence (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES public.platform_tenants(id),
  revision integer NOT NULL, kind text NOT NULL CHECK(kind IN ('deployment','isolation','admin_acceptance','account_protection','backup_restore','clinical','training','support')),
  reference text NOT NULL CHECK(length(trim(reference)) BETWEEN 5 AND 2000),
  actor_id uuid REFERENCES auth.users(id), created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,revision,kind)
 );
-CREATE TABLE public.platform_launch_approvals (
+CREATE TABLE IF NOT EXISTS public.platform_launch_approvals (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES public.platform_tenants(id),
  revision integer NOT NULL, actor_id uuid NOT NULL REFERENCES auth.users(id),
  reason text NOT NULL CHECK(length(trim(reason))>=5), created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,revision)
@@ -23,13 +23,15 @@ DO $$ DECLARE t text; BEGIN
  EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',t);
  EXECUTE format('REVOKE ALL ON public.%I FROM PUBLIC,anon,authenticated',t);
  EXECUTE format('GRANT SELECT ON public.%I TO authenticated',t);
+ EXECUTE format('DROP POLICY IF EXISTS execution_read ON public.%I',t);
  EXECUTE format('CREATE POLICY execution_read ON public.%I FOR SELECT TO authenticated USING(public.platform_can(''hospitals.read''))',t);
+ EXECUTE format('DROP TRIGGER IF EXISTS execution_audit ON public.%I',t);
  EXECUTE format('CREATE TRIGGER execution_audit AFTER INSERT OR UPDATE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.audit_platform_change()',t);
  END LOOP;
 END $$;
 
 -- Evaluate the original requester, never a browser-supplied role or worker JWT subject.
-CREATE FUNCTION public.platform_actor_can(p_actor uuid,p_permission text)
+CREATE OR REPLACE FUNCTION public.platform_actor_can(p_actor uuid,p_permission text)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
  SELECT EXISTS(SELECT 1 FROM public.carelink_instance WHERE singleton AND enabled AND instance_kind='platform') AND (
  EXISTS(SELECT 1 FROM public.platform_owners WHERE user_id=p_actor) OR EXISTS(
@@ -38,7 +40,7 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
  WHEN 'technical_admin' THEN p_permission IN ('onboarding.write','operations.write')
  WHEN 'finance_manager' THEN p_permission='billing.write' ELSE false END));
 $$;
-CREATE FUNCTION public.platform_launch_blockers(p_tenant uuid)
+CREATE OR REPLACE FUNCTION public.platform_launch_blockers(p_tenant uuid)
 RETURNS text[] LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path='' AS $$
 DECLARE t public.platform_tenants; d public.platform_onboarding_drafts; blockers text[] := '{}'; k text;
 BEGIN
@@ -56,13 +58,24 @@ BEGIN
  IF EXISTS(SELECT 1 FROM public.platform_onboarding_tasks WHERE hospital_id=p_tenant AND status<>'completed') THEN blockers:=array_append(blockers,'Complete onboarding checklist'); END IF;
  RETURN blockers;
 END $$;
-CREATE FUNCTION public.platform_readiness(p_tenant_id uuid)
+CREATE OR REPLACE FUNCTION public.platform_readiness(p_tenant_id uuid)
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path='' AS $$
 BEGIN
  IF NOT public.platform_can('hospitals.read') THEN RAISE EXCEPTION 'Not authorized'; END IF;
  RETURN jsonb_build_object('blockers',public.platform_launch_blockers(p_tenant_id),'revision',(SELECT revision FROM public.platform_onboarding_drafts WHERE tenant_id=p_tenant_id));
 END $$;
-CREATE FUNCTION public.platform_record_evidence(p_tenant_id uuid,p_revision integer,p_kind text,p_reference text)
+CREATE OR REPLACE FUNCTION public.platform_hospital_status(p_tenant_id uuid)
+RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+ SELECT jsonb_build_object(
+   'tenant_id',t.id,'registration_status',t.status,'lifecycle_state',t.lifecycle_state,
+   'provisioned_at',t.provisioned_at,'administrator_configured',t.admin_user_id IS NOT NULL,
+   'latest_job', (SELECT to_jsonb(j) - 'configuration' - 'lease_token' FROM public.platform_jobs j WHERE j.tenant_id=t.id ORDER BY j.created_at DESC LIMIT 1),
+   'steps', COALESCE((SELECT jsonb_agg(to_jsonb(s) ORDER BY s.created_at) FROM public.platform_job_steps s JOIN public.platform_jobs j ON j.id=s.job_id WHERE j.tenant_id=t.id),'[]'::jsonb),
+   'readiness_blockers',public.platform_launch_blockers(t.id),
+   'owner_approved',EXISTS(SELECT 1 FROM public.platform_launch_approvals a WHERE a.tenant_id=t.id AND a.revision=(SELECT revision FROM public.platform_onboarding_drafts d WHERE d.tenant_id=t.id))
+ ) FROM public.platform_tenants t WHERE t.id=p_tenant_id;
+$$;
+CREATE OR REPLACE FUNCTION public.platform_record_evidence(p_tenant_id uuid,p_revision integer,p_kind text,p_reference text)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
  IF NOT public.platform_can('onboarding.write') OR p_kind NOT IN ('clinical','training','support','backup_restore','account_protection','admin_acceptance') THEN RAISE EXCEPTION 'Not authorized'; END IF;
@@ -72,7 +85,7 @@ BEGIN
  ON CONFLICT(tenant_id,revision,kind) DO UPDATE SET reference=EXCLUDED.reference,actor_id=EXCLUDED.actor_id,created_at=now();
  DELETE FROM public.platform_launch_approvals WHERE tenant_id=p_tenant_id;
 END $$;
-CREATE FUNCTION public.platform_approve_launch(p_tenant_id uuid,p_revision integer,p_reason text)
+CREATE OR REPLACE FUNCTION public.platform_approve_launch(p_tenant_id uuid,p_revision integer,p_reason text)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
  IF NOT public.is_platform_owner() THEN RAISE EXCEPTION 'Owner approval required'; END IF;
@@ -83,20 +96,22 @@ BEGIN
  ON CONFLICT(tenant_id,revision) DO UPDATE SET actor_id=EXCLUDED.actor_id,reason=EXCLUDED.reason,created_at=now();
 END $$;
 
-CREATE FUNCTION public.platform_snapshot_job() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+CREATE OR REPLACE FUNCTION public.platform_snapshot_job() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE d public.platform_onboarding_drafts;
 BEGIN
  IF NEW.tenant_id IS NOT NULL THEN
  SELECT * INTO d FROM public.platform_onboarding_drafts WHERE tenant_id=NEW.tenant_id;
- NEW.draft_revision:=d.revision; NEW.configuration:=COALESCE(d.requirements,'{}');
+ NEW.draft_revision:=d.revision;
+ NEW.configuration:=jsonb_build_object('_tenant_name', (SELECT hospital_name FROM public.platform_tenants WHERE id=NEW.tenant_id), '_region', (SELECT region FROM public.platform_tenants WHERE id=NEW.tenant_id), '_admin_email', (SELECT owner_email FROM public.platform_tenants WHERE id=NEW.tenant_id)) || COALESCE(d.requirements,'{}');
  IF NEW.kind IN ('provision','apply_modules','go_live') AND d.id IS NULL THEN RAISE EXCEPTION 'Save requirements before requesting this operation'; END IF;
  IF NEW.kind='go_live' AND (cardinality(public.platform_launch_blockers(NEW.tenant_id))>0 OR NOT EXISTS(SELECT 1 FROM public.platform_launch_approvals WHERE tenant_id=NEW.tenant_id AND revision=d.revision)) THEN RAISE EXCEPTION 'Launch evidence and owner approval required'; END IF;
  END IF;
  RETURN NEW;
 END $$;
+DROP TRIGGER IF EXISTS snapshot_job ON public.platform_jobs;
 CREATE TRIGGER snapshot_job BEFORE INSERT ON public.platform_jobs FOR EACH ROW EXECUTE FUNCTION public.platform_snapshot_job();
 
-CREATE FUNCTION public.platform_claim_job() RETURNS public.platform_jobs LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+CREATE OR REPLACE FUNCTION public.platform_claim_job() RETURNS public.platform_jobs LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE j public.platform_jobs; perm text;
 BEGIN
  -- A transaction advisory lock serializes claim selection across workers, not execution.
@@ -119,12 +134,12 @@ BEGIN
  UPDATE public.platform_jobs SET status='running',attempts=attempts+1,lease_token=gen_random_uuid(),lease_until=now()+interval '90 seconds',error=null WHERE id=j.id RETURNING * INTO j;
  RETURN j;
 END $$;
-CREATE FUNCTION public.platform_job_heartbeat(p_id uuid,p_token uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+CREATE OR REPLACE FUNCTION public.platform_job_heartbeat(p_id uuid,p_token uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
  UPDATE public.platform_jobs SET lease_until=now()+interval '90 seconds' WHERE id=p_id AND lease_token=p_token AND status='running' AND lease_until>now();
  RETURN FOUND;
 END $$;
-CREATE FUNCTION public.platform_checkpoint_job(p_id uuid,p_token uuid,p_name text,p_result jsonb)
+CREATE OR REPLACE FUNCTION public.platform_checkpoint_job(p_id uuid,p_token uuid,p_name text,p_result jsonb)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
  PERFORM 1 FROM public.platform_jobs WHERE id=p_id AND lease_token=p_token AND status='running' AND lease_until>now() FOR UPDATE;
@@ -132,7 +147,7 @@ BEGIN
  IF p_name IS NULL OR length(p_name)>80 OR jsonb_typeof(p_result)<>'object' OR octet_length(p_result::text)>12000 THEN RAISE EXCEPTION 'Invalid checkpoint'; END IF;
  INSERT INTO public.platform_job_steps(job_id,name,result) VALUES(p_id,p_name,p_result) ON CONFLICT(job_id,name) DO NOTHING;
 END $$;
-CREATE FUNCTION public.platform_finish_job(p_id uuid,p_token uuid,p_status text,p_error text DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.platform_finish_job(p_id uuid,p_token uuid,p_status text,p_error text DEFAULT NULL)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE j public.platform_jobs;
 BEGIN
@@ -148,9 +163,11 @@ DO $$ DECLARE f record; BEGIN
  FOR f IN SELECT p.oid::regprocedure AS sig,p.proname AS name FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname IN
  ('platform_actor_can','platform_launch_blockers','platform_readiness','platform_record_evidence','platform_approve_launch','platform_snapshot_job','platform_claim_job','platform_job_heartbeat','platform_checkpoint_job','platform_finish_job') LOOP
  EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC,anon,authenticated',f.sig);
- IF f.name IN ('platform_readiness','platform_record_evidence','platform_approve_launch') THEN EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO authenticated',f.sig); END IF;
+ IF f.name IN ('platform_readiness','platform_hospital_status','platform_record_evidence','platform_approve_launch') THEN EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO authenticated',f.sig); END IF;
  IF f.name IN ('platform_claim_job','platform_job_heartbeat','platform_checkpoint_job','platform_finish_job') THEN EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO service_role',f.sig); END IF;
  END LOOP;
 END $$;
 GRANT SELECT ON public.platform_jobs,public.platform_job_steps,public.platform_tenants,public.platform_onboarding_drafts TO service_role;
+CREATE INDEX IF NOT EXISTS platform_jobs_next_attempt ON public.platform_jobs(status,next_attempt_at,created_at);
+CREATE INDEX IF NOT EXISTS platform_jobs_tenant_running ON public.platform_jobs(tenant_id,status,lease_until);
 COMMIT;
