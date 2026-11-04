@@ -65,7 +65,7 @@ END $$;
 CREATE FUNCTION public.platform_record_evidence(p_tenant_id uuid,p_revision integer,p_kind text,p_reference text)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
- IF NOT public.platform_can('onboarding.write') OR p_kind NOT IN ('clinical','training','support','backup_restore','account_protection') THEN RAISE EXCEPTION 'Not authorized'; END IF;
+ IF NOT public.platform_can('onboarding.write') OR p_kind NOT IN ('clinical','training','support','backup_restore','account_protection','admin_acceptance') THEN RAISE EXCEPTION 'Not authorized'; END IF;
  PERFORM 1 FROM public.platform_tenants WHERE id=p_tenant_id AND lifecycle_state<>'archived' FOR UPDATE;
  IF NOT FOUND OR p_revision IS DISTINCT FROM (SELECT revision FROM public.platform_onboarding_drafts WHERE tenant_id=p_tenant_id) THEN RAISE EXCEPTION 'Reload the current requirements revision'; END IF;
  INSERT INTO public.platform_launch_evidence(tenant_id,revision,kind,reference,actor_id) VALUES(p_tenant_id,p_revision,p_kind,p_reference,auth.uid())
