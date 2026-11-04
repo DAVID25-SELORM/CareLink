@@ -97,12 +97,15 @@ async function waitForHealth(adapter, ref) {
 export async function runOnce(api = rpc) {
   const job = await api('platform_claim_job')
   if (!job) return false
+  const heartbeat = setInterval(() => { api('platform_job_heartbeat', { p_id:job.id, p_token:job.lease_token }).catch(() => {}) }, 30000)
   try {
     const result = await executeJob(job, api)
     await api('platform_finish_job', { p_id: job.id, p_token: job.lease_token, p_status: 'succeeded', p_error: null })
   } catch (error) {
     try { if (job.tenant_id) await api('platform_record_binding', { p_tenant_id:job.tenant_id, p_state:{ provider_status:'failed', last_error:error.message } }) } catch { /* preserve original failure */ }
     await api('platform_finish_job', { p_id: job.id, p_token: job.lease_token, p_status: 'failed', p_error: error.message })
+  } finally {
+    clearInterval(heartbeat)
   }
   return true
 }
