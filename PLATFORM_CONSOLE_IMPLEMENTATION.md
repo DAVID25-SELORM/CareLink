@@ -70,3 +70,9 @@ backups, notifications, settings and audited transactional RPCs. Paystack,
 Flutterwave, remote provisioning, support worker execution and hospital usage
 collection remain server-worker integrations; the browser only requests jobs and
 never receives provider secrets.
+
+## Onboarding wizard milestone
+
+Migration 019 (platform project only, after 018) adds revision-checked onboarding drafts. The wizard resumes the saved step and requested configuration for an existing hospital. Only onboarding writers can save; readers can inspect. Drafts do not change subscriptions, operational status or deployed modules. Conflicting saves preserve local edits and offer explicit discard/reload.
+
+Apply 019 before using Save draft. Existing hospital and checklist views remain available when draft setup is missing. This milestone does not implement infrastructure execution or go-live approvals; those are explicitly shown as pending requirements.

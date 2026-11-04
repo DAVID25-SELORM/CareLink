@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../supabaseClient'
 import { withTimeout } from '../services/queryTimeout'
 import { can } from '../platform/domain'
+import OnboardingWizard from '../platform/OnboardingWizard'
 
 const TASK_PHASE_ORDER = ['intake', 'technical', 'database', 'accounts', 'branding', 'go_live', 'security', 'handover']
 
@@ -215,6 +216,8 @@ const HospitalOnboarding = () => {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-medium text-slate-500">Live hospitals</p><p className="mt-3 text-3xl font-semibold text-slate-900">{overview.liveHospitals}</p></div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-medium text-slate-500">Average checklist progress</p><p className="mt-3 text-3xl font-semibold text-slate-900">{overview.averageProgress}%</p></div>
         </section>
+
+        {selectedHospital && <OnboardingWizard key={selectedHospital.id} hospital={selectedHospital} editable={canEditTasks} />}
 
         <div className="grid gap-6 xl:grid-cols-[1.15fr_1.65fr]">
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
