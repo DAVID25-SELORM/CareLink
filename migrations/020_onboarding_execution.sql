@@ -31,12 +31,22 @@ DO $$ DECLARE t text; BEGIN
 END $$;
 
 -- Evaluate the original requester, never a browser-supplied role or worker JWT subject.
+CREATE OR REPLACE FUNCTION public.platform_can(p_permission text)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+ SELECT COALESCE(CASE public.platform_role()
+ WHEN 'platform_owner' THEN true
+ WHEN 'platform_admin' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','hospitals.write','onboarding.write','billing.read','support.read','support.write','operations.read','notifications.read','audit.read','settings.read','team.read','team.write'])
+ WHEN 'finance_manager' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','billing.read','billing.write','notifications.read','audit.read'])
+ WHEN 'support_officer' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','support.read','support.write','operations.read','notifications.read'])
+ WHEN 'technical_admin' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','onboarding.write','operations.read','operations.write','notifications.read','audit.read','settings.read'])
+ ELSE false END,false);
+$$;
 CREATE OR REPLACE FUNCTION public.platform_actor_can(p_actor uuid,p_permission text)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
  SELECT EXISTS(SELECT 1 FROM public.carelink_instance WHERE singleton AND enabled AND instance_kind='platform') AND (
  EXISTS(SELECT 1 FROM public.platform_owners WHERE user_id=p_actor) OR EXISTS(
  SELECT 1 FROM public.platform_members WHERE user_id=p_actor AND status='active' AND CASE role
- WHEN 'platform_admin' THEN p_permission IN ('hospitals.write','onboarding.write')
+ WHEN 'platform_admin' THEN p_permission IN ('hospitals.write','onboarding.write','team.write')
  WHEN 'technical_admin' THEN p_permission IN ('onboarding.write','operations.write')
  WHEN 'finance_manager' THEN p_permission='billing.write' ELSE false END));
 $$;
