@@ -9,6 +9,12 @@ export class VercelAdapter {
   async findProject(name) { try { return await this.request(`/v9/projects/${encodeURIComponent(name)}`) } catch (error) { if (error.message.includes('(404)')) return null; throw error } }
   async createProject(name) { return (await this.findProject(name)) || this.request('/v9/projects', { method:'POST', body:{ name, framework:'vite', gitRepository:this.gitRepo ? { type:'github', repo:this.gitRepo } : undefined } }) }
   setEnvironment(project, key, value, target = ['production']) { return this.request(`/v10/projects/${encodeURIComponent(project)}/env`, { method:'POST', body:{ key, value, type:'encrypted', target } }) }
-  deploy(name, ref) { return this.request('/v13/deployments', { method:'POST', body:{ name, target:'production', gitSource: this.gitRepo ? { type:'github', repo:this.gitRepo, ref } : undefined } }) }
+  async deploy(name, ref) {
+    const existing = await this.request(`/v6/deployments?projectId=${encodeURIComponent(name)}&limit=20`)
+    const deployments = existing?.deployments || []
+    const match = deployments.find(item => item.readyState === 'READY' && (item.meta?.githubCommitRef === ref || item.gitSource?.ref === ref || item.target === 'production'))
+    if (match) return match
+    return this.request('/v13/deployments', { method:'POST', body:{ name, target:'production', gitSource: this.gitRepo ? { type:'github', repo:this.gitRepo, ref } : undefined } })
+  }
   deployment(id) { return this.request(`/v13/deployments/${encodeURIComponent(id)}`) }
 }
