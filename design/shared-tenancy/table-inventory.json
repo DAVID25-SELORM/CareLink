@@ -1,0 +1,842 @@
+[
+  {
+    "table_name": "admissions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "ai_suggestions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "allergies",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "ambulance_dispatches",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "ambulance_fleet",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "anc_registrations",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "anc_visits",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "appointments",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "audit_log",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "beds",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "billing_items",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "blood_donations",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "blood_inventory",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "blood_requests",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "carelink_instance",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "claim_batches",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "claim_items",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "claims",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "clinical_notes",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "clinical_orders",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "consent_records",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "controlled_substance_log",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "data_access_log",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "deliveries",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "dental_records",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "dhims2_indicator_mappings",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "dhims2_reports",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "diagnoses",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "diet_orders",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "discharge_summaries",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "drug_batches",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "drug_interactions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "drugs",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "encounters",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "fee_schedules",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "fhir_endpoint_config",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "fhir_resource_log",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "fluid_balance_charts",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "handover_notes",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "hospital_departments",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "hospital_onboarding_tasks",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "hospital_profile",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "hospitals",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "hr_attendance",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "hr_leaves",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "hr_payroll",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "hr_staff",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "integration_endpoints",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "inventory_categories",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "inventory_items",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "inventory_transactions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "lab_panels",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "lab_specimens",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "lab_test_catalog",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "lab_tests",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "leave_requests",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "maternity_deliveries",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "medical_records",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "medication_administration_records",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "mortuary_records",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "nhia_submissions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "nhia_tariff_catalog",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "nhis_cc_codes",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "notification_logs",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "notification_settings",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "notification_templates",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "notifications",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "nurse_notes",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "nursing_assessments",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "nursing_care_plans",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "offline_cache_manifest",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "patient_transfers",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "patient_vitals",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "patients",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "payment_allocations",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "payments",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "permissions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "physiotherapy_sessions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "platform_audit_log",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_backups",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_health_checks",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_incidents",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_integrations",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_invoices",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_job_steps",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_jobs",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_launch_approvals",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_launch_evidence",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_members",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_notifications",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_onboarding_drafts",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_onboarding_tasks",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "platform_owners",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_payments",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_plans",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_settings",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_subscriptions",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_tenant_bindings",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_tenant_costs",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_tenant_schema_ledger",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_tenants",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_ticket_messages",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_tickets",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "platform_usage",
+    "rls_enabled": true,
+    "has_tenant_id": true,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "postnatal_visits",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "prescription_items",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "prescriptions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "problem_list",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "purchase_order_items",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "purchase_orders",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "queue_management",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "radiology_orders",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "radiology_results",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "receipts",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "record_requests",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "referrals",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "registered_devices",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "report_runs",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "report_templates",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "role_permissions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "roles",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "service_fees",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "staff_schedules",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "suppliers",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "surgical_procedures",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "sync_checkpoints",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "sync_conflicts",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "sync_queue",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "theatre_bookings",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "theatre_operation_notes",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "theatre_post_op",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "theatre_pre_op",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "theatre_sessions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "triage_assessments",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "user_sessions",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": true
+  },
+  {
+    "table_name": "users",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "virtual_consultations",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "vitals",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "ward_rounds",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
+    "table_name": "wards",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  }
+]

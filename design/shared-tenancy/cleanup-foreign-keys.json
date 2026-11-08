@@ -1,0 +1,1667 @@
+[
+  {
+    "child": "hr_leaves",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (approved_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "hr_payroll",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (processed_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "nhia_submissions",
+    "parent": "claim_batches",
+    "definition": "FOREIGN KEY (batch_id) REFERENCES claim_batches(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "diagnoses",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "diagnoses",
+    "parent": "users",
+    "definition": "FOREIGN KEY (diagnosed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "nhia_submissions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "nursing_assessments",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_sessions",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_sessions",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id)"
+  },
+  {
+    "child": "theatre_sessions",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "theatre_pre_op",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_pre_op",
+    "parent": "theatre_sessions",
+    "definition": "FOREIGN KEY (session_id) REFERENCES theatre_sessions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_pre_op",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "theatre_operation_notes",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_operation_notes",
+    "parent": "theatre_sessions",
+    "definition": "FOREIGN KEY (session_id) REFERENCES theatre_sessions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_operation_notes",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "theatre_post_op",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_post_op",
+    "parent": "theatre_sessions",
+    "definition": "FOREIGN KEY (session_id) REFERENCES theatre_sessions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_post_op",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "anc_visits",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "anc_visits",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id)"
+  },
+  {
+    "child": "anc_visits",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "nursing_assessments",
+    "parent": "users",
+    "definition": "FOREIGN KEY (assessed_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "handover_notes",
+    "parent": "wards",
+    "definition": "FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "handover_notes",
+    "parent": "users",
+    "definition": "FOREIGN KEY (outgoing_nurse_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "handover_notes",
+    "parent": "users",
+    "definition": "FOREIGN KEY (incoming_nurse_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "audit_log",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "prescriptions",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "prescriptions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "prescription_items",
+    "parent": "prescriptions",
+    "definition": "FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "prescription_items",
+    "parent": "drugs",
+    "definition": "FOREIGN KEY (drug_id) REFERENCES drugs(id) ON DELETE RESTRICT"
+  },
+  {
+    "child": "payments",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "payments",
+    "parent": "prescriptions",
+    "definition": "FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "handover_notes",
+    "parent": "users",
+    "definition": "FOREIGN KEY (acknowledged_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claims",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "claims",
+    "parent": "payments",
+    "definition": "FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claims",
+    "parent": "prescriptions",
+    "definition": "FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (requested_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "appointments",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "appointments",
+    "parent": "users",
+    "definition": "FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "virtual_consultations",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "virtual_consultations",
+    "parent": "users",
+    "definition": "FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "virtual_consultations",
+    "parent": "appointments",
+    "definition": "FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "referrals",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "referrals",
+    "parent": "users",
+    "definition": "FOREIGN KEY (referring_doctor_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "referrals",
+    "parent": "users",
+    "definition": "FOREIGN KEY (referred_to_doctor_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "patient_vitals",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "patient_vitals",
+    "parent": "users",
+    "definition": "FOREIGN KEY (nurse_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "nurse_notes",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nurse_notes",
+    "parent": "users",
+    "definition": "FOREIGN KEY (nurse_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "radiology_orders",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "medical_records",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "medical_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (officer_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "medical_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (archived_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "medical_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (restored_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "record_requests",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "record_requests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "radiology_orders",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "radiology_orders",
+    "parent": "users",
+    "definition": "FOREIGN KEY (ordered_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "radiology_orders",
+    "parent": "users",
+    "definition": "FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "hospitals",
+    "parent": "users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "virtual_consultations",
+    "parent": "prescriptions",
+    "definition": "FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (collected_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "hospital_onboarding_tasks",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hospital_onboarding_tasks",
+    "parent": "users",
+    "definition": "FOREIGN KEY (completed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "surgical_procedures",
+    "parent": "theatre_bookings",
+    "definition": "FOREIGN KEY (booking_id) REFERENCES theatre_bookings(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "surgical_procedures",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "notifications",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "notifications",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "queue_management",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "queue_management",
+    "parent": "users",
+    "definition": "FOREIGN KEY (served_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "wards",
+    "parent": "users",
+    "definition": "FOREIGN KEY (nurse_in_charge) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "beds",
+    "parent": "wards",
+    "definition": "FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "beds",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (current_patient_id) REFERENCES patients(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "hr_payroll",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "admissions",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "admissions",
+    "parent": "beds",
+    "definition": "FOREIGN KEY (bed_id) REFERENCES beds(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "admissions",
+    "parent": "wards",
+    "definition": "FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "admissions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (admitted_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "admissions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (discharged_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "inventory_items",
+    "parent": "inventory_categories",
+    "definition": "FOREIGN KEY (category_id) REFERENCES inventory_categories(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "inventory_transactions",
+    "parent": "inventory_items",
+    "definition": "FOREIGN KEY (item_id) REFERENCES inventory_items(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "inventory_transactions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (issued_to_user) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "inventory_transactions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "triage_assessments",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "triage_assessments",
+    "parent": "users",
+    "definition": "FOREIGN KEY (assessed_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "triage_assessments",
+    "parent": "users",
+    "definition": "FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "staff_schedules",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "leave_requests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "leave_requests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "blood_inventory",
+    "parent": "users",
+    "definition": "FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "blood_donations",
+    "parent": "users",
+    "definition": "FOREIGN KEY (received_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "hr_payroll",
+    "parent": "hr_staff",
+    "definition": "FOREIGN KEY (staff_id) REFERENCES hr_staff(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "blood_requests",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "blood_requests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (requested_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "blood_requests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "maternity_deliveries",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "purchase_order_items",
+    "parent": "purchase_orders",
+    "definition": "FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "purchase_order_items",
+    "parent": "drugs",
+    "definition": "FOREIGN KEY (drug_id) REFERENCES drugs(id) ON DELETE RESTRICT"
+  },
+  {
+    "child": "patient_transfers",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "maternity_deliveries",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id)"
+  },
+  {
+    "child": "maternity_deliveries",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "postnatal_visits",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "postnatal_visits",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id)"
+  },
+  {
+    "child": "postnatal_visits",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "hr_payroll",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (generated_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "diet_orders",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "diet_orders",
+    "parent": "admissions",
+    "definition": "FOREIGN KEY (admission_id) REFERENCES admissions(id)"
+  },
+  {
+    "child": "diet_orders",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (ordered_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "notification_settings",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "notification_settings",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (updated_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "notification_templates",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "notification_templates",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (updated_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "notification_logs",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "notification_logs",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id)"
+  },
+  {
+    "child": "notification_logs",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (sent_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "hr_staff",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hr_staff",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "purchase_orders",
+    "parent": "suppliers",
+    "definition": "FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "hr_attendance",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hr_attendance",
+    "parent": "hr_staff",
+    "definition": "FOREIGN KEY (staff_id) REFERENCES hr_staff(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hr_attendance",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (marked_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "hr_leaves",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hr_leaves",
+    "parent": "hr_staff",
+    "definition": "FOREIGN KEY (staff_id) REFERENCES hr_staff(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hr_leaves",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (applied_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "ambulance_fleet",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ambulance_fleet",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "ambulance_dispatches",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ambulance_dispatches",
+    "parent": "ambulance_fleet",
+    "definition": "FOREIGN KEY (ambulance_id) REFERENCES ambulance_fleet(id)"
+  },
+  {
+    "child": "ambulance_dispatches",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (dispatched_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "roles",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "encounters",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "encounters",
+    "parent": "users",
+    "definition": "FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "encounters",
+    "parent": "appointments",
+    "definition": "FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "encounters",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "diagnoses",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "vitals",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "vitals",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "vitals",
+    "parent": "users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "clinical_notes",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "clinical_notes",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "clinical_notes",
+    "parent": "users",
+    "definition": "FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "clinical_notes",
+    "parent": "clinical_notes",
+    "definition": "FOREIGN KEY (parent_note_id) REFERENCES clinical_notes(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "clinical_notes",
+    "parent": "users",
+    "definition": "FOREIGN KEY (signed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "clinical_orders",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "clinical_orders",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "clinical_orders",
+    "parent": "users",
+    "definition": "FOREIGN KEY (ordered_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "clinical_orders",
+    "parent": "users",
+    "definition": "FOREIGN KEY (completed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "problem_list",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "problem_list",
+    "parent": "diagnoses",
+    "definition": "FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "problem_list",
+    "parent": "users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "role_permissions",
+    "parent": "roles",
+    "definition": "FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "allergies",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "allergies",
+    "parent": "users",
+    "definition": "FOREIGN KEY (verified_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "medication_administration_records",
+    "parent": "admissions",
+    "definition": "FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "medication_administration_records",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "medication_administration_records",
+    "parent": "prescription_items",
+    "definition": "FOREIGN KEY (prescription_item_id) REFERENCES prescription_items(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "medication_administration_records",
+    "parent": "drugs",
+    "definition": "FOREIGN KEY (drug_id) REFERENCES drugs(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "medication_administration_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (administered_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "medication_administration_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (witnessed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "fluid_balance_charts",
+    "parent": "admissions",
+    "definition": "FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "fluid_balance_charts",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "fluid_balance_charts",
+    "parent": "users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nursing_assessments",
+    "parent": "admissions",
+    "definition": "FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nursing_assessments",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nursing_care_plans",
+    "parent": "admissions",
+    "definition": "FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nursing_care_plans",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nursing_care_plans",
+    "parent": "users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nursing_care_plans",
+    "parent": "users",
+    "definition": "FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "ward_rounds",
+    "parent": "admissions",
+    "definition": "FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ward_rounds",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ward_rounds",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "ward_rounds",
+    "parent": "users",
+    "definition": "FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ward_rounds",
+    "parent": "wards",
+    "definition": "FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "billing_items",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "billing_items",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "billing_items",
+    "parent": "clinical_orders",
+    "definition": "FOREIGN KEY (order_id) REFERENCES clinical_orders(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "billing_items",
+    "parent": "prescription_items",
+    "definition": "FOREIGN KEY (prescription_item_id) REFERENCES prescription_items(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "billing_items",
+    "parent": "nhia_tariff_catalog",
+    "definition": "FOREIGN KEY (tariff_id) REFERENCES nhia_tariff_catalog(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "billing_items",
+    "parent": "fee_schedules",
+    "definition": "FOREIGN KEY (fee_schedule_id) REFERENCES fee_schedules(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "billing_items",
+    "parent": "users",
+    "definition": "FOREIGN KEY (billed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claim_batches",
+    "parent": "users",
+    "definition": "FOREIGN KEY (scrubbed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claim_batches",
+    "parent": "users",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claims",
+    "parent": "claim_batches",
+    "definition": "FOREIGN KEY (batch_id) REFERENCES claim_batches(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claims",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claim_items",
+    "parent": "claims",
+    "definition": "FOREIGN KEY (claim_id) REFERENCES claims(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "claim_items",
+    "parent": "billing_items",
+    "definition": "FOREIGN KEY (billing_item_id) REFERENCES billing_items(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claim_items",
+    "parent": "nhia_tariff_catalog",
+    "definition": "FOREIGN KEY (tariff_id) REFERENCES nhia_tariff_catalog(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "claim_items",
+    "parent": "diagnoses",
+    "definition": "FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "payment_allocations",
+    "parent": "payments",
+    "definition": "FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "payment_allocations",
+    "parent": "billing_items",
+    "definition": "FOREIGN KEY (billing_item_id) REFERENCES billing_items(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "radiology_orders",
+    "parent": "clinical_orders",
+    "definition": "FOREIGN KEY (order_id) REFERENCES clinical_orders(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "radiology_results",
+    "parent": "radiology_orders",
+    "definition": "FOREIGN KEY (radiology_order_id) REFERENCES radiology_orders(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "radiology_results",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "radiology_results",
+    "parent": "users",
+    "definition": "FOREIGN KEY (radiologist_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "radiology_results",
+    "parent": "users",
+    "definition": "FOREIGN KEY (critical_finding_communicated_to) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "radiology_results",
+    "parent": "users",
+    "definition": "FOREIGN KEY (signed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "theatre_bookings",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_bookings",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_bookings",
+    "parent": "clinical_orders",
+    "definition": "FOREIGN KEY (order_id) REFERENCES clinical_orders(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "theatre_bookings",
+    "parent": "users",
+    "definition": "FOREIGN KEY (lead_surgeon_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "theatre_bookings",
+    "parent": "users",
+    "definition": "FOREIGN KEY (assistant_surgeon_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "theatre_bookings",
+    "parent": "users",
+    "definition": "FOREIGN KEY (anesthetist_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "theatre_bookings",
+    "parent": "users",
+    "definition": "FOREIGN KEY (scrub_nurse_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "discharge_summaries",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "discharge_summaries",
+    "parent": "admissions",
+    "definition": "FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "discharge_summaries",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "discharge_summaries",
+    "parent": "users",
+    "definition": "FOREIGN KEY (discharged_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "prescriptions",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "payments",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "admissions",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "triage_assessments",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "role_permissions",
+    "parent": "permissions",
+    "definition": "FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "role_permissions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (granted_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "anc_registrations",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "anc_registrations",
+    "parent": "users",
+    "definition": "FOREIGN KEY (registered_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "anc_registrations",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hospital_departments",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "hospital_departments",
+    "parent": "users",
+    "definition": "FOREIGN KEY (head_of_department) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "user_sessions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "user_sessions",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "consent_records",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "consent_records",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "consent_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (witnessed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "consent_records",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "data_access_log",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "data_access_log",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "data_access_log",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ai_suggestions",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "users",
+    "definition": "FOREIGN KEY (completed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "nhis_cc_codes",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "fhir_resource_log",
+    "parent": "users",
+    "definition": "FOREIGN KEY (triggered_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "fhir_resource_log",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "fhir_endpoint_config",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "dhims2_indicator_mappings",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "dhims2_reports",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "dhims2_reports",
+    "parent": "users",
+    "definition": "FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "integration_endpoints",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "report_templates",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "report_templates",
+    "parent": "users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "report_runs",
+    "parent": "report_templates",
+    "definition": "FOREIGN KEY (template_id) REFERENCES report_templates(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "report_runs",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "report_runs",
+    "parent": "users",
+    "definition": "FOREIGN KEY (run_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ai_suggestions",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ai_suggestions",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "ai_suggestions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (accepted_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "sync_queue",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "sync_queue",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "sync_conflicts",
+    "parent": "sync_queue",
+    "definition": "FOREIGN KEY (sync_queue_id) REFERENCES sync_queue(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "sync_conflicts",
+    "parent": "users",
+    "definition": "FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "offline_cache_manifest",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "sync_checkpoints",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "registered_devices",
+    "parent": "users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "registered_devices",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "dental_records",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "dental_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (dentist_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nhis_cc_codes",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "nhis_cc_codes",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "lab_specimens",
+    "parent": "lab_tests",
+    "definition": "FOREIGN KEY (lab_test_id) REFERENCES lab_tests(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "lab_specimens",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "lab_specimens",
+    "parent": "users",
+    "definition": "FOREIGN KEY (collected_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_specimens",
+    "parent": "users",
+    "definition": "FOREIGN KEY (received_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_panels",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "drug_batches",
+    "parent": "drugs",
+    "definition": "FOREIGN KEY (drug_id) REFERENCES drugs(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "drug_batches",
+    "parent": "users",
+    "definition": "FOREIGN KEY (received_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "drug_batches",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "drug_interactions",
+    "parent": "drugs",
+    "definition": "FOREIGN KEY (drug_a_id) REFERENCES drugs(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "drug_interactions",
+    "parent": "drugs",
+    "definition": "FOREIGN KEY (drug_b_id) REFERENCES drugs(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "controlled_substance_log",
+    "parent": "drugs",
+    "definition": "FOREIGN KEY (drug_id) REFERENCES drugs(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "controlled_substance_log",
+    "parent": "drug_batches",
+    "definition": "FOREIGN KEY (drug_batch_id) REFERENCES drug_batches(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "controlled_substance_log",
+    "parent": "prescriptions",
+    "definition": "FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "controlled_substance_log",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "controlled_substance_log",
+    "parent": "users",
+    "definition": "FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "controlled_substance_log",
+    "parent": "users",
+    "definition": "FOREIGN KEY (witnessed_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "controlled_substance_log",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "mortuary_records",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "mortuary_records",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "mortuary_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (attending_doctor_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "mortuary_records",
+    "parent": "users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "dental_records",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "dental_records",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "physiotherapy_sessions",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "physiotherapy_sessions",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "physiotherapy_sessions",
+    "parent": "encounters",
+    "definition": "FOREIGN KEY (encounter_id) REFERENCES encounters(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "physiotherapy_sessions",
+    "parent": "users",
+    "definition": "FOREIGN KEY (therapist_id) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "receipts",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "receipts",
+    "parent": "payments",
+    "definition": "FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "receipts",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "receipts",
+    "parent": "users",
+    "definition": "FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "receipts",
+    "parent": "users",
+    "definition": "FOREIGN KEY (voided_by) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "deliveries",
+    "parent": "users",
+    "definition": "FOREIGN KEY (attendant_id) REFERENCES users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "nhis_cc_codes",
+    "parent": "users",
+    "definition": "FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "deliveries",
+    "parent": "hospitals",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "deliveries",
+    "parent": "patients",
+    "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "deliveries",
+    "parent": "anc_registrations",
+    "definition": "FOREIGN KEY (anc_registration_id) REFERENCES anc_registrations(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "lab_test_catalog",
+    "definition": "FOREIGN KEY (catalog_id) REFERENCES lab_test_catalog(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "lab_tests",
+    "parent": "lab_panels",
+    "definition": "FOREIGN KEY (panel_id) REFERENCES lab_panels(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "platform_owners",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "platform_members",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_tenants",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "platform_onboarding_tasks",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (hospital_id) REFERENCES platform_tenants(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "platform_onboarding_tasks",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (completed_by) REFERENCES auth.users(id) ON DELETE SET NULL"
+  },
+  {
+    "child": "platform_subscriptions",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_subscriptions",
+    "parent": "platform_plans",
+    "definition": "FOREIGN KEY (plan_id) REFERENCES platform_plans(id)"
+  },
+  {
+    "child": "platform_invoices",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_invoices",
+    "parent": "platform_subscriptions",
+    "definition": "FOREIGN KEY (subscription_id) REFERENCES platform_subscriptions(id)"
+  },
+  {
+    "child": "platform_payments",
+    "parent": "platform_invoices",
+    "definition": "FOREIGN KEY (invoice_id) REFERENCES platform_invoices(id)"
+  },
+  {
+    "child": "platform_payments",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_payments",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recorded_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_tickets",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_tickets",
+    "parent": "platform_members",
+    "definition": "FOREIGN KEY (assigned_to) REFERENCES platform_members(id)"
+  },
+  {
+    "child": "platform_ticket_messages",
+    "parent": "platform_tickets",
+    "definition": "FOREIGN KEY (ticket_id) REFERENCES platform_tickets(id)"
+  },
+  {
+    "child": "platform_ticket_messages",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (author_id) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_job_steps",
+    "parent": "platform_jobs",
+    "definition": "FOREIGN KEY (job_id) REFERENCES platform_jobs(id)"
+  },
+  {
+    "child": "platform_usage",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_health_checks",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_jobs",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_jobs",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (requested_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_backups",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_backups",
+    "parent": "platform_jobs",
+    "definition": "FOREIGN KEY (job_id) REFERENCES platform_jobs(id)"
+  },
+  {
+    "child": "platform_notifications",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (recipient_id) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_onboarding_drafts",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_onboarding_drafts",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (updated_by) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_launch_evidence",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_launch_evidence",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (actor_id) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_launch_approvals",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id)"
+  },
+  {
+    "child": "platform_launch_approvals",
+    "parent": "auth.users",
+    "definition": "FOREIGN KEY (actor_id) REFERENCES auth.users(id)"
+  },
+  {
+    "child": "platform_tenant_bindings",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "platform_tenant_schema_ledger",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id) ON DELETE CASCADE"
+  },
+  {
+    "child": "platform_tenant_costs",
+    "parent": "platform_tenants",
+    "definition": "FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id) ON DELETE CASCADE"
+  }
+]

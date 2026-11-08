@@ -1,0 +1,5123 @@
+{
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "referrals",
+      "policyname": "Admins can view all referrals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "referrals",
+      "policyname": "Doctors can create referrals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'doctor'::text))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "referrals",
+      "policyname": "Doctors can update received referrals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((auth.uid() = referred_to_doctor_id) OR (auth.uid() = referring_doctor_id) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "referrals",
+      "policyname": "Doctors can view their referrals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(((auth.uid() = referring_doctor_id) OR (auth.uid() = referred_to_doctor_id)) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text]))))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "referrals",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescription_items",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescription_items",
+      "policyname": "prescription_items_delete_restricted",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescription_items",
+      "policyname": "prescription_items_insert_doctors_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescription_items",
+      "policyname": "prescription_items_select_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'pharmacist'::text, 'nurse'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescription_items",
+      "policyname": "prescription_items_update_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'pharmacist'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'pharmacist'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "carelink_users_delete_admin",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "DELETE",
+      "qual": "is_tenant_admin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "carelink_users_insert_admin",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "is_tenant_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "carelink_users_update_admin",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "UPDATE",
+      "qual": "is_tenant_admin()",
+      "with_check": "is_tenant_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "users_delete_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "users_insert_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = 'admin'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "users_select_authenticated",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "policyname": "users_update_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": "(get_user_role() = 'admin'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patients",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patients",
+      "policyname": "patients_delete_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patients",
+      "policyname": "patients_insert_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patients",
+      "policyname": "patients_select_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'pharmacist'::text, 'cashier'::text, 'records_officer'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patients",
+      "policyname": "patients_update_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_schedules",
+      "policyname": "Admin manage fee schedules",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_schedules",
+      "policyname": "Staff view fee schedules",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_schedules",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "appointments",
+      "policyname": "appointments_delete_authorized_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "appointments",
+      "policyname": "appointments_insert_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "appointments",
+      "policyname": "appointments_select_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "appointments",
+      "policyname": "appointments_update_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "appointments",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "audit_log",
+      "policyname": "audit_log_delete_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "audit_log",
+      "policyname": "audit_log_insert_all_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "audit_log",
+      "policyname": "audit_log_no_updates",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "false",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "audit_log",
+      "policyname": "audit_log_select_all_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "audit_log",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patient_vitals",
+      "policyname": "Nurses can insert patient vitals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['nurse'::text, 'admin'::text])))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patient_vitals",
+      "policyname": "Nurses can update their own vitals records",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((nurse_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patient_vitals",
+      "policyname": "Nurses can view all patient vitals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['nurse'::text, 'doctor'::text, 'admin'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patient_vitals",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nurse_notes",
+      "policyname": "Nurses and doctors can view all notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['nurse'::text, 'doctor'::text, 'admin'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nurse_notes",
+      "policyname": "Nurses can delete their own notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "((nurse_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nurse_notes",
+      "policyname": "Nurses can insert notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['nurse'::text, 'admin'::text])))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nurse_notes",
+      "policyname": "Nurses can update their own notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((nurse_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nurse_notes",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "medical_records",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "medical_records",
+      "policyname": "medical_records_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(((officer_id = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'records_officer'::text))))) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "medical_records",
+      "policyname": "medical_records_select",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['records_officer'::text, 'doctor'::text, 'nurse'::text, 'admin'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "medical_records",
+      "policyname": "medical_records_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((officer_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": "((officer_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "record_requests",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "record_requests",
+      "policyname": "record_requests_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['records_officer'::text, 'doctor'::text, 'admin'::text])))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "record_requests",
+      "policyname": "record_requests_select",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['records_officer'::text, 'doctor'::text, 'admin'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "record_requests",
+      "policyname": "record_requests_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['records_officer'::text, 'admin'::text])))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['records_officer'::text, 'admin'::text])))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospitals",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospitals",
+      "policyname": "hospitals_insert_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospitals",
+      "policyname": "hospitals_select_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospitals",
+      "policyname": "hospitals_update_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_onboarding_tasks",
+      "policyname": "carelink_legacy_onboarding_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "false",
+      "with_check": "false"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_onboarding_tasks",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_onboarding_tasks",
+      "policyname": "hospital_onboarding_tasks_insert_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_onboarding_tasks",
+      "policyname": "hospital_onboarding_tasks_select_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_onboarding_tasks",
+      "policyname": "hospital_onboarding_tasks_update_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "anc_visits",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "anc_visits",
+      "policyname": "hospital_anc_visits",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT anc_visits.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "maternity_deliveries",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "maternity_deliveries",
+      "policyname": "hospital_deliveries",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT maternity_deliveries.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "postnatal_visits",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "postnatal_visits",
+      "policyname": "hospital_postnatal",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT postnatal_visits.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "diet_orders",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "diet_orders",
+      "policyname": "hospital_diet_orders",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT diet_orders.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "surgical_procedures",
+      "policyname": "Doctors manage surgical procedures",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "surgical_procedures",
+      "policyname": "Staff view surgical procedures",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "surgical_procedures",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_settings",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_settings",
+      "policyname": "hospital_notification_settings",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT notification_settings.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_templates",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_templates",
+      "policyname": "hospital_notification_templates",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT notification_templates.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_logs",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_logs",
+      "policyname": "hospital_notification_logs",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT notification_logs.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "policyname": "Users can view own notifications",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "((user_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "wards",
+      "policyname": "Admin full access wards",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "wards",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "beds",
+      "policyname": "Admin full access beds",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "beds",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "inventory_categories",
+      "policyname": "Admin full access inventory_categories",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "inventory_categories",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "inventory_items",
+      "policyname": "Admin full access inventory_items",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "inventory_items",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "service_fees",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "service_fees",
+      "policyname": "service_fees_delete",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "service_fees",
+      "policyname": "service_fees_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = 'admin'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "service_fees",
+      "policyname": "service_fees_select",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "service_fees",
+      "policyname": "service_fees_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": "(get_user_role() = 'admin'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_leaves",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_leaves",
+      "policyname": "hospital_hr_leaves",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT hr_leaves.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_payroll",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_payroll",
+      "policyname": "hospital_hr_payroll",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT hr_payroll.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_test_catalog",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_test_catalog",
+      "policyname": "lab_test_catalog_delete",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_test_catalog",
+      "policyname": "lab_test_catalog_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = 'admin'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_test_catalog",
+      "policyname": "lab_test_catalog_select",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_test_catalog",
+      "policyname": "lab_test_catalog_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": "(get_user_role() = 'admin'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_staff",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_staff",
+      "policyname": "hospital_hr_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT hr_staff.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_attendance",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hr_attendance",
+      "policyname": "hospital_hr_attendance",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT hr_attendance.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_onboarding_tasks",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_onboarding_tasks",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('onboarding.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_onboarding_tasks",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_onboarding_tasks",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('onboarding.write'::text)",
+      "with_check": "platform_can('onboarding.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ambulance_fleet",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ambulance_fleet",
+      "policyname": "hospital_ambulance_fleet",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT ambulance_fleet.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_plans",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_plans",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_plans",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('billing.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_plans",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('billing.write'::text)",
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ambulance_dispatches",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ambulance_dispatches",
+      "policyname": "hospital_ambulance_dispatches",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT ambulance_dispatches.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "billing_items",
+      "policyname": "Admin cashier manage billing items",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'cashier'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "billing_items",
+      "policyname": "Staff view billing items",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "billing_items",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claim_batches",
+      "policyname": "Admin view claim batches",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claim_batches",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tickets",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tickets",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('support.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tickets",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('support.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tickets",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('support.write'::text)",
+      "with_check": "platform_can('support.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "encounters",
+      "policyname": "Doctors manage encounters",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'pharmacist'::text, 'cashier'::text, 'records_officer'::text, 'lab_tech'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "encounters",
+      "policyname": "Staff view encounters",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "encounters",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "diagnoses",
+      "policyname": "Doctors manage diagnoses",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "diagnoses",
+      "policyname": "Staff view diagnoses",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "diagnoses",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "vitals",
+      "policyname": "Clinical staff manage vitals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "vitals",
+      "policyname": "Staff view vitals",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "vitals",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clinical_notes",
+      "policyname": "Clinical staff manage notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clinical_notes",
+      "policyname": "Staff view clinical notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clinical_notes",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clinical_orders",
+      "policyname": "Doctors manage orders",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clinical_orders",
+      "policyname": "Staff view orders",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "clinical_orders",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "problem_list",
+      "policyname": "Doctors manage problem list",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "problem_list",
+      "policyname": "Staff view problem list",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "problem_list",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_incidents",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_incidents",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_incidents",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('operations.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_incidents",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('operations.write'::text)",
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "allergies",
+      "policyname": "Clinical staff manage allergies",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "allergies",
+      "policyname": "Staff view allergies",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "allergies",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_integrations",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_integrations",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('settings.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_integrations",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('operations.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_integrations",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('settings.write'::text)",
+      "with_check": "platform_can('settings.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "medication_administration_records",
+      "policyname": "Clinical staff view MAR",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "medication_administration_records",
+      "policyname": "Nurses manage MAR",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "medication_administration_records",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fluid_balance_charts",
+      "policyname": "Clinical staff view fluid balance",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fluid_balance_charts",
+      "policyname": "Nurses manage fluid balance",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fluid_balance_charts",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_settings",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_settings",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('settings.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_settings",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('settings.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_settings",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('settings.write'::text)",
+      "with_check": "platform_can('settings.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_notifications",
+      "policyname": "notifications_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "((recipient_id = auth.uid()) AND (platform_role() IS NOT NULL))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_notifications",
+      "policyname": "notifications_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((recipient_id = auth.uid()) AND (platform_role() IS NOT NULL))",
+      "with_check": "(recipient_id = auth.uid())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patient_transfers",
+      "policyname": "Authenticated read patient_transfers",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patient_transfers",
+      "policyname": "Nurse manage patient_transfers",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "patient_transfers",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_members",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_members",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('team.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_members",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('team.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_members",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('team.write'::text)",
+      "with_check": "platform_can('team.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nursing_assessments",
+      "policyname": "Nurses manage assessments",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nursing_assessments",
+      "policyname": "Staff view nursing assessments",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nursing_assessments",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nursing_care_plans",
+      "policyname": "Nurses manage care plans",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nursing_care_plans",
+      "policyname": "Staff view care plans",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nursing_care_plans",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "suppliers",
+      "policyname": "Admin manage suppliers",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'pharmacist'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "suppliers",
+      "policyname": "Authenticated read suppliers",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "suppliers",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_subscriptions",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_subscriptions",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_subscriptions",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('billing.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_subscriptions",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('billing.write'::text)",
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_invoices",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_invoices",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_invoices",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('billing.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_invoices",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('billing.write'::text)",
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "purchase_orders",
+      "policyname": "Admin manage purchase_orders",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'pharmacist'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "purchase_orders",
+      "policyname": "Authenticated read purchase_orders",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "purchase_orders",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "purchase_order_items",
+      "policyname": "Admin manage purchase_order_items",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'pharmacist'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "purchase_order_items",
+      "policyname": "Authenticated read purchase_order_items",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "purchase_order_items",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_payments",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_payments",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_payments",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('billing.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_payments",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('billing.write'::text)",
+      "with_check": "platform_can('billing.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_backups",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_backups",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_backups",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('operations.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_backups",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('operations.write'::text)",
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_usage",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_usage",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_usage",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_usage",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('operations.write'::text)",
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_health_checks",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_health_checks",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_health_checks",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('operations.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_health_checks",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('operations.write'::text)",
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_ticket_messages",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_ticket_messages",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('support.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_ticket_messages",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('support.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_ticket_messages",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('support.write'::text)",
+      "with_check": "platform_can('support.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_ticket_messages",
+      "policyname": "message_author",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(author_id = auth.uid())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ward_rounds",
+      "policyname": "Doctors manage ward rounds",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ward_rounds",
+      "policyname": "Staff view ward rounds",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ward_rounds",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "handover_notes",
+      "policyname": "Nurses manage handover notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "handover_notes",
+      "policyname": "Nurses view handover notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "handover_notes",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhia_tariff_catalog",
+      "policyname": "Admin manage tariff catalog",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhia_tariff_catalog",
+      "policyname": "Staff view tariff catalog",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhia_tariff_catalog",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claims",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claims",
+      "policyname": "claims_delete_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claims",
+      "policyname": "claims_insert_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claims",
+      "policyname": "claims_select_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claims",
+      "policyname": "claims_update_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claim_items",
+      "policyname": "Admin view claim items",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "claim_items",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhia_submissions",
+      "policyname": "Admin view nhia submissions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhia_submissions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "payment_allocations",
+      "policyname": "Admin cashier view payment allocations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'cashier'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "payment_allocations",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "radiology_orders",
+      "policyname": "Doctors manage radiology orders",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'lab_tech'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "radiology_orders",
+      "policyname": "Staff view radiology orders",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "radiology_orders",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "radiology_results",
+      "policyname": "Radiographers manage results",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'lab_tech'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "radiology_results",
+      "policyname": "Staff view radiology results",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "radiology_results",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_bookings",
+      "policyname": "Doctors manage theatre bookings",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_bookings",
+      "policyname": "Staff view theatre bookings",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_bookings",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_onboarding_drafts",
+      "policyname": "draft_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescriptions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescriptions",
+      "policyname": "prescriptions_delete_restricted",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescriptions",
+      "policyname": "prescriptions_insert_doctors_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescriptions",
+      "policyname": "prescriptions_select_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'pharmacist'::text, 'nurse'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "prescriptions",
+      "policyname": "prescriptions_update_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'pharmacist'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'pharmacist'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "discharge_summaries",
+      "policyname": "Clinical staff manage discharge summaries",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "discharge_summaries",
+      "policyname": "Staff view discharge summaries",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "discharge_summaries",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "payments",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "payments",
+      "policyname": "payments_delete_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "payments",
+      "policyname": "payments_insert_cashiers_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "payments",
+      "policyname": "payments_select_authorized_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text, 'doctor'::text, 'pharmacist'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "payments",
+      "policyname": "payments_update_finance_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'cashier'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "roles",
+      "policyname": "Admin manage roles",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "roles",
+      "policyname": "Staff view roles",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "roles",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "anc_registrations",
+      "policyname": "Clinical staff manage anc registrations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "anc_registrations",
+      "policyname": "Staff view anc registrations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "anc_registrations",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "permissions",
+      "policyname": "Staff view permissions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "permissions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "role_permissions",
+      "policyname": "Admin manage role permissions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "role_permissions",
+      "policyname": "Staff view role permissions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "role_permissions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_departments",
+      "policyname": "Admin manage departments",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_departments",
+      "policyname": "Staff view departments",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_departments",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_sessions",
+      "policyname": "System manage sessions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_sessions",
+      "policyname": "Users view own sessions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "((user_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_sessions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "consent_records",
+      "policyname": "Clinical staff manage consent",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'records_officer'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "consent_records",
+      "policyname": "Clinical staff view consent",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "consent_records",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "data_access_log",
+      "policyname": "Admin view data access log",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "data_access_log",
+      "policyname": "System insert data access log",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "data_access_log",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fhir_resource_log",
+      "policyname": "Admin view fhir log",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fhir_resource_log",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fhir_endpoint_config",
+      "policyname": "Admin manage fhir config",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fhir_endpoint_config",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "dhims2_indicator_mappings",
+      "policyname": "Admin manage dhims2 mappings",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "dhims2_indicator_mappings",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_launch_evidence",
+      "policyname": "execution_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_launch_approvals",
+      "policyname": "execution_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_jobs",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_jobs",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_jobs",
+      "policyname": "console_job_requester",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "((requested_by = auth.uid()) AND (platform_role() IS NOT NULL))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_jobs",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('operations.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_jobs",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('operations.write'::text)",
+      "with_check": "platform_can('operations.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_job_steps",
+      "policyname": "execution_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tenants",
+      "policyname": "console_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(platform_role() IS NOT NULL)",
+      "with_check": "(platform_role() IS NOT NULL)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tenants",
+      "policyname": "console_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "platform_can('hospitals.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tenants",
+      "policyname": "console_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tenants",
+      "policyname": "console_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "platform_can('hospitals.write'::text)",
+      "with_check": "platform_can('hospitals.write'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "dhims2_reports",
+      "policyname": "Admin manage dhims2 reports",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "dhims2_reports",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "integration_endpoints",
+      "policyname": "Admin manage integrations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "integration_endpoints",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "report_templates",
+      "policyname": "Admin manage report templates",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "report_templates",
+      "policyname": "Staff view report templates",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "report_templates",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "report_runs",
+      "policyname": "Staff create report runs",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "report_runs",
+      "policyname": "Staff view own report runs",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "((run_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "report_runs",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ai_suggestions",
+      "policyname": "Clinical staff view ai suggestions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ai_suggestions",
+      "policyname": "System manage ai suggestions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ai_suggestions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sync_queue",
+      "policyname": "Users manage own sync queue",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "((user_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sync_queue",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sync_conflicts",
+      "policyname": "Admin manage sync conflicts",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sync_conflicts",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tenant_bindings",
+      "policyname": "binding_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tenant_schema_ledger",
+      "policyname": "schema_ledger_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('hospitals.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "offline_cache_manifest",
+      "policyname": "Users manage own cache manifest",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(user_id = auth.uid())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "offline_cache_manifest",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sync_checkpoints",
+      "policyname": "Admin manage sync checkpoints",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "sync_checkpoints",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "registered_devices",
+      "policyname": "Users manage own devices",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "((user_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "registered_devices",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_specimens",
+      "policyname": "Lab staff manage specimens",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'lab_tech'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_specimens",
+      "policyname": "Lab staff view specimens",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_specimens",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_panels",
+      "policyname": "Admin manage lab panels",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'lab_tech'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_panels",
+      "policyname": "Staff view lab panels",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_panels",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_tenant_costs",
+      "policyname": "cost_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('billing.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drug_batches",
+      "policyname": "Pharmacy staff manage batches",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'pharmacist'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drug_batches",
+      "policyname": "Pharmacy staff view batches",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drug_batches",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drug_interactions",
+      "policyname": "Admin manage drug interactions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'pharmacist'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drug_interactions",
+      "policyname": "Staff view drug interactions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drug_interactions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "controlled_substance_log",
+      "policyname": "Pharmacy staff manage controlled log",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'pharmacist'::text])))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "controlled_substance_log",
+      "policyname": "Pharmacy staff view controlled log",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'pharmacist'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "controlled_substance_log",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "mortuary_records",
+      "policyname": "Clinical staff manage mortuary",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'records_officer'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "mortuary_records",
+      "policyname": "Clinical staff view mortuary",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'records_officer'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "mortuary_records",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "dental_records",
+      "policyname": "Doctors manage dental records",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "dental_records",
+      "policyname": "Staff view dental records",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "dental_records",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "physiotherapy_sessions",
+      "policyname": "Clinical staff manage physio",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "physiotherapy_sessions",
+      "policyname": "Staff view physio sessions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "physiotherapy_sessions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "receipts",
+      "policyname": "Cashier manage receipts",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'cashier'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "receipts",
+      "policyname": "Staff view receipts",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "receipts",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "deliveries",
+      "policyname": "Clinical staff manage deliveries",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "deliveries",
+      "policyname": "Clinical staff view deliveries",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "deliveries",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhis_cc_codes",
+      "policyname": "Staff manage cc codes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'cashier'::text, 'records_officer'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhis_cc_codes",
+      "policyname": "Staff view cc codes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "nhis_cc_codes",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_tests",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_tests",
+      "policyname": "lab_tests_delete_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_tests",
+      "policyname": "lab_tests_insert_doctors_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_tests",
+      "policyname": "lab_tests_select_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text, 'lab_tech'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "lab_tests",
+      "policyname": "lab_tests_update_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'lab_tech'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'lab_tech'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_audit_log",
+      "policyname": "platform_audit_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "platform_can('audit.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_sessions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_sessions",
+      "policyname": "hospital_theatre_sessions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT theatre_sessions.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_pre_op",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_pre_op",
+      "policyname": "hospital_theatre_pre_op",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT theatre_pre_op.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_operation_notes",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_operation_notes",
+      "policyname": "hospital_theatre_op_notes",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT theatre_operation_notes.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drugs",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drugs",
+      "policyname": "drugs_delete_admin_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "DELETE",
+      "qual": "(get_user_role() = 'admin'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drugs",
+      "policyname": "drugs_insert_pharmacists_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'pharmacist'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drugs",
+      "policyname": "drugs_select_medical_staff",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'doctor'::text, 'pharmacist'::text, 'nurse'::text]))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "drugs",
+      "policyname": "drugs_update_pharmacists_only",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(get_user_role() = ANY (ARRAY['admin'::text, 'pharmacist'::text]))",
+      "with_check": "(get_user_role() = ANY (ARRAY['admin'::text, 'pharmacist'::text]))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_post_op",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "theatre_post_op",
+      "policyname": "hospital_theatre_post_op",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(hospital_id = ( SELECT theatre_post_op.hospital_id\n   FROM users\n  WHERE (users.id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "inventory_transactions",
+      "policyname": "Admin full access inventory_transactions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "inventory_transactions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "staff_schedules",
+      "policyname": "Admin full access schedules",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "staff_schedules",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "leave_requests",
+      "policyname": "Admin full access leave_requests",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "leave_requests",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "blood_inventory",
+      "policyname": "Admin full access blood_inventory",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "blood_inventory",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "blood_donations",
+      "policyname": "Admin full access blood_donations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "blood_donations",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "blood_requests",
+      "policyname": "Admin full access blood_requests",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "blood_requests",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "virtual_consultations",
+      "policyname": "View own virtual consultations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "((doctor_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "virtual_consultations",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_profile",
+      "policyname": "Allow public read access",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_profile",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_profile",
+      "policyname": "hospital_profile_insert_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_profile",
+      "policyname": "hospital_profile_select_public",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "hospital_profile",
+      "policyname": "hospital_profile_update_admin",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "admissions",
+      "policyname": "Admin full access admissions",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "admissions",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "queue_management",
+      "policyname": "Staff can view queues",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text, 'doctor'::text, 'pharmacist'::text, 'cashier'::text, 'records_officer'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "queue_management",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "triage_assessments",
+      "policyname": "Admin full access triage",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text, 'doctor'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "triage_assessments",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
+    }
+  ],
+  "functions": [
+    {
+      "signature": "is_platform_owner()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.is_platform_owner()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT EXISTS (\r\n    SELECT 1 FROM public.platform_owners p, public.carelink_instance i\r\n    WHERE p.user_id = auth.uid() AND i.singleton AND i.enabled AND i.instance_kind = 'platform'\r\n  );\r\n$function$\n"
+    },
+    {
+      "signature": "is_tenant_admin()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.is_tenant_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT public.is_tenant_user() AND EXISTS (\r\n    SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'\r\n  );\r\n$function$\n"
+    },
+    {
+      "signature": "audit_platform_change()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.audit_platform_change()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n  INSERT INTO public.platform_audit_log(actor_id,table_name,operation,record_id,old_values,new_values)\r\n  VALUES (auth.uid(), TG_TABLE_NAME, TG_OP, COALESCE(NEW.id, OLD.id),\r\n    CASE WHEN TG_OP <> 'INSERT' THEN to_jsonb(OLD) END,\r\n    CASE WHEN TG_OP <> 'DELETE' THEN to_jsonb(NEW) END);\r\n  RETURN COALESCE(NEW, OLD);\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "platform_set_member(uuid,text,text,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_set_member(p_id uuid, p_role text, p_status text, p_reason text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF NOT public.is_platform_owner() OR length(trim(p_reason))<5 THEN RAISE EXCEPTION 'Owner permission and reason required'; END IF;\r\n UPDATE public.platform_members SET role=p_role,status=p_status WHERE id=p_id;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Member not found'; END IF;\r\n INSERT INTO public.platform_audit_log(actor_id,table_name,operation,record_id,new_values) VALUES(auth.uid(),'platform_members','change_access',p_id,jsonb_build_object('reason',p_reason,'outcome','succeeded'));\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_reconcile_payment(uuid,numeric,text,text,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_reconcile_payment(p_invoice_id uuid, p_amount numeric, p_reference text, p_note text, p_provider text DEFAULT 'manual'::text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE i public.platform_invoices; v_id uuid; v_existing public.platform_payments;\r\nBEGIN\r\n IF p_provider='manual' THEN\r\n   IF NOT public.platform_can('billing.write') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n ELSIF current_setting('request.jwt.claim.role',true) IS DISTINCT FROM 'service_role'\r\n   AND COALESCE(current_setting('request.jwt.claims',true),'{}')::jsonb->>'role' IS DISTINCT FROM 'service_role' THEN\r\n   RAISE EXCEPTION 'Provider payments require server verification';\r\n END IF;\r\n IF p_provider NOT IN ('manual','paystack','flutterwave') OR p_amount<=0 OR length(trim(p_reference))<3 THEN RAISE EXCEPTION 'Invalid payment'; END IF;\r\n SELECT * INTO i FROM public.platform_invoices WHERE id=p_invoice_id FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Invoice not found'; END IF;\r\n SELECT * INTO v_existing FROM public.platform_payments WHERE provider=p_provider AND reference=trim(p_reference);\r\n IF FOUND THEN\r\n   IF v_existing.invoice_id<>p_invoice_id OR v_existing.amount<>p_amount THEN RAISE EXCEPTION 'Reference already used for a different payment'; END IF;\r\n   RETURN v_existing.id;\r\n END IF;\r\n IF i.status<>'issued' OR p_amount>i.amount-i.paid_amount THEN RAISE EXCEPTION 'Payment exceeds the outstanding balance or invoice is closed'; END IF;\r\n INSERT INTO public.platform_payments(invoice_id,tenant_id,currency,amount,provider,reference,note,recorded_by)\r\n VALUES(i.id,i.tenant_id,i.currency,p_amount,p_provider,trim(p_reference),p_note,auth.uid()) RETURNING id INTO v_id;\r\n UPDATE public.platform_invoices SET paid_amount=paid_amount+p_amount,status=CASE WHEN paid_amount+p_amount=amount THEN 'paid' ELSE 'issued' END WHERE id=i.id;\r\n IF i.paid_amount+p_amount=i.amount THEN\r\n   UPDATE public.platform_subscriptions s SET status='active' WHERE s.id=i.subscription_id AND s.status='past_due'\r\n   AND NOT EXISTS(SELECT 1 FROM public.platform_invoices n WHERE n.subscription_id=s.id AND n.status='issued' AND n.due_date<current_date);\r\n END IF;\r\n RETURN v_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "is_tenant_user()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.is_tenant_user()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n SELECT EXISTS (SELECT 1 FROM public.users u, public.carelink_instance i\r\n WHERE u.id=auth.uid() AND i.singleton AND i.enabled AND i.instance_kind='tenant'\r\n AND NOT EXISTS(SELECT 1 FROM public.platform_owners p WHERE p.user_id=auth.uid())\r\n AND NOT EXISTS(SELECT 1 FROM public.platform_members m WHERE m.user_id=auth.uid()));\r\n$function$\n"
+    },
+    {
+      "signature": "get_carelink_access()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.get_carelink_access()\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n SELECT CASE WHEN public.platform_role() IS NOT NULL THEN jsonb_build_object('role',public.platform_role(),'scope','platform')\r\n WHEN public.is_tenant_user() THEN (SELECT jsonb_build_object('role',role,'scope','tenant') FROM public.users WHERE id=auth.uid())\r\n ELSE jsonb_build_object('role',null,'scope',null) END;\r\n$function$\n"
+    },
+    {
+      "signature": "platform_role()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_role()\n RETURNS text\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n SELECT CASE WHEN public.is_platform_owner() THEN 'platform_owner' ELSE (\r\n   SELECT m.role FROM public.platform_members m, public.carelink_instance i\r\n   WHERE m.user_id=auth.uid() AND m.status='active' AND i.singleton AND i.enabled AND i.instance_kind='platform'\r\n ) END;\r\n$function$\n"
+    },
+    {
+      "signature": "platform_can(text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_can(p_permission text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n SELECT COALESCE(CASE public.platform_role()\r\n WHEN 'platform_owner' THEN true\r\n WHEN 'platform_admin' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','hospitals.write','onboarding.write','billing.read','support.read','support.write','operations.read','notifications.read','audit.read','settings.read'])\r\n WHEN 'finance_manager' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','billing.read','billing.write','notifications.read','audit.read'])\r\n WHEN 'support_officer' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','support.read','support.write','operations.read','notifications.read'])\r\n WHEN 'technical_admin' THEN p_permission = ANY(ARRAY['overview.read','hospitals.read','onboarding.write','operations.read','operations.write','notifications.read','audit.read','settings.read'])\r\n ELSE false END, false);\r\n$function$\n"
+    },
+    {
+      "signature": "calculate_bmi()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.calculate_bmi()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  IF NEW.weight_kg IS NOT NULL AND NEW.height_cm IS NOT NULL AND NEW.height_cm > 0 THEN\r\n    NEW.bmi := ROUND(NEW.weight_kg / POWER(NEW.height_cm / 100.0, 2), 1);\r\n  END IF;\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "calculate_billing_total()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.calculate_billing_total()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  NEW.discount_amount := COALESCE(NEW.unit_price * NEW.quantity * COALESCE(NEW.discount_percent, 0) / 100, 0);\r\n  NEW.total_amount := (NEW.unit_price * NEW.quantity) - NEW.discount_amount + COALESCE(NEW.tax_amount, 0);\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "update_updated_at_column()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "update_referrals_updated_at()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.update_referrals_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  NEW.updated_at = timezone('utc'::text, now());\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "set_records_row_updated_at()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.set_records_row_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "update_advanced_features_timestamp()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.update_advanced_features_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "set_hospital_onboarding_updated_at()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.set_hospital_onboarding_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "set_hospital_profile_updated_at()",
+      "security_definer": false,
+      "definition": "CREATE OR REPLACE FUNCTION public.set_hospital_profile_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "signature": "get_user_role()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.get_user_role()\n RETURNS text\n LANGUAGE sql\n SECURITY DEFINER\nAS $function$\r\n  SELECT COALESCE(\r\n    (SELECT role FROM users WHERE id = auth.uid()),\r\n    'unauthorized'\r\n  );\r\n$function$\n"
+    },
+    {
+      "signature": "platform_archive_hospital(uuid,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_archive_hospital(p_id uuid, p_reason text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF NOT public.platform_can('hospitals.write') OR length(trim(p_reason))<5 THEN RAISE EXCEPTION 'Permission and reason required'; END IF;\r\n PERFORM 1 FROM public.platform_tenants WHERE id=p_id AND lifecycle_state IN ('onboarding','suspended') FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Suspend an active hospital before archiving'; END IF;\r\n IF EXISTS(SELECT 1 FROM public.platform_jobs WHERE tenant_id=p_id AND status IN ('queued','running')) THEN RAISE EXCEPTION 'Resolve queued operations before archiving'; END IF;\r\n UPDATE public.platform_tenants SET lifecycle_state='archived' WHERE id=p_id;\r\n INSERT INTO public.platform_audit_log(actor_id,table_name,operation,record_id,new_values) VALUES(auth.uid(),'platform_tenants','archive',p_id,jsonb_build_object('reason',p_reason,'outcome','succeeded'));\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_assign_subscription(uuid,uuid,text,boolean)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_assign_subscription(p_tenant_id uuid, p_plan_id uuid, p_cycle text, p_trial boolean)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE p public.platform_plans; v_id uuid; v_end date;\r\nBEGIN\r\n IF NOT public.platform_can('billing.write') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n IF p_cycle NOT IN ('monthly','annual') THEN RAISE EXCEPTION 'Invalid billing cycle'; END IF;\r\n PERFORM 1 FROM public.platform_tenants WHERE id=p_tenant_id AND lifecycle_state<>'archived' FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Hospital unavailable'; END IF;\r\n SELECT * INTO p FROM public.platform_plans WHERE id=p_plan_id AND active;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Choose an active plan'; END IF;\r\n IF EXISTS(SELECT 1 FROM public.platform_invoices WHERE tenant_id=p_tenant_id AND status='issued') THEN RAISE EXCEPTION 'Reconcile or void outstanding invoices before changing plans'; END IF;\r\n v_end := CASE WHEN p_trial AND p.trial_days>0 THEN current_date+p.trial_days WHEN p_cycle='annual' THEN (current_date+interval '1 year')::date ELSE (current_date+interval '1 month')::date END;\r\n INSERT INTO public.platform_subscriptions(tenant_id,plan_id,billing_cycle,status,currency,amount,period_start,period_end,trial_end,grace_days)\r\n VALUES(p_tenant_id,p.id,p_cycle,CASE WHEN p_trial AND p.trial_days>0 THEN 'trialing' ELSE 'active' END,p.currency,\r\n CASE WHEN p_cycle='annual' THEN p.annual_price ELSE p.monthly_price END,current_date,v_end,CASE WHEN p_trial AND p.trial_days>0 THEN v_end END,p.grace_days)\r\n ON CONFLICT(tenant_id) DO UPDATE SET plan_id=EXCLUDED.plan_id,billing_cycle=EXCLUDED.billing_cycle,status=EXCLUDED.status,\r\n currency=EXCLUDED.currency,amount=EXCLUDED.amount,period_start=EXCLUDED.period_start,period_end=EXCLUDED.period_end,trial_end=EXCLUDED.trial_end,grace_days=EXCLUDED.grace_days\r\n RETURNING id INTO v_id;\r\n RETURN v_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_billing_action(text,uuid,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_billing_action(p_kind text, p_id uuid, p_reason text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF NOT public.platform_can('billing.write') OR length(trim(p_reason))<5 THEN RAISE EXCEPTION 'Permission and reason required'; END IF;\r\n IF p_kind='cancel_subscription' THEN UPDATE public.platform_subscriptions SET status='cancelled' WHERE id=p_id;\r\n ELSIF p_kind='void_invoice' THEN UPDATE public.platform_invoices SET status='void' WHERE id=p_id AND paid_amount=0 AND status='issued';\r\n ELSE RAISE EXCEPTION 'Unsupported billing action'; END IF;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Record unavailable or action not allowed'; END IF;\r\n INSERT INTO public.platform_audit_log(actor_id,table_name,operation,record_id,new_values) VALUES(auth.uid(),'billing',p_kind,p_id,jsonb_build_object('reason',p_reason,'outcome','succeeded'));\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_generate_invoice(uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_generate_invoice(p_subscription_id uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE s public.platform_subscriptions; v_id uuid; v_start date; v_end date;\r\nBEGIN\r\n IF NOT public.platform_can('billing.write') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n SELECT * INTO s FROM public.platform_subscriptions WHERE id=p_subscription_id FOR UPDATE;\r\n IF NOT FOUND OR s.status='cancelled' THEN RAISE EXCEPTION 'Subscription unavailable'; END IF;\r\n IF s.status='trialing' AND s.trial_end>current_date THEN RAISE EXCEPTION 'Trial has not ended'; END IF;\r\n v_start := CASE WHEN s.status='trialing' THEN s.period_end ELSE s.period_start END;\r\n v_end := CASE WHEN s.status='trialing' THEN (v_start+CASE WHEN s.billing_cycle='annual' THEN interval '1 year' ELSE interval '1 month' END)::date ELSE s.period_end END;\r\n SELECT id INTO v_id FROM public.platform_invoices WHERE subscription_id=s.id AND period_start=v_start;\r\n IF v_id IS NOT NULL THEN RETURN v_id; END IF;\r\n IF s.status='trialing' THEN UPDATE public.platform_subscriptions SET status='active',period_start=v_start,period_end=v_end WHERE id=s.id; END IF;\r\n INSERT INTO public.platform_invoices(tenant_id,subscription_id,currency,amount,status,period_start,period_end,due_date)\r\n VALUES(s.tenant_id,s.id,s.currency,s.amount,CASE WHEN s.amount=0 THEN 'paid' ELSE 'issued' END,v_start,v_end,v_start+s.grace_days) RETURNING id INTO v_id;\r\n RETURN v_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_register_hospital(text,text,text,uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_register_hospital(p_name text, p_email text, p_region text, p_request_key uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE v_id uuid;\r\nBEGIN\r\n IF NOT public.platform_can('hospitals.write') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n IF length(trim(p_name))<2 OR p_email !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$' THEN RAISE EXCEPTION 'Hospital name and valid administrator email required'; END IF;\r\n INSERT INTO public.platform_tenants(hospital_name,owner_email,region,created_by,request_key,status)\r\n VALUES(trim(p_name),lower(trim(p_email)),trim(p_region),auth.uid(),p_request_key,'intake')\r\n ON CONFLICT(request_key) DO UPDATE SET request_key=EXCLUDED.request_key RETURNING id INTO v_id;\r\n INSERT INTO public.platform_onboarding_tasks(hospital_id,phase,task_name,sort_order)\r\n SELECT v_id,x.phase,x.name,x.n FROM (VALUES\r\n ('intake','Verify hospital registration',1),('accounts','Invite hospital administrator',2),\r\n ('technical','Provision isolated hospital workspace',3),('branding','Confirm initial configuration',4),\r\n ('database','Assign licensed modules',5),('handover','Complete staff training',6),\r\n ('security','Verify tenant isolation and readiness',7),('go_live','Approve go-live checklist',8)\r\n ) x(phase,name,n) WHERE NOT EXISTS(SELECT 1 FROM public.platform_onboarding_tasks WHERE hospital_id=v_id);\r\n RETURN v_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_renew_subscription(uuid,date)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_renew_subscription(p_id uuid, p_expected_end date)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE s public.platform_subscriptions;\r\nBEGIN\r\n IF NOT public.platform_can('billing.write') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n SELECT * INTO s FROM public.platform_subscriptions WHERE id=p_id FOR UPDATE;\r\n IF NOT FOUND OR s.status='cancelled' OR s.status='trialing' THEN RAISE EXCEPTION 'Subscription cannot be renewed'; END IF;\r\n IF s.period_end<>p_expected_end THEN RETURN; END IF;\r\n IF s.period_end>current_date THEN RAISE EXCEPTION 'Renewal period has not started'; END IF;\r\n IF NOT EXISTS(SELECT 1 FROM public.platform_invoices WHERE subscription_id=s.id AND period_start=s.period_start AND status='paid') THEN RAISE EXCEPTION 'Current period must be invoiced and paid before renewal'; END IF;\r\n UPDATE public.platform_subscriptions SET period_start=s.period_end,period_end=(s.period_end+CASE WHEN s.billing_cycle='annual' THEN interval '1 year' ELSE interval '1 month' END)::date,status='active' WHERE id=s.id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_request_job(text,uuid,jsonb,text,uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_request_job(p_kind text, p_tenant_id uuid, p_payload jsonb, p_reason text, p_request_key uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE v_id uuid; t public.platform_tenants; s public.platform_subscriptions; v_permission text;\r\nBEGIN\r\n v_permission := CASE WHEN p_kind='invite_platform' THEN 'team.write' WHEN p_kind IN ('invite_admin','provision','go_live','apply_modules') THEN 'onboarding.write' ELSE 'operations.write' END;\r\n IF NOT public.platform_can(v_permission) THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n IF length(trim(p_reason))<5 THEN RAISE EXCEPTION 'Provide a reason of at least five characters'; END IF;\r\n IF p_payload IS NULL OR jsonb_typeof(p_payload)<>'object' THEN RAISE EXCEPTION 'Invalid request payload'; END IF;\r\n -- Never accept server URLs, credentials or arbitrary commands from a browser.\r\n IF EXISTS(SELECT 1 FROM jsonb_object_keys(p_payload) k WHERE k NOT IN ('email','role','modules','backup_id')) THEN RAISE EXCEPTION 'Unsupported request fields'; END IF;\r\n SELECT id INTO v_id FROM public.platform_jobs WHERE request_key=p_request_key AND requested_by=auth.uid();\r\n IF v_id IS NOT NULL THEN RETURN v_id; END IF;\r\n IF p_kind='invite_platform' THEN\r\n   IF p_tenant_id IS NOT NULL OR p_payload->>'role' NOT IN ('platform_admin','finance_manager','support_officer','technical_admin') OR COALESCE(p_payload->>'email','') !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$' THEN RAISE EXCEPTION 'Valid platform invitation required'; END IF;\r\n ELSE\r\n   SELECT * INTO t FROM public.platform_tenants WHERE id=p_tenant_id FOR UPDATE;\r\n   IF NOT FOUND OR t.lifecycle_state='archived' THEN RAISE EXCEPTION 'Hospital unavailable'; END IF;\r\n   IF EXISTS(SELECT 1 FROM public.platform_jobs WHERE tenant_id=t.id AND status IN ('queued','running') AND kind IN ('provision','go_live','suspend','reactivate','apply_modules','restore')) THEN RAISE EXCEPTION 'Wait for the existing hospital operation to finish'; END IF;\r\n   IF p_kind='go_live' THEN\r\n     IF t.provisioned_at IS NULL OR t.admin_user_id IS NULL OR EXISTS(SELECT 1 FROM public.platform_onboarding_tasks WHERE hospital_id=t.id AND status<>'completed') THEN RAISE EXCEPTION 'Provisioning, administrator invitation and all readiness tasks must be complete'; END IF;\r\n   END IF;\r\n   IF p_kind='suspend' AND t.lifecycle_state<>'active' THEN RAISE EXCEPTION 'Only active hospitals can be suspended'; END IF;\r\n   IF p_kind='reactivate' AND t.lifecycle_state<>'suspended' THEN RAISE EXCEPTION 'Only suspended hospitals can be reactivated'; END IF;\r\n   IF p_kind IN ('go_live','reactivate','apply_modules') THEN\r\n     SELECT * INTO s FROM public.platform_subscriptions WHERE tenant_id=t.id AND status IN ('active','trialing') AND period_end+grace_days>=current_date;\r\n     IF NOT FOUND THEN RAISE EXCEPTION 'An eligible subscription is required'; END IF;\r\n   END IF;\r\n   IF p_kind='apply_modules' THEN\r\n     IF jsonb_typeof(p_payload->'modules') IS DISTINCT FROM 'array' THEN RAISE EXCEPTION 'Module list required'; END IF;\r\n     IF EXISTS(SELECT 1 FROM jsonb_array_elements_text(p_payload->'modules') m WHERE NOT m=ANY((SELECT modules FROM public.platform_plans WHERE id=s.plan_id))) THEN RAISE EXCEPTION 'Selected module is not included in the subscription plan'; END IF;\r\n   END IF;\r\n   IF p_kind='restore' AND NOT EXISTS(SELECT 1 FROM public.platform_backups WHERE id=(p_payload->>'backup_id')::uuid AND tenant_id=t.id AND status='available' AND (expires_at IS NULL OR expires_at>now())) THEN RAISE EXCEPTION 'Choose an available backup for this hospital'; END IF;\r\n   IF p_kind='invite_admin' THEN p_payload:=jsonb_build_object('email',t.owner_email); END IF;\r\n END IF;\r\n INSERT INTO public.platform_jobs(kind,tenant_id,payload,reason,request_key,requested_by)\r\n VALUES(p_kind,p_tenant_id,p_payload,trim(p_reason),p_request_key,auth.uid()) RETURNING id INTO v_id;\r\n RETURN v_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_retry_job(uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_retry_job(p_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE j public.platform_jobs;\r\nBEGIN\r\n SELECT * INTO j FROM public.platform_jobs WHERE id=p_id FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Job unavailable'; END IF;\r\n IF NOT public.platform_can(CASE WHEN j.kind='invite_platform' THEN 'team.write' WHEN j.kind IN ('invite_admin','provision','go_live','apply_modules') THEN 'onboarding.write' ELSE 'operations.write' END) THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n IF j.status NOT IN ('failed','blocked') THEN RAISE EXCEPTION 'Only failed or blocked jobs can be retried'; END IF;\r\n UPDATE public.platform_jobs SET status='queued',error=null,lease_token=null,lease_until=null WHERE id=j.id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_run_reminders()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_run_reminders()\n RETURNS integer\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE n integer;\r\nBEGIN\r\n IF NOT public.platform_can('billing.write') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n UPDATE public.platform_subscriptions s SET status='past_due' WHERE status='active' AND EXISTS(SELECT 1 FROM public.platform_invoices i WHERE i.subscription_id=s.id AND i.status='issued' AND i.due_date<current_date);\r\n INSERT INTO public.platform_notifications(recipient_id,title,body,path,dedupe_key)\r\n SELECT auth.uid(),'Subscription renewal approaching',t.hospital_name||' renews on '||s.period_end,'/platform/subscriptions','renewal:'||s.id||':'||s.period_end\r\n FROM public.platform_subscriptions s JOIN public.platform_tenants t ON t.id=s.tenant_id,public.platform_settings cfg\r\n WHERE s.status IN ('active','trialing','past_due') AND s.period_end<=current_date+cfg.renewal_notice_days\r\n ON CONFLICT(recipient_id,dedupe_key) DO NOTHING;\r\n GET DIAGNOSTICS n=ROW_COUNT;\r\n RETURN n;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_search(text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_search(p_query text)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE v_result jsonb; v_pattern text;\r\nBEGIN\r\n IF public.platform_role() IS NULL THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n IF length(trim(p_query))<2 THEN RETURN '[]'; END IF;\r\n v_pattern := '%' || replace(replace(replace(left(p_query,100),'\\','\\\\'),'%','\\%'),'_','\\_') || '%';\r\n SELECT COALESCE(jsonb_agg(x),'[]') INTO v_result FROM (\r\n SELECT id,'hospital' AS kind,hospital_name AS label,'/platform/hospitals/'||id AS path FROM public.platform_tenants WHERE public.platform_can('hospitals.read') AND hospital_name ILIKE v_pattern\r\n UNION ALL SELECT id,'ticket',subject,'/platform/support?ticket='||id FROM public.platform_tickets WHERE public.platform_can('support.read') AND subject ILIKE v_pattern\r\n UNION ALL SELECT id,'invoice',number,'/platform/billing?invoice='||id FROM public.platform_invoices WHERE public.platform_can('billing.read') AND number ILIKE v_pattern\r\n LIMIT 20) x;\r\n RETURN v_result;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_save_onboarding_draft(uuid,integer,integer,jsonb)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_save_onboarding_draft(p_tenant_id uuid, p_revision integer, p_step integer, p_requirements jsonb)\n RETURNS platform_onboarding_drafts\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE d public.platform_onboarding_drafts; k text;\r\nBEGIN\r\n IF NOT public.platform_can('onboarding.write') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n IF p_revision IS NULL OR p_revision<0 OR p_step IS NULL OR p_step NOT BETWEEN 0 AND 7 THEN RAISE EXCEPTION 'Invalid draft revision or step'; END IF;\r\n IF p_requirements IS NULL OR jsonb_typeof(p_requirements)<>'object' OR octet_length(p_requirements::text)>24000 THEN RAISE EXCEPTION 'Invalid requirements'; END IF;\r\n FOR k IN SELECT jsonb_object_keys(p_requirements) LOOP\r\n   IF k NOT IN ('contact_phone','location','primary_color','secondary_color','target_date','notes','modules','training_notes','verification_notes') THEN RAISE EXCEPTION 'Unsupported requirement field'; END IF;\r\n   IF k<>'modules' AND (jsonb_typeof(p_requirements->k)<>'string' OR length(p_requirements->>k)>4000) THEN RAISE EXCEPTION 'Invalid text field'; END IF;\r\n END LOOP;\r\n IF p_requirements ? 'modules' THEN\r\n   IF jsonb_typeof(p_requirements->'modules')<>'array' THEN RAISE EXCEPTION 'Module list required'; END IF;\r\n   IF EXISTS(SELECT 1 FROM jsonb_array_elements(p_requirements->'modules') m WHERE jsonb_typeof(m)<>'string') THEN RAISE EXCEPTION 'Invalid module'; END IF;\r\n   IF EXISTS(SELECT 1 FROM jsonb_array_elements_text(p_requirements->'modules') m WHERE m NOT IN ('patients','appointments','laboratory','pharmacy','drug_management','billing','claims','reports','nurse_dashboard','records_dashboard','referrals')) THEN RAISE EXCEPTION 'Unknown module'; END IF;\r\n END IF;\r\n -- Serialize first saves as well as updates; no duplicate draft race.\r\n PERFORM 1 FROM public.platform_tenants WHERE id=p_tenant_id AND lifecycle_state<>'archived' FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Hospital unavailable'; END IF;\r\n SELECT * INTO d FROM public.platform_onboarding_drafts WHERE tenant_id=p_tenant_id;\r\n IF COALESCE(d.revision,0)<>p_revision THEN RAISE EXCEPTION 'Draft changed by another editor. Reload before saving.'; END IF;\r\n INSERT INTO public.platform_onboarding_drafts(tenant_id,step,requirements,updated_by)\r\n VALUES(p_tenant_id,p_step,p_requirements,auth.uid())\r\n ON CONFLICT(tenant_id) DO UPDATE SET revision=platform_onboarding_drafts.revision+1,\r\n step=EXCLUDED.step, requirements=EXCLUDED.requirements,updated_by=auth.uid(),updated_at=now()\r\n RETURNING * INTO d;\r\n RETURN d;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_actor_can(uuid,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_actor_can(p_actor uuid, p_permission text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n SELECT EXISTS(SELECT 1 FROM public.carelink_instance WHERE singleton AND enabled AND instance_kind='platform') AND (\r\n EXISTS(SELECT 1 FROM public.platform_owners WHERE user_id=p_actor) OR EXISTS(\r\n SELECT 1 FROM public.platform_members WHERE user_id=p_actor AND status='active' AND CASE role\r\n WHEN 'platform_admin' THEN p_permission IN ('hospitals.write','onboarding.write')\r\n WHEN 'technical_admin' THEN p_permission IN ('onboarding.write','operations.write')\r\n WHEN 'finance_manager' THEN p_permission='billing.write' ELSE false END));\r\n$function$\n"
+    },
+    {
+      "signature": "platform_approve_launch(uuid,integer,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_approve_launch(p_tenant_id uuid, p_revision integer, p_reason text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF NOT public.is_platform_owner() THEN RAISE EXCEPTION 'Owner approval required'; END IF;\r\n PERFORM 1 FROM public.platform_tenants WHERE id=p_tenant_id FOR UPDATE;\r\n IF p_revision IS DISTINCT FROM (SELECT revision FROM public.platform_onboarding_drafts WHERE tenant_id=p_tenant_id) THEN RAISE EXCEPTION 'Requirements changed'; END IF;\r\n IF cardinality(public.platform_launch_blockers(p_tenant_id))>0 THEN RAISE EXCEPTION 'Resolve launch blockers first'; END IF;\r\n INSERT INTO public.platform_launch_approvals(tenant_id,revision,actor_id,reason) VALUES(p_tenant_id,p_revision,auth.uid(),p_reason)\r\n ON CONFLICT(tenant_id,revision) DO UPDATE SET actor_id=EXCLUDED.actor_id,reason=EXCLUDED.reason,created_at=now();\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_checkpoint_job(uuid,uuid,text,jsonb)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_checkpoint_job(p_id uuid, p_token uuid, p_name text, p_result jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n PERFORM 1 FROM public.platform_jobs WHERE id=p_id AND lease_token=p_token AND status='running' AND lease_until>now() FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Lease lost'; END IF;\r\n IF p_name IS NULL OR length(p_name)>80 OR jsonb_typeof(p_result)<>'object' OR octet_length(p_result::text)>12000 THEN RAISE EXCEPTION 'Invalid checkpoint'; END IF;\r\n INSERT INTO public.platform_job_steps(job_id,name,result) VALUES(p_id,p_name,p_result) ON CONFLICT(job_id,name) DO NOTHING;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_claim_job()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_claim_job()\n RETURNS platform_jobs\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE j public.platform_jobs; perm text;\r\nBEGIN\r\n -- A transaction advisory lock serializes claim selection across workers, not execution.\r\n PERFORM pg_advisory_xact_lock(72819401);\r\n SELECT * INTO j FROM public.platform_jobs q WHERE\r\n ((q.status='queued' AND q.next_attempt_at<=now()) OR (q.status='running' AND q.lease_until<now()))\r\n AND NOT EXISTS(SELECT 1 FROM public.platform_jobs r WHERE r.tenant_id=q.tenant_id AND r.id<>q.id AND r.status='running' AND r.lease_until>=now())\r\n ORDER BY q.created_at FOR UPDATE SKIP LOCKED LIMIT 1;\r\n IF NOT FOUND THEN RETURN NULL; END IF;\r\n perm:=CASE WHEN j.kind='invite_platform' THEN 'team.write' WHEN j.kind IN ('provision','invite_admin','apply_modules','go_live') THEN 'onboarding.write' ELSE 'operations.write' END;\r\n IF NOT public.platform_actor_can(j.requested_by,perm) OR\r\n (j.tenant_id IS NOT NULL AND EXISTS(SELECT 1 FROM public.platform_tenants WHERE id=j.tenant_id AND lifecycle_state='archived')) OR\r\n (j.kind IN ('provision','apply_modules','go_live') AND j.draft_revision IS DISTINCT FROM (SELECT revision FROM public.platform_onboarding_drafts WHERE tenant_id=j.tenant_id)) THEN\r\n UPDATE public.platform_jobs SET status='blocked',error='Authorization or requirements changed; submit a new request',lease_token=null,lease_until=null WHERE id=j.id;\r\n RETURN NULL;\r\n END IF;\r\n IF j.kind='go_live' AND (cardinality(public.platform_launch_blockers(j.tenant_id))>0 OR NOT EXISTS(SELECT 1 FROM public.platform_launch_approvals WHERE tenant_id=j.tenant_id AND revision=j.draft_revision)) THEN\r\n UPDATE public.platform_jobs SET status='blocked',error='Launch approval is no longer valid' WHERE id=j.id; RETURN NULL;\r\n END IF;\r\n UPDATE public.platform_jobs SET status='running',attempts=attempts+1,lease_token=gen_random_uuid(),lease_until=now()+interval '90 seconds',error=null WHERE id=j.id RETURNING * INTO j;\r\n RETURN j;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_snapshot_job()",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_snapshot_job()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE d public.platform_onboarding_drafts;\r\nBEGIN\r\n IF NEW.tenant_id IS NOT NULL THEN\r\n SELECT * INTO d FROM public.platform_onboarding_drafts WHERE tenant_id=NEW.tenant_id;\r\n NEW.draft_revision:=d.revision; NEW.configuration:=COALESCE(d.requirements,'{}');\r\n IF NEW.kind IN ('provision','apply_modules','go_live') AND d.id IS NULL THEN RAISE EXCEPTION 'Save requirements before requesting this operation'; END IF;\r\n IF NEW.kind='go_live' AND (cardinality(public.platform_launch_blockers(NEW.tenant_id))>0 OR NOT EXISTS(SELECT 1 FROM public.platform_launch_approvals WHERE tenant_id=NEW.tenant_id AND revision=d.revision)) THEN RAISE EXCEPTION 'Launch evidence and owner approval required'; END IF;\r\n END IF;\r\n RETURN NEW;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_record_schema(uuid,text,text,text,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_record_schema(p_tenant_id uuid, p_name text, p_checksum text, p_status text, p_error text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF COALESCE(NULLIF(current_setting('request.jwt.claim.role',true),''), NULLIF(current_setting('request.jwt.claims',true),'')::jsonb->>'role') IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Worker permission required'; END IF;\r\n IF p_checksum IS NULL OR p_status IS NULL OR p_name IS NULL OR length(trim(p_name)) NOT BETWEEN 1 AND 160 OR p_checksum !~ '^[a-f0-9]{64}$' OR p_status NOT IN ('applied','failed') THEN RAISE EXCEPTION 'Invalid schema record'; END IF;\r\n INSERT INTO public.platform_tenant_schema_ledger(tenant_id,migration_name,checksum,status,error) VALUES(p_tenant_id,trim(p_name),p_checksum,p_status,left(p_error,500)) ON CONFLICT(tenant_id,migration_name) DO UPDATE SET checksum=EXCLUDED.checksum,status=EXCLUDED.status,error=EXCLUDED.error,applied_at=now();\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_finish_job(uuid,uuid,text,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_finish_job(p_id uuid, p_token uuid, p_status text, p_error text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE j public.platform_jobs;\r\nBEGIN\r\n SELECT * INTO j FROM public.platform_jobs WHERE id=p_id AND lease_token=p_token AND status='running' AND lease_until>now() FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'Lease lost'; END IF;\r\n IF p_status NOT IN ('succeeded','failed','blocked','queued') THEN RAISE EXCEPTION 'Invalid result'; END IF;\r\n UPDATE public.platform_jobs SET status=CASE WHEN p_status='queued' AND attempts>=6 THEN 'failed' ELSE p_status END,error=left(p_error,500),\r\n next_attempt_at=now()+make_interval(secs=>least(3600,30*power(2,least(attempts,7))::integer)),\r\n completed_at=CASE WHEN p_status='succeeded' THEN now() ELSE NULL END,lease_token=null,lease_until=null WHERE id=j.id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_job_heartbeat(uuid,uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_job_heartbeat(p_id uuid, p_token uuid)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n UPDATE public.platform_jobs SET lease_until=now()+interval '90 seconds' WHERE id=p_id AND lease_token=p_token AND status='running' AND lease_until>now();\r\n RETURN FOUND;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_launch_blockers(uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_launch_blockers(p_tenant uuid)\n RETURNS text[]\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE t public.platform_tenants; d public.platform_onboarding_drafts; blockers text[] := '{}'; k text;\r\nBEGIN\r\n SELECT * INTO t FROM public.platform_tenants WHERE id=p_tenant;\r\n SELECT * INTO d FROM public.platform_onboarding_drafts WHERE tenant_id=p_tenant;\r\n IF t.id IS NULL OR t.lifecycle_state='archived' THEN blockers:=array_append(blockers,'Hospital unavailable'); END IF;\r\n IF d.id IS NULL THEN blockers:=array_append(blockers,'Save requirements'); END IF;\r\n IF t.provisioned_at IS NULL THEN blockers:=array_append(blockers,'Provision workspace'); END IF;\r\n IF t.admin_user_id IS NULL THEN blockers:=array_append(blockers,'Set up administrator'); END IF;\r\n IF NOT EXISTS(SELECT 1 FROM public.platform_subscriptions WHERE tenant_id=p_tenant AND status IN ('active','trialing') AND period_end+grace_days>=current_date) THEN blockers:=array_append(blockers,'Eligible subscription required'); END IF;\r\n IF EXISTS(SELECT 1 FROM jsonb_array_elements_text(COALESCE(d.requirements->'modules','[]')) m WHERE NOT m=ANY(t.enabled_modules)) THEN blockers:=array_append(blockers,'Requested modules not confirmed'); END IF;\r\n FOREACH k IN ARRAY ARRAY['deployment','isolation','admin_acceptance','account_protection','backup_restore','clinical','training','support'] LOOP\r\n IF NOT EXISTS(SELECT 1 FROM public.platform_launch_evidence WHERE tenant_id=p_tenant AND revision=d.revision AND kind=k) THEN blockers:=array_append(blockers,'Evidence required: '||k); END IF;\r\n END LOOP;\r\n IF EXISTS(SELECT 1 FROM public.platform_onboarding_tasks WHERE hospital_id=p_tenant AND status<>'completed') THEN blockers:=array_append(blockers,'Complete onboarding checklist'); END IF;\r\n RETURN blockers;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_readiness(uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_readiness(p_tenant_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF NOT public.platform_can('hospitals.read') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n RETURN jsonb_build_object('blockers',public.platform_launch_blockers(p_tenant_id),'revision',(SELECT revision FROM public.platform_onboarding_drafts WHERE tenant_id=p_tenant_id));\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_record_evidence(uuid,integer,text,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_record_evidence(p_tenant_id uuid, p_revision integer, p_kind text, p_reference text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF NOT public.platform_can('onboarding.write') OR p_kind NOT IN ('clinical','training','support','backup_restore','account_protection','admin_acceptance') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n PERFORM 1 FROM public.platform_tenants WHERE id=p_tenant_id AND lifecycle_state<>'archived' FOR UPDATE;\r\n IF NOT FOUND OR p_revision IS DISTINCT FROM (SELECT revision FROM public.platform_onboarding_drafts WHERE tenant_id=p_tenant_id) THEN RAISE EXCEPTION 'Reload the current requirements revision'; END IF;\r\n INSERT INTO public.platform_launch_evidence(tenant_id,revision,kind,reference,actor_id) VALUES(p_tenant_id,p_revision,p_kind,p_reference,auth.uid())\r\n ON CONFLICT(tenant_id,revision,kind) DO UPDATE SET reference=EXCLUDED.reference,actor_id=EXCLUDED.actor_id,created_at=now();\r\n DELETE FROM public.platform_launch_approvals WHERE tenant_id=p_tenant_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_hospital_status(uuid)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_hospital_status(p_tenant_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE v_result jsonb;\r\nBEGIN\r\n IF NOT public.platform_can('hospitals.read') THEN RAISE EXCEPTION 'Not authorized'; END IF;\r\n SELECT jsonb_build_object(\r\n   'tenant_id',t.id,'registration_status',t.status,'lifecycle_state',t.lifecycle_state,'provisioned_at',t.provisioned_at,\r\n   'administrator_configured',t.admin_user_id IS NOT NULL,\r\n   'binding',(SELECT (to_jsonb(b) - 'id' - 'tenant_id') - CASE WHEN public.platform_can('billing.read') THEN ARRAY[]::text[] ELSE ARRAY['estimated_monthly_cost','cost_currency'] END FROM public.platform_tenant_bindings b WHERE b.tenant_id=t.id),\r\n   'schema_ledger',COALESCE((SELECT jsonb_agg(to_jsonb(l) ORDER BY l.applied_at DESC) FROM public.platform_tenant_schema_ledger l WHERE l.tenant_id=t.id),'[]'::jsonb),\r\n   'latest_job',(SELECT to_jsonb(j) - 'configuration' - 'lease_token' FROM public.platform_jobs j WHERE j.tenant_id=t.id ORDER BY j.created_at DESC LIMIT 1),\r\n   'steps',COALESCE((SELECT jsonb_agg(to_jsonb(s) ORDER BY s.created_at) FROM public.platform_job_steps s JOIN public.platform_jobs j ON j.id=s.job_id WHERE j.tenant_id=t.id),'[]'::jsonb),\r\n   'readiness_blockers',public.platform_launch_blockers(t.id),\r\n   'owner_approved',EXISTS(SELECT 1 FROM public.platform_launch_approvals a WHERE a.tenant_id=t.id AND a.revision=(SELECT revision FROM public.platform_onboarding_drafts d WHERE d.tenant_id=t.id))\r\n ) INTO v_result FROM public.platform_tenants t WHERE t.id=p_tenant_id;\r\n RETURN v_result;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_record_health(uuid,text,integer,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_record_health(p_tenant_id uuid, p_status text, p_latency integer, p_error text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF COALESCE(NULLIF(current_setting('request.jwt.claim.role',true),''), NULLIF(current_setting('request.jwt.claims',true),'')::jsonb->>'role') IS DISTINCT FROM 'service_role' OR p_status IS NULL OR p_latency IS NULL OR p_latency<0 OR p_status NOT IN ('healthy','degraded','down') THEN RAISE EXCEPTION 'Worker permission required'; END IF;\r\n INSERT INTO public.platform_health_checks(tenant_id,service,status,latency_ms,detail,created_at) VALUES(p_tenant_id,'provisioning',p_status, greatest(p_latency,0),left(COALESCE(p_error,''),500),now());\r\n UPDATE public.platform_tenant_bindings SET health_status=p_status,last_health_check_at=now(),last_sync_at=now(),last_error=left(p_error,500),updated_at=now() WHERE tenant_id=p_tenant_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_record_cost(uuid,text,date,numeric,text,text)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_record_cost(p_tenant_id uuid, p_provider text, p_period date, p_amount numeric, p_currency text, p_source text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nBEGIN\r\n IF COALESCE(NULLIF(current_setting('request.jwt.claim.role',true),''), NULLIF(current_setting('request.jwt.claims',true),'')::jsonb->>'role') IS DISTINCT FROM 'service_role' OR p_provider IS NULL OR p_amount IS NULL OR p_currency IS NULL OR p_source IS NULL OR p_provider NOT IN ('supabase','vercel','other') OR p_amount<0 OR p_currency !~ '^[A-Z]{3}$' OR length(trim(p_source))<2 THEN RAISE EXCEPTION 'Invalid cost record'; END IF;\r\n INSERT INTO public.platform_tenant_costs(tenant_id,provider,period_start,amount,currency,source) VALUES(p_tenant_id,p_provider,date_trunc('month',COALESCE(p_period,current_date))::date,p_amount,p_currency,trim(p_source)) ON CONFLICT(tenant_id,provider,period_start) DO UPDATE SET amount=EXCLUDED.amount,currency=EXCLUDED.currency,source=EXCLUDED.source,measured_at=now();\r\n UPDATE public.platform_tenant_bindings SET estimated_monthly_cost=(SELECT sum(amount) FROM public.platform_tenant_costs WHERE tenant_id=p_tenant_id AND currency=p_currency AND period_start=date_trunc('month',COALESCE(p_period,current_date))::date),cost_currency=p_currency,updated_at=now() WHERE tenant_id=p_tenant_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_worker_record(uuid,uuid,text,jsonb)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_worker_record(p_id uuid, p_token uuid, p_operation text, p_args jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE j public.platform_jobs; permission text;\r\nBEGIN\r\n SELECT * INTO j FROM public.platform_jobs WHERE id=p_id FOR UPDATE;\r\n IF NOT FOUND OR j.status<>'running' OR j.lease_token IS DISTINCT FROM p_token OR j.lease_until IS NULL OR j.lease_until<=now() THEN\r\n   RAISE EXCEPTION 'Lease lost';\r\n END IF;\r\n permission:=CASE WHEN j.kind='invite_platform' THEN 'team.write'\r\n WHEN j.kind IN ('provision','invite_admin','apply_modules','go_live') THEN 'onboarding.write' ELSE 'operations.write' END;\r\n IF NOT public.platform_actor_can(j.requested_by,permission) THEN RAISE EXCEPTION 'Authorization changed'; END IF;\r\n PERFORM 1 FROM public.platform_tenants WHERE id=j.tenant_id AND lifecycle_state<>'archived' FOR UPDATE;\r\n IF NOT FOUND OR j.tenant_id IS DISTINCT FROM (p_args->>'p_tenant_id')::uuid THEN RAISE EXCEPTION 'Hospital unavailable'; END IF;\r\n IF j.draft_revision IS DISTINCT FROM (SELECT revision FROM public.platform_onboarding_drafts WHERE tenant_id=j.tenant_id) THEN\r\n   RAISE EXCEPTION 'Requirements changed';\r\n END IF;\r\n IF p_operation='platform_record_binding' THEN\r\n   PERFORM public.platform_record_binding(j.tenant_id,p_args->'p_state');\r\n ELSIF p_operation='platform_record_schema' THEN\r\n   PERFORM public.platform_record_schema(j.tenant_id,p_args->>'p_name',p_args->>'p_checksum',p_args->>'p_status',p_args->>'p_error');\r\n ELSIF p_operation='platform_record_health' THEN\r\n   PERFORM public.platform_record_health(j.tenant_id,p_args->>'p_status',(p_args->>'p_latency')::integer,p_args->>'p_error');\r\n ELSIF p_operation='platform_record_cost' THEN\r\n   PERFORM public.platform_record_cost(j.tenant_id,p_args->>'p_provider',(p_args->>'p_period')::date,(p_args->>'p_amount')::numeric,p_args->>'p_currency',p_args->>'p_source');\r\n ELSE RAISE EXCEPTION 'Unsupported worker write'; END IF;\r\nEND $function$\n"
+    },
+    {
+      "signature": "platform_record_binding(uuid,jsonb)",
+      "security_definer": true,
+      "definition": "CREATE OR REPLACE FUNCTION public.platform_record_binding(p_tenant_id uuid, p_state jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\nDECLARE v_ref text; v_url text; v_checksum text; k text;\r\nBEGIN\r\n IF COALESCE(NULLIF(current_setting('request.jwt.claim.role',true),''), NULLIF(current_setting('request.jwt.claims',true),'')::jsonb->>'role') IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Worker permission required'; END IF;\r\n IF p_state IS NULL OR jsonb_typeof(p_state)<>'object' OR octet_length(p_state::text)>12000 THEN RAISE EXCEPTION 'Invalid binding'; END IF;\r\n FOR k IN SELECT jsonb_object_keys(p_state) LOOP\r\n   IF k NOT IN ('supabase_project_ref','supabase_url','vercel_project_id','vercel_project_name','deployment_id','deployment_url','domain','provider_status','health_status','admin_invitation_status','schema_version','schema_checksum','estimated_monthly_cost','cost_currency','provisioned_at','last_error') THEN RAISE EXCEPTION 'Unsupported binding field'; END IF;\r\n END LOOP;\r\n v_ref:=p_state->>'supabase_project_ref'; v_url:=p_state->>'supabase_url'; v_checksum:=p_state->>'schema_checksum';\r\n IF v_ref IS NOT NULL AND v_ref !~ '^[a-z0-9]{6,64}$' THEN RAISE EXCEPTION 'Invalid Supabase project reference'; END IF;\r\n IF v_checksum IS NOT NULL AND v_checksum !~ '^[a-f0-9]{64}$' THEN RAISE EXCEPTION 'Invalid schema checksum'; END IF;\r\n INSERT INTO public.platform_tenant_bindings(tenant_id,supabase_project_ref,supabase_url,vercel_project_id,vercel_project_name,deployment_id,deployment_url,domain,provider_status,health_status,admin_invitation_status,schema_version,schema_checksum,estimated_monthly_cost,cost_currency,provisioned_at,last_sync_at,last_error)\r\n SELECT p_tenant_id,v_ref,p_state->>'supabase_url',p_state->>'vercel_project_id',p_state->>'vercel_project_name',p_state->>'deployment_id',p_state->>'deployment_url',p_state->>'domain',COALESCE(p_state->>'provider_status','pending'),COALESCE(p_state->>'health_status','unknown'),COALESCE(p_state->>'admin_invitation_status','pending'),p_state->>'schema_version',v_checksum,(p_state->>'estimated_monthly_cost')::numeric,p_state->>'cost_currency',(p_state->>'provisioned_at')::timestamptz,now(),left(p_state->>'last_error',500)\r\n ON CONFLICT(tenant_id) DO UPDATE SET supabase_project_ref=COALESCE(EXCLUDED.supabase_project_ref,platform_tenant_bindings.supabase_project_ref),supabase_url=COALESCE(EXCLUDED.supabase_url,platform_tenant_bindings.supabase_url),vercel_project_id=COALESCE(EXCLUDED.vercel_project_id,platform_tenant_bindings.vercel_project_id),vercel_project_name=COALESCE(EXCLUDED.vercel_project_name,platform_tenant_bindings.vercel_project_name),deployment_id=COALESCE(EXCLUDED.deployment_id,platform_tenant_bindings.deployment_id),deployment_url=COALESCE(EXCLUDED.deployment_url,platform_tenant_bindings.deployment_url),domain=COALESCE(EXCLUDED.domain,platform_tenant_bindings.domain),provider_status=CASE WHEN p_state ? 'provider_status' THEN EXCLUDED.provider_status ELSE platform_tenant_bindings.provider_status END,health_status=CASE WHEN p_state ? 'health_status' THEN EXCLUDED.health_status ELSE platform_tenant_bindings.health_status END,admin_invitation_status=CASE WHEN p_state ? 'admin_invitation_status' THEN EXCLUDED.admin_invitation_status ELSE platform_tenant_bindings.admin_invitation_status END,schema_version=COALESCE(EXCLUDED.schema_version,platform_tenant_bindings.schema_version),schema_checksum=COALESCE(EXCLUDED.schema_checksum,platform_tenant_bindings.schema_checksum),estimated_monthly_cost=COALESCE(EXCLUDED.estimated_monthly_cost,platform_tenant_bindings.estimated_monthly_cost),cost_currency=COALESCE(EXCLUDED.cost_currency,platform_tenant_bindings.cost_currency),provisioned_at=COALESCE(EXCLUDED.provisioned_at,platform_tenant_bindings.provisioned_at),last_sync_at=now(),last_error=CASE WHEN p_state ? 'last_error' THEN EXCLUDED.last_error ELSE platform_tenant_bindings.last_error END,updated_at=now();\r\n IF COALESCE(p_state->>'provider_status','')='ready' THEN UPDATE public.platform_tenants SET provisioned_at=COALESCE(provisioned_at,now()),status=CASE WHEN status IN ('lead','intake','provisioning') THEN 'training' ELSE status END,updated_at=now() WHERE id=p_tenant_id; END IF;\r\nEND $function$\n"
+    }
+  ],
+  "views": [
+    {
+      "schemaname": "public",
+      "viewname": "fluid_balance_daily",
+      "viewowner": "postgres",
+      "definition": " SELECT admission_id,\n    patient_id,\n    chart_date,\n    sum(\n        CASE\n            WHEN (entry_type = 'intake'::text) THEN volume_ml\n            ELSE 0\n        END) AS total_intake_ml,\n    sum(\n        CASE\n            WHEN (entry_type = 'output'::text) THEN volume_ml\n            ELSE 0\n        END) AS total_output_ml,\n    (sum(\n        CASE\n            WHEN (entry_type = 'intake'::text) THEN volume_ml\n            ELSE 0\n        END) - sum(\n        CASE\n            WHEN (entry_type = 'output'::text) THEN volume_ml\n            ELSE 0\n        END)) AS net_balance_ml\n   FROM fluid_balance_charts\n  GROUP BY admission_id, patient_id, chart_date;"
+    }
+  ]
+}

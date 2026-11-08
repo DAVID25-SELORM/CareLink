@@ -1,0 +1,462 @@
+{
+  "checked_at": "2026-11-05T05:38:21.745Z",
+  "project_ref": "wjlpywztfjruqnavwsvr",
+  "tables": [
+    {
+      "table_name": "admissions",
+      "has_rows": false
+    },
+    {
+      "table_name": "ai_suggestions",
+      "has_rows": false
+    },
+    {
+      "table_name": "allergies",
+      "has_rows": false
+    },
+    {
+      "table_name": "ambulance_dispatches",
+      "has_rows": false
+    },
+    {
+      "table_name": "ambulance_fleet",
+      "has_rows": false
+    },
+    {
+      "table_name": "anc_registrations",
+      "has_rows": false
+    },
+    {
+      "table_name": "anc_visits",
+      "has_rows": false
+    },
+    {
+      "table_name": "appointments",
+      "has_rows": true
+    },
+    {
+      "table_name": "audit_log",
+      "has_rows": true
+    },
+    {
+      "table_name": "beds",
+      "has_rows": false
+    },
+    {
+      "table_name": "billing_items",
+      "has_rows": false
+    },
+    {
+      "table_name": "blood_donations",
+      "has_rows": false
+    },
+    {
+      "table_name": "blood_inventory",
+      "has_rows": true
+    },
+    {
+      "table_name": "blood_requests",
+      "has_rows": false
+    },
+    {
+      "table_name": "carelink_instance",
+      "has_rows": true
+    },
+    {
+      "table_name": "claim_batches",
+      "has_rows": false
+    },
+    {
+      "table_name": "claim_items",
+      "has_rows": false
+    },
+    {
+      "table_name": "claims",
+      "has_rows": false
+    },
+    {
+      "table_name": "clinical_notes",
+      "has_rows": false
+    },
+    {
+      "table_name": "clinical_orders",
+      "has_rows": false
+    },
+    {
+      "table_name": "consent_records",
+      "has_rows": false
+    },
+    {
+      "table_name": "controlled_substance_log",
+      "has_rows": false
+    },
+    {
+      "table_name": "data_access_log",
+      "has_rows": false
+    },
+    {
+      "table_name": "deliveries",
+      "has_rows": false
+    },
+    {
+      "table_name": "dental_records",
+      "has_rows": false
+    },
+    {
+      "table_name": "dhims2_indicator_mappings",
+      "has_rows": false
+    },
+    {
+      "table_name": "dhims2_reports",
+      "has_rows": false
+    },
+    {
+      "table_name": "diagnoses",
+      "has_rows": false
+    },
+    {
+      "table_name": "diet_orders",
+      "has_rows": false
+    },
+    {
+      "table_name": "discharge_summaries",
+      "has_rows": false
+    },
+    {
+      "table_name": "drug_batches",
+      "has_rows": false
+    },
+    {
+      "table_name": "drug_interactions",
+      "has_rows": false
+    },
+    {
+      "table_name": "drugs",
+      "has_rows": true
+    },
+    {
+      "table_name": "encounters",
+      "has_rows": false
+    },
+    {
+      "table_name": "fee_schedules",
+      "has_rows": false
+    },
+    {
+      "table_name": "fhir_endpoint_config",
+      "has_rows": false
+    },
+    {
+      "table_name": "fhir_resource_log",
+      "has_rows": false
+    },
+    {
+      "table_name": "fluid_balance_charts",
+      "has_rows": false
+    },
+    {
+      "table_name": "handover_notes",
+      "has_rows": false
+    },
+    {
+      "table_name": "hospital_departments",
+      "has_rows": false
+    },
+    {
+      "table_name": "hospital_onboarding_tasks",
+      "has_rows": false
+    },
+    {
+      "table_name": "hospital_profile",
+      "has_rows": true
+    },
+    {
+      "table_name": "hospitals",
+      "has_rows": false
+    },
+    {
+      "table_name": "hr_attendance",
+      "has_rows": false
+    },
+    {
+      "table_name": "hr_leaves",
+      "has_rows": false
+    },
+    {
+      "table_name": "hr_payroll",
+      "has_rows": false
+    },
+    {
+      "table_name": "hr_staff",
+      "has_rows": false
+    },
+    {
+      "table_name": "integration_endpoints",
+      "has_rows": false
+    },
+    {
+      "table_name": "inventory_categories",
+      "has_rows": true
+    },
+    {
+      "table_name": "inventory_items",
+      "has_rows": false
+    },
+    {
+      "table_name": "inventory_transactions",
+      "has_rows": false
+    },
+    {
+      "table_name": "lab_panels",
+      "has_rows": true
+    },
+    {
+      "table_name": "lab_specimens",
+      "has_rows": false
+    },
+    {
+      "table_name": "lab_test_catalog",
+      "has_rows": true
+    },
+    {
+      "table_name": "lab_tests",
+      "has_rows": true
+    },
+    {
+      "table_name": "leave_requests",
+      "has_rows": false
+    },
+    {
+      "table_name": "maternity_deliveries",
+      "has_rows": false
+    },
+    {
+      "table_name": "medical_records",
+      "has_rows": false
+    },
+    {
+      "table_name": "medication_administration_records",
+      "has_rows": false
+    },
+    {
+      "table_name": "mortuary_records",
+      "has_rows": false
+    },
+    {
+      "table_name": "nhia_submissions",
+      "has_rows": false
+    },
+    {
+      "table_name": "nhia_tariff_catalog",
+      "has_rows": false
+    },
+    {
+      "table_name": "nhis_cc_codes",
+      "has_rows": false
+    },
+    {
+      "table_name": "notification_logs",
+      "has_rows": false
+    },
+    {
+      "table_name": "notification_settings",
+      "has_rows": false
+    },
+    {
+      "table_name": "notification_templates",
+      "has_rows": false
+    },
+    {
+      "table_name": "notifications",
+      "has_rows": false
+    },
+    {
+      "table_name": "nurse_notes",
+      "has_rows": false
+    },
+    {
+      "table_name": "nursing_assessments",
+      "has_rows": false
+    },
+    {
+      "table_name": "nursing_care_plans",
+      "has_rows": false
+    },
+    {
+      "table_name": "offline_cache_manifest",
+      "has_rows": false
+    },
+    {
+      "table_name": "patient_transfers",
+      "has_rows": false
+    },
+    {
+      "table_name": "patient_vitals",
+      "has_rows": false
+    },
+    {
+      "table_name": "patients",
+      "has_rows": true
+    },
+    {
+      "table_name": "payment_allocations",
+      "has_rows": false
+    },
+    {
+      "table_name": "payments",
+      "has_rows": true
+    },
+    {
+      "table_name": "permissions",
+      "has_rows": true
+    },
+    {
+      "table_name": "physiotherapy_sessions",
+      "has_rows": false
+    },
+    {
+      "table_name": "postnatal_visits",
+      "has_rows": false
+    },
+    {
+      "table_name": "prescription_items",
+      "has_rows": true
+    },
+    {
+      "table_name": "prescriptions",
+      "has_rows": true
+    },
+    {
+      "table_name": "problem_list",
+      "has_rows": false
+    },
+    {
+      "table_name": "purchase_order_items",
+      "has_rows": false
+    },
+    {
+      "table_name": "purchase_orders",
+      "has_rows": false
+    },
+    {
+      "table_name": "queue_management",
+      "has_rows": false
+    },
+    {
+      "table_name": "radiology_orders",
+      "has_rows": false
+    },
+    {
+      "table_name": "radiology_results",
+      "has_rows": false
+    },
+    {
+      "table_name": "receipts",
+      "has_rows": false
+    },
+    {
+      "table_name": "record_requests",
+      "has_rows": false
+    },
+    {
+      "table_name": "referrals",
+      "has_rows": true
+    },
+    {
+      "table_name": "registered_devices",
+      "has_rows": false
+    },
+    {
+      "table_name": "report_runs",
+      "has_rows": false
+    },
+    {
+      "table_name": "report_templates",
+      "has_rows": false
+    },
+    {
+      "table_name": "role_permissions",
+      "has_rows": false
+    },
+    {
+      "table_name": "roles",
+      "has_rows": true
+    },
+    {
+      "table_name": "service_fees",
+      "has_rows": true
+    },
+    {
+      "table_name": "staff_schedules",
+      "has_rows": false
+    },
+    {
+      "table_name": "suppliers",
+      "has_rows": false
+    },
+    {
+      "table_name": "surgical_procedures",
+      "has_rows": false
+    },
+    {
+      "table_name": "sync_checkpoints",
+      "has_rows": false
+    },
+    {
+      "table_name": "sync_conflicts",
+      "has_rows": false
+    },
+    {
+      "table_name": "sync_queue",
+      "has_rows": false
+    },
+    {
+      "table_name": "theatre_bookings",
+      "has_rows": false
+    },
+    {
+      "table_name": "theatre_operation_notes",
+      "has_rows": false
+    },
+    {
+      "table_name": "theatre_post_op",
+      "has_rows": false
+    },
+    {
+      "table_name": "theatre_pre_op",
+      "has_rows": false
+    },
+    {
+      "table_name": "theatre_sessions",
+      "has_rows": false
+    },
+    {
+      "table_name": "triage_assessments",
+      "has_rows": false
+    },
+    {
+      "table_name": "user_sessions",
+      "has_rows": false
+    },
+    {
+      "table_name": "users",
+      "has_rows": true
+    },
+    {
+      "table_name": "virtual_consultations",
+      "has_rows": false
+    },
+    {
+      "table_name": "vitals",
+      "has_rows": false
+    },
+    {
+      "table_name": "ward_rounds",
+      "has_rows": false
+    },
+    {
+      "table_name": "wards",
+      "has_rows": false
+    }
+  ]
+}

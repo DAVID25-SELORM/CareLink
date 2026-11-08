@@ -12,7 +12,7 @@ export class VercelAdapter {
   async deploy(name, ref) {
     const existing = await this.request(`/v6/deployments?projectId=${encodeURIComponent(name)}&limit=20`)
     const deployments = existing?.deployments || []
-    const match = deployments.find(item => item.readyState === 'READY' && (item.meta?.githubCommitRef === ref || item.gitSource?.ref === ref || item.target === 'production'))
+    const match = deployments.find(item => ['READY', 'QUEUED', 'INITIALIZING', 'BUILDING'].includes(item.readyState || item.state) && (item.meta?.githubCommitSha === ref || item.gitSource?.sha === ref))
     if (match) return match
     return this.request('/v13/deployments', { method:'POST', body:{ name, target:'production', gitSource: this.gitRepo ? { type:'github', repo:this.gitRepo, ref } : undefined } })
   }

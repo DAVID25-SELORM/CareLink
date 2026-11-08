@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { supabase } from '../supabaseClient'
+import { supabase, hospitalConflict } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useOrg } from '../hooks/useOrg'
 
@@ -136,7 +136,7 @@ export default function NotificationSettings() {
         ...templateForm,
         hospital_id: orgId,
         updated_by: user.id,
-      }, { onConflict: 'hospital_id,event_type,channel' })
+      }, { onConflict: hospitalConflict('hospital_id,event_type,channel') })
       if (error) throw error
       toast.success('Template saved')
       setTemplateForm({ event_type: 'appointment_reminder', channel: 'SMS', template_text: '' })
@@ -156,7 +156,7 @@ export default function NotificationSettings() {
         ...settingsForm,
         hospital_id: orgId,
         updated_by: user.id,
-      }, { onConflict: 'hospital_id' })
+      }, { onConflict: hospitalConflict('hospital_id') })
       if (error) throw error
       toast.success('Notification settings saved')
     } catch {

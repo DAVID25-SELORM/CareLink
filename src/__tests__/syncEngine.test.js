@@ -18,6 +18,7 @@ const supabaseMocks = vi.hoisted(() => ({
 
 vi.mock('../services/offlineDB', () => offlineDbMocks)
 vi.mock('../supabaseClient', () => ({
+  sharedHospitalMode: false,
   supabase: supabaseMocks,
 }))
 

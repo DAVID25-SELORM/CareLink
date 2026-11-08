@@ -1,4 +1,9 @@
-import { supabase } from '../supabaseClient'
+import { supabase, sharedHospitalMode } from '../supabaseClient'
+let hospitalSync = null
+export function setHospitalSync(runner) {
+  hospitalSync?.dispose()
+  hospitalSync = runner
+}
 import {
   putMany,
   clearStore,
@@ -121,6 +126,19 @@ async function pushMutations() {
 }
 
 export async function syncAll() {
+  if (sharedHospitalMode) {
+    if (!hospitalSync) return { status: 'hospital_required' }
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return { status: 'offline' }
+    notifyListeners({ type: 'sync_start' })
+    try {
+      const result = await hospitalSync.run()
+      notifyListeners({ type: 'sync_complete', results: result.results })
+      return result
+    } catch {
+      notifyListeners({ type: 'sync_error', error: 'Hospital sync could not complete' })
+      return { status: 'error', error: 'Hospital sync could not complete' }
+    }
+  }
   if (isSyncing) return { status: 'already_running' }
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     return { status: 'offline' }
@@ -158,6 +176,7 @@ export async function syncAll() {
 }
 
 export async function initialCache() {
+  if (sharedHospitalMode) return { status: 'shared_initial_cache_unavailable' }
   const deviceId = await getDeviceId()
   notifyListeners({ type: 'initial_cache_start', deviceId })
 

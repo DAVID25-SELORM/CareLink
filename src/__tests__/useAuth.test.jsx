@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from '../hooks/useAuth'
 import { supabase } from '../supabaseClient'
 
 const mocks = vi.hoisted(() => ({ authChanged: null }))
-vi.mock('../supabaseClient', () => ({ supabase: {
+vi.mock('../supabaseClient', () => ({ sharedHospitalMode: false, createHospitalDatabase: vi.fn(), setHospitalDatabase: vi.fn(), supabase: {
   rpc: vi.fn(),
   auth: {
     getSession: vi.fn(),

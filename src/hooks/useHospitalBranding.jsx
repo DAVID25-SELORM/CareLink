@@ -77,9 +77,8 @@ export const useHospitalBranding = () => {
 
         if (error) throw error
 
-        const nextBranding = updateHospitalBrandingCache(data)
-
         if (active) {
+          const nextBranding = updateHospitalBrandingCache(data)
           setBranding(nextBranding)
         }
       } catch (error) {
@@ -98,8 +97,11 @@ export const useHospitalBranding = () => {
     }
 
     if (brandingCache) {
-      setLoading(false)
+      const timer = setTimeout(() => {
+        if (active) { setBranding(brandingCache || DEFAULT_HOSPITAL_BRANDING); setLoading(false) }
+      }, 0)
       return () => {
+        clearTimeout(timer)
         active = false
         if (typeof window !== 'undefined') {
           window.removeEventListener(BRANDING_UPDATE_EVENT, handleBrandingUpdate)

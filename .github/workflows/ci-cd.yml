@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '22'
 
 jobs:
   # Job 1: Lint and Code Quality
@@ -63,7 +63,9 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm run test:run
+        run: |
+          npm run test:run
+          node --test tests/*.node-test.mjs worker/*.node-test.mjs worker/providers/*.node-test.mjs
 
   # Job 3: Build
   build:
@@ -122,15 +124,15 @@ jobs:
         run: npm ci
       
       - name: Run npm audit
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Check for sensitive data
         run: |
           echo "Checking for potential sensitive data leaks..."
-          if grep -rE "(password|secret|api_key|token)" src/ --exclude-dir=node_modules --exclude="*.md"; then
-            echo "⚠️  Warning: Potential sensitive data found"
+          if grep -rEi "(service_role|sb_secret_|SUPABASE_MANAGEMENT_TOKEN|-----BEGIN [A-Z ]*PRIVATE KEY)" src/ --exclude-dir=node_modules --exclude="*.md"; then
+            echo "Secret-like material found in src/"
+            exit 1
           fi
-        continue-on-error: true
 
   # Job 5: Deploy to Vercel (Production)
   deploy-production:

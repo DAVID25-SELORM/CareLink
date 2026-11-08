@@ -1,0 +1,37 @@
+{
+  "verified_at": "2026-11-05T05:55:43.083Z",
+  "project_ref": "wjlpywztfjruqnavwsvr",
+  "target_counts": [
+    {
+      "table_name": "appointments",
+      "rows": 0
+    },
+    {
+      "table_name": "lab_tests",
+      "rows": 0
+    },
+    {
+      "table_name": "patients",
+      "rows": 0
+    },
+    {
+      "table_name": "payments",
+      "rows": 0
+    },
+    {
+      "table_name": "prescription_items",
+      "rows": 0
+    },
+    {
+      "table_name": "prescriptions",
+      "rows": 0
+    },
+    {
+      "table_name": "referrals",
+      "rows": 0
+    }
+  ],
+  "protected_table_count": 133,
+  "protected_count_changes": [],
+  "verified": true
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { supabase } from '../supabaseClient'
+import { supabase, hospitalConflict } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useOrg } from '../hooks/useOrg'
 
@@ -179,7 +179,7 @@ export default function HRPayroll() {
         notes: payrollForm.notes,
         generated_by: user.id,
       }))
-      const { error } = await supabase.from('hr_payroll').upsert(payrollEntries, { onConflict: 'hospital_id,staff_id,month' })
+      const { error } = await supabase.from('hr_payroll').upsert(payrollEntries, { onConflict: hospitalConflict('hospital_id,staff_id,month') })
       if (error) throw error
       toast.success(`Payroll generated for ${payrollEntries.length} staff members`)
       setShowPayrollForm(false)

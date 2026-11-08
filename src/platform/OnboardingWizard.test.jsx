@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import OnboardingWizard from './OnboardingWizard'
 import { command, query } from './api'
+vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ userRole: 'platform_owner' }) }))
 vi.mock('./api', () => ({ command:vi.fn(), query:vi.fn() }))
 vi.mock('../supabaseClient', () => ({ supabase:{from:() => ({select:() => ({eq:() => ({maybeSingle:() => ({})})})})} }))
 const hospital = {id:'hospital',hospital_name:'Pilot',owner_email:'admin@example.com',lifecycle_state:'onboarding'}

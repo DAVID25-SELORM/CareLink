@@ -1,4 +1,8 @@
 import { openDB } from 'idb'
+import { createHospitalCache } from './hospitalCache.mjs'
+
+// Shared screens must receive this scoped cache, not the legacy exports below.
+export const openHospitalCache = (hospitalId, userId) => createHospitalCache({ hospitalId, userId, openDatabase: openDB })
 
 const DB_NAME = 'carelink-offline'
 const DB_VERSION = 1
@@ -92,6 +96,23 @@ export async function deleteRecord(storeName, id) {
 export async function clearStore(storeName) {
   const db = await getDB()
   return db.clear(storeName)
+}
+
+/**
+ * Remove cached clinical reads and their sync checkpoints (e.g. on sign-out) so patient data
+ * does not stay readable in this browser profile. Unsynced queued mutations are deliberately
+ * kept so offline clinical work is never lost; the device id is kept too.
+ */
+export async function purgeCachedClinicalData() {
+  const db = await getDB()
+  const tx = db.transaction([...OFFLINE_STORES, META_STORE], 'readwrite')
+  for (const store of OFFLINE_STORES) tx.objectStore(store).clear()
+  let cursor = await tx.objectStore(META_STORE).openCursor()
+  while (cursor) {
+    if (String(cursor.key).startsWith('checkpoint_')) await cursor.delete()
+    cursor = await cursor.continue()
+  }
+  await tx.done
 }
 
 // ─── Sync Queue ──────────────────────────────────────────────────────

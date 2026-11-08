@@ -7,7 +7,16 @@ export class SupabaseManagementAdapter {
     if (!this.token || !this.organization) throw new Error('Supabase management configuration is incomplete')
   }
   request(path, options = {}) { return requestJson(this.base, path, { ...options, token: this.token, fetchImpl: this.fetchImpl }) }
-  async findProject(name) { const data = await this.request('/v1/projects'); return (Array.isArray(data) ? data : data?.projects || []).find(p => p.name === name || p.slug === name) || null }
+  async findProject(name) {
+    const data = await this.request('/v1/projects')
+    const matches = (Array.isArray(data) ? data : data?.projects || []).filter(p => p.name === name || p.slug === name)
+    if (matches.length > 1) throw new Error('Ambiguous project ownership; manual reconciliation required')
+    const project = matches[0]
+    if (project && project.organization_slug !== this.organization && project.organization_id !== this.organization) {
+      throw new Error('Project ownership does not match the configured organization')
+    }
+    return project || null
+  }
   async createProject({ name, region }) {
     const existing = await this.findProject(name); if (existing) return existing
     return this.request('/v1/projects', { method:'POST', body:{ organization_slug:this.organization, name, db_pass:randomBytes(32).toString('base64url'), region } })

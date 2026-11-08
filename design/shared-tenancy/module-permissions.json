@@ -1,0 +1,1412 @@
+[
+  {
+    "table": "admissions",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "ai_suggestions",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "allergies",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "ambulance_dispatches",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "ambulance_fleet",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "anc_registrations",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "anc_visits",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "audit_log",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "beds",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "billing_items",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "cashier",
+      "doctor"
+    ]
+  },
+  {
+    "table": "blood_donations",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "blood_inventory",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "blood_requests",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "claim_batches",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "claim_items",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "claims",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "cashier"
+    ]
+  },
+  {
+    "table": "clinical_notes",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "clinical_orders",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "consent_records",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "controlled_substance_log",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "pharmacist"
+    ]
+  },
+  {
+    "table": "data_access_log",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "deliveries",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "dental_records",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "dhims2_indicator_mappings",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "dhims2_reports",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "diagnoses",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "diet_orders",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "discharge_summaries",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "drug_batches",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "pharmacist"
+    ]
+  },
+  {
+    "table": "drug_interactions",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "pharmacist"
+    ]
+  },
+  {
+    "table": "drugs",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "pharmacist"
+    ]
+  },
+  {
+    "table": "encounters",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "fee_schedules",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "fhir_endpoint_config",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "fhir_resource_log",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "fluid_balance_charts",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "handover_notes",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "nurse"
+    ]
+  },
+  {
+    "table": "hospital_departments",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "hospital_onboarding_tasks",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "hospital_profile",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "hospitals",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "hr_attendance",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "hr_leaves",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "hr_payroll",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "hr_staff",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "integration_endpoints",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "inventory_categories",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "inventory_items",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "inventory_transactions",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "lab_panels",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "lab_specimens",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "lab_test_catalog",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "leave_requests",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "maternity_deliveries",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "medical_records",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "medication_administration_records",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "mortuary_records",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "nhia_submissions",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "nhia_tariff_catalog",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "nhis_cc_codes",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "notification_logs",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "notification_settings",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "notification_templates",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "notifications",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "nurse_notes",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "nurse"
+    ]
+  },
+  {
+    "table": "nursing_assessments",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "nurse"
+    ]
+  },
+  {
+    "table": "nursing_care_plans",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "nurse"
+    ]
+  },
+  {
+    "table": "offline_cache_manifest",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "patient_transfers",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "patient_vitals",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "nurse"
+    ]
+  },
+  {
+    "table": "payment_allocations",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "cashier"
+    ]
+  },
+  {
+    "table": "physiotherapy_sessions",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "postnatal_visits",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "problem_list",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "purchase_order_items",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "pharmacist"
+    ]
+  },
+  {
+    "table": "purchase_orders",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "pharmacist"
+    ]
+  },
+  {
+    "table": "queue_management",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "radiology_orders",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "radiology_results",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "receipts",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "cashier"
+    ]
+  },
+  {
+    "table": "record_requests",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "records_officer"
+    ]
+  },
+  {
+    "table": "registered_devices",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "report_runs",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "report_templates",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "service_fees",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "staff_schedules",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "suppliers",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "pharmacist"
+    ]
+  },
+  {
+    "table": "surgical_procedures",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "sync_checkpoints",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "sync_conflicts",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "sync_queue",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "theatre_bookings",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "theatre_operation_notes",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "theatre_post_op",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "theatre_pre_op",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "theatre_sessions",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "triage_assessments",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "user_sessions",
+    "readers": [
+      "admin"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "virtual_consultations",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  },
+  {
+    "table": "vitals",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
+    "table": "ward_rounds",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor"
+    ]
+  },
+  {
+    "table": "wards",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin"
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+worker.env
+.env
+.env.*
+*.local
+.git
+node_modules
+.venv
+dist
+.claude

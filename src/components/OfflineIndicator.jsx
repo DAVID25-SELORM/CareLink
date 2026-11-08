@@ -5,14 +5,24 @@ import { useAuth } from '../hooks/useAuth'
 import { isPlatformRole } from '../platform/domain'
 
 const OfflineIndicator = () => {
-  const { userRole } = useAuth()
+  const { userRole, hospital } = useAuth()
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [syncStatus, setSyncStatus] = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
   const [showDetails, setShowDetails] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
+  async function refreshStats() {
+    try {
+      const stats = await getCacheStats()
+      setPendingCount(stats.pendingSync)
+    } catch {
+      // IndexedDB may not be available
+    }
+  }
+
   useEffect(() => {
+    if (hospital) return
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
     window.addEventListener('online', handleOnline)
@@ -27,7 +37,7 @@ const OfflineIndicator = () => {
       }
     })
 
-    refreshStats()
+    const initialRefresh = setTimeout(refreshStats, 0)
     const interval = setInterval(refreshStats, 30000)
 
     return () => {
@@ -35,17 +45,9 @@ const OfflineIndicator = () => {
       window.removeEventListener('offline', handleOffline)
       unsubscribe()
       clearInterval(interval)
+      clearTimeout(initialRefresh)
     }
-  }, [])
-
-  async function refreshStats() {
-    try {
-      const stats = await getCacheStats()
-      setPendingCount(stats.pendingSync)
-    } catch {
-      // IndexedDB may not be available
-    }
-  }
+  }, [hospital])
 
   async function handleManualSync() {
     setSyncing(true)
@@ -53,7 +55,7 @@ const OfflineIndicator = () => {
   }
 
   // Don't show anything if online and no pending items
-  if (!userRole || isPlatformRole(userRole) || (isOnline && pendingCount === 0 && !syncing)) return null
+  if (hospital || !userRole || isPlatformRole(userRole) || (isOnline && pendingCount === 0 && !syncing)) return null
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

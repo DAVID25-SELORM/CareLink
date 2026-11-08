@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
-import { supabase } from '../supabaseClient'
+import { supabase, sharedHospitalMode, createStaffSignupClient } from '../supabaseClient'
 import carelinkLogo from '../assets/carelink-logo.svg'
 
 /**
@@ -15,6 +15,7 @@ const Login = ({ platform = false }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registering, setRegistering] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
@@ -25,6 +26,20 @@ const Login = ({ platform = false }) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+
+    if (registering && sharedHospitalMode) {
+      try {
+        const client = createStaffSignupClient()
+        const { error } = await client.auth.signUp({ email: email.trim(), password,
+          options: { emailRedirectTo: window.location.origin } })
+        if (error) throw error
+        toast.success('Check your email to verify your account, then sign in to accept your hospital invitation.')
+        setRegistering(false)
+        setPassword('')
+      } catch (error) { toast.error(error.message || 'Account registration failed') }
+      finally { setLoading(false) }
+      return
+    }
 
     const { data, error } = await signIn(email, password)
 
@@ -77,6 +92,10 @@ const Login = ({ platform = false }) => {
           </p>
         </div>
 
+        {sharedHospitalMode && !platform && <button type="button" disabled={loading} onClick={() => setRegistering(value => !value)} className="mb-4 text-blue-700 underline">
+          {registering ? 'Already registered? Sign in' : 'Invited administrator? Create your account'}
+        </button>}
+        {registering && <p className="mb-4 text-sm">Use the email address invited by the platform owner. Creating an account does not grant hospital access.</p>}
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           <div>
             <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 mb-2">
@@ -100,6 +119,7 @@ const Login = ({ platform = false }) => {
             <input
               id="login-password"
               type="password"
+              minLength={registering ? 12 : undefined}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -113,7 +133,7 @@ const Login = ({ platform = false }) => {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all-smooth disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Please wait…' : registering ? 'Create invited account' : 'Sign In'}
           </button>
 
           <div className="text-center">

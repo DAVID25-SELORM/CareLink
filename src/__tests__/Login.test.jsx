@@ -25,6 +25,8 @@ vi.mock('../hooks/useHospitalBranding', () => ({
 }))
 
 vi.mock('../supabaseClient', () => ({
+  sharedHospitalMode: false,
+  createStaffSignupClient: vi.fn(),
   supabase: {
     auth: {
       resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),

@@ -1,6 +1,7 @@
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { isPlatformRole } from '../platform/domain'
+import MfaGate from './MfaGate'
 
 /**
  * Protected Route Component
@@ -66,7 +67,7 @@ const ProtectedRoute = ({ children, allowedRoles = [], platformOnly = false }) =
     )
   }
 
-  return children
+  return <MfaGate signOut={signOut}>{children}</MfaGate>
 }
 
 export default ProtectedRoute

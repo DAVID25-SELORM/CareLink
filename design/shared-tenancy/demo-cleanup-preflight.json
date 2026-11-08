@@ -1,0 +1,602 @@
+{
+  "counts": [
+    {
+      "table_name": "admissions",
+      "rows": 0
+    },
+    {
+      "table_name": "ai_suggestions",
+      "rows": 0
+    },
+    {
+      "table_name": "allergies",
+      "rows": 0
+    },
+    {
+      "table_name": "ambulance_dispatches",
+      "rows": 0
+    },
+    {
+      "table_name": "ambulance_fleet",
+      "rows": 0
+    },
+    {
+      "table_name": "anc_registrations",
+      "rows": 0
+    },
+    {
+      "table_name": "anc_visits",
+      "rows": 0
+    },
+    {
+      "table_name": "appointments",
+      "rows": 8
+    },
+    {
+      "table_name": "audit_log",
+      "rows": 8
+    },
+    {
+      "table_name": "beds",
+      "rows": 0
+    },
+    {
+      "table_name": "billing_items",
+      "rows": 0
+    },
+    {
+      "table_name": "blood_donations",
+      "rows": 0
+    },
+    {
+      "table_name": "blood_inventory",
+      "rows": 8
+    },
+    {
+      "table_name": "blood_requests",
+      "rows": 0
+    },
+    {
+      "table_name": "carelink_instance",
+      "rows": 1
+    },
+    {
+      "table_name": "claim_batches",
+      "rows": 0
+    },
+    {
+      "table_name": "claim_items",
+      "rows": 0
+    },
+    {
+      "table_name": "claims",
+      "rows": 0
+    },
+    {
+      "table_name": "clinical_notes",
+      "rows": 0
+    },
+    {
+      "table_name": "clinical_orders",
+      "rows": 0
+    },
+    {
+      "table_name": "consent_records",
+      "rows": 0
+    },
+    {
+      "table_name": "controlled_substance_log",
+      "rows": 0
+    },
+    {
+      "table_name": "data_access_log",
+      "rows": 0
+    },
+    {
+      "table_name": "deliveries",
+      "rows": 0
+    },
+    {
+      "table_name": "dental_records",
+      "rows": 0
+    },
+    {
+      "table_name": "dhims2_indicator_mappings",
+      "rows": 0
+    },
+    {
+      "table_name": "dhims2_reports",
+      "rows": 0
+    },
+    {
+      "table_name": "diagnoses",
+      "rows": 0
+    },
+    {
+      "table_name": "diet_orders",
+      "rows": 0
+    },
+    {
+      "table_name": "discharge_summaries",
+      "rows": 0
+    },
+    {
+      "table_name": "drug_batches",
+      "rows": 0
+    },
+    {
+      "table_name": "drug_interactions",
+      "rows": 0
+    },
+    {
+      "table_name": "drugs",
+      "rows": 173
+    },
+    {
+      "table_name": "encounters",
+      "rows": 0
+    },
+    {
+      "table_name": "fee_schedules",
+      "rows": 0
+    },
+    {
+      "table_name": "fhir_endpoint_config",
+      "rows": 0
+    },
+    {
+      "table_name": "fhir_resource_log",
+      "rows": 0
+    },
+    {
+      "table_name": "fluid_balance_charts",
+      "rows": 0
+    },
+    {
+      "table_name": "handover_notes",
+      "rows": 0
+    },
+    {
+      "table_name": "hospital_departments",
+      "rows": 0
+    },
+    {
+      "table_name": "hospital_onboarding_tasks",
+      "rows": 0
+    },
+    {
+      "table_name": "hospital_profile",
+      "rows": 1
+    },
+    {
+      "table_name": "hospitals",
+      "rows": 0
+    },
+    {
+      "table_name": "hr_attendance",
+      "rows": 0
+    },
+    {
+      "table_name": "hr_leaves",
+      "rows": 0
+    },
+    {
+      "table_name": "hr_payroll",
+      "rows": 0
+    },
+    {
+      "table_name": "hr_staff",
+      "rows": 0
+    },
+    {
+      "table_name": "integration_endpoints",
+      "rows": 0
+    },
+    {
+      "table_name": "inventory_categories",
+      "rows": 6
+    },
+    {
+      "table_name": "inventory_items",
+      "rows": 0
+    },
+    {
+      "table_name": "inventory_transactions",
+      "rows": 0
+    },
+    {
+      "table_name": "lab_panels",
+      "rows": 11
+    },
+    {
+      "table_name": "lab_specimens",
+      "rows": 0
+    },
+    {
+      "table_name": "lab_test_catalog",
+      "rows": 104
+    },
+    {
+      "table_name": "lab_tests",
+      "rows": 4
+    },
+    {
+      "table_name": "leave_requests",
+      "rows": 0
+    },
+    {
+      "table_name": "maternity_deliveries",
+      "rows": 0
+    },
+    {
+      "table_name": "medical_records",
+      "rows": 0
+    },
+    {
+      "table_name": "medication_administration_records",
+      "rows": 0
+    },
+    {
+      "table_name": "mortuary_records",
+      "rows": 0
+    },
+    {
+      "table_name": "nhia_submissions",
+      "rows": 0
+    },
+    {
+      "table_name": "nhia_tariff_catalog",
+      "rows": 0
+    },
+    {
+      "table_name": "nhis_cc_codes",
+      "rows": 0
+    },
+    {
+      "table_name": "notification_logs",
+      "rows": 0
+    },
+    {
+      "table_name": "notification_settings",
+      "rows": 0
+    },
+    {
+      "table_name": "notification_templates",
+      "rows": 0
+    },
+    {
+      "table_name": "notifications",
+      "rows": 0
+    },
+    {
+      "table_name": "nurse_notes",
+      "rows": 0
+    },
+    {
+      "table_name": "nursing_assessments",
+      "rows": 0
+    },
+    {
+      "table_name": "nursing_care_plans",
+      "rows": 0
+    },
+    {
+      "table_name": "offline_cache_manifest",
+      "rows": 0
+    },
+    {
+      "table_name": "patient_transfers",
+      "rows": 0
+    },
+    {
+      "table_name": "patient_vitals",
+      "rows": 0
+    },
+    {
+      "table_name": "patients",
+      "rows": 10
+    },
+    {
+      "table_name": "payment_allocations",
+      "rows": 0
+    },
+    {
+      "table_name": "payments",
+      "rows": 3
+    },
+    {
+      "table_name": "permissions",
+      "rows": 15
+    },
+    {
+      "table_name": "physiotherapy_sessions",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_audit_log",
+      "rows": 18
+    },
+    {
+      "table_name": "platform_backups",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_health_checks",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_incidents",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_integrations",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_invoices",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_job_steps",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_jobs",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_launch_approvals",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_launch_evidence",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_members",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_notifications",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_onboarding_drafts",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_onboarding_tasks",
+      "rows": 8
+    },
+    {
+      "table_name": "platform_owners",
+      "rows": 1
+    },
+    {
+      "table_name": "platform_payments",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_plans",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_settings",
+      "rows": 1
+    },
+    {
+      "table_name": "platform_subscriptions",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_tenant_bindings",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_tenant_costs",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_tenant_schema_ledger",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_tenants",
+      "rows": 1
+    },
+    {
+      "table_name": "platform_ticket_messages",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_tickets",
+      "rows": 0
+    },
+    {
+      "table_name": "platform_usage",
+      "rows": 0
+    },
+    {
+      "table_name": "postnatal_visits",
+      "rows": 0
+    },
+    {
+      "table_name": "prescription_items",
+      "rows": 11
+    },
+    {
+      "table_name": "prescriptions",
+      "rows": 5
+    },
+    {
+      "table_name": "problem_list",
+      "rows": 0
+    },
+    {
+      "table_name": "purchase_order_items",
+      "rows": 0
+    },
+    {
+      "table_name": "purchase_orders",
+      "rows": 0
+    },
+    {
+      "table_name": "queue_management",
+      "rows": 0
+    },
+    {
+      "table_name": "radiology_orders",
+      "rows": 0
+    },
+    {
+      "table_name": "radiology_results",
+      "rows": 0
+    },
+    {
+      "table_name": "receipts",
+      "rows": 0
+    },
+    {
+      "table_name": "record_requests",
+      "rows": 0
+    },
+    {
+      "table_name": "referrals",
+      "rows": 1
+    },
+    {
+      "table_name": "registered_devices",
+      "rows": 0
+    },
+    {
+      "table_name": "report_runs",
+      "rows": 0
+    },
+    {
+      "table_name": "report_templates",
+      "rows": 0
+    },
+    {
+      "table_name": "role_permissions",
+      "rows": 0
+    },
+    {
+      "table_name": "roles",
+      "rows": 7
+    },
+    {
+      "table_name": "service_fees",
+      "rows": 78
+    },
+    {
+      "table_name": "staff_schedules",
+      "rows": 0
+    },
+    {
+      "table_name": "suppliers",
+      "rows": 0
+    },
+    {
+      "table_name": "surgical_procedures",
+      "rows": 0
+    },
+    {
+      "table_name": "sync_checkpoints",
+      "rows": 0
+    },
+    {
+      "table_name": "sync_conflicts",
+      "rows": 0
+    },
+    {
+      "table_name": "sync_queue",
+      "rows": 0
+    },
+    {
+      "table_name": "theatre_bookings",
+      "rows": 0
+    },
+    {
+      "table_name": "theatre_operation_notes",
+      "rows": 0
+    },
+    {
+      "table_name": "theatre_post_op",
+      "rows": 0
+    },
+    {
+      "table_name": "theatre_pre_op",
+      "rows": 0
+    },
+    {
+      "table_name": "theatre_sessions",
+      "rows": 0
+    },
+    {
+      "table_name": "triage_assessments",
+      "rows": 0
+    },
+    {
+      "table_name": "user_sessions",
+      "rows": 0
+    },
+    {
+      "table_name": "users",
+      "rows": 11
+    },
+    {
+      "table_name": "virtual_consultations",
+      "rows": 0
+    },
+    {
+      "table_name": "vitals",
+      "rows": 0
+    },
+    {
+      "table_name": "ward_rounds",
+      "rows": 0
+    },
+    {
+      "table_name": "wards",
+      "rows": 0
+    }
+  ],
+  "triggers": [
+    {
+      "table_name": "appointments",
+      "tgname": "update_appointments_updated_at",
+      "definition": "CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+      "function_body": "\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n"
+    },
+    {
+      "table_name": "lab_tests",
+      "tgname": "update_lab_tests_updated_at",
+      "definition": "CREATE TRIGGER update_lab_tests_updated_at BEFORE UPDATE ON public.lab_tests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+      "function_body": "\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n"
+    },
+    {
+      "table_name": "patients",
+      "tgname": "update_patients_updated_at",
+      "definition": "CREATE TRIGGER update_patients_updated_at BEFORE UPDATE ON public.patients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+      "function_body": "\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n"
+    },
+    {
+      "table_name": "payments",
+      "tgname": "update_payments_updated_at",
+      "definition": "CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON public.payments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+      "function_body": "\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n"
+    },
+    {
+      "table_name": "prescriptions",
+      "tgname": "update_prescriptions_updated_at",
+      "definition": "CREATE TRIGGER update_prescriptions_updated_at BEFORE UPDATE ON public.prescriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+      "function_body": "\r\nBEGIN\r\n  NEW.updated_at = NOW();\r\n  RETURN NEW;\r\nEND;\r\n"
+    },
+    {
+      "table_name": "referrals",
+      "tgname": "update_referrals_updated_at",
+      "definition": "CREATE TRIGGER update_referrals_updated_at BEFORE UPDATE ON public.referrals FOR EACH ROW EXECUTE FUNCTION update_referrals_updated_at()",
+      "function_body": "\r\nBEGIN\r\n  NEW.updated_at = timezone('utc'::text, now());\r\n  RETURN NEW;\r\nEND;\r\n"
+    }
+  ]
+}

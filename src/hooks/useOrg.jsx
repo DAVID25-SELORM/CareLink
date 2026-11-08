@@ -1,25 +1,22 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import { supabase } from '../supabaseClient'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { supabase, sharedHospitalMode } from '../supabaseClient'
 import { useAuth } from './useAuth'
 import { isPlatformRole } from '../platform/domain'
 
 const OrgContext = createContext(null)
 
 export function OrgProvider({ children }) {
-  const { user, userRole } = useAuth()
+  const { user, userRole, hospital } = useAuth()
   const [org, setOrg] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (user && userRole && !isPlatformRole(userRole)) {
-      loadOrganization()
-    } else {
+  const loadOrganization = useCallback(async () => {
+    if (sharedHospitalMode) return
+    if (!user || !userRole || isPlatformRole(userRole)) {
       setOrg(null)
       setLoading(false)
+      return
     }
-  }, [user, userRole])
-
-  async function loadOrganization() {
     try {
       // Get user's org from the users table (org_id / hospital_id)
       const { data: userData, error: userError } = await supabase
@@ -59,10 +56,19 @@ export function OrgProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, userRole])
+
+  useEffect(() => {
+    if (sharedHospitalMode) return
+    const timer = setTimeout(() => { void loadOrganization() }, 0)
+    return () => clearTimeout(timer)
+  }, [loadOrganization])
 
   return (
-    <OrgContext.Provider value={{ org, loading, reload: loadOrganization }}>
+    <OrgContext.Provider value={{
+      org: sharedHospitalMode ? (hospital ? { id: hospital.hospitalId, name: hospital.name, settings: {} } : null) : org,
+      loading: sharedHospitalMode ? false : loading, reload: loadOrganization,
+    }}>
       {children}
     </OrgContext.Provider>
   )

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../supabaseClient'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { pingHealthFlow } from '../services/healthflowService'
+import { MfaSettings } from '../components/MfaGate'
 
 export default function Settings() {
   const { user } = useAuth()
@@ -225,6 +226,8 @@ export default function Settings() {
             </button>
           </form>
         </section>
+
+        <MfaSettings />
 
         {/* HealthFlow Integration Section */}
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { supabase } from '../supabaseClient'
+import { supabase, hospitalConflict } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useOrg } from '../hooks/useOrg'
 
@@ -159,7 +159,7 @@ export default function Theatre() {
         hospital_id: orgId,
         recorded_by: user.id,
         recorded_at: new Date().toISOString(),
-      }, { onConflict: 'session_id' })
+      }, { onConflict: hospitalConflict('session_id') })
       if (error) throw error
       toast.success('Pre-op assessment saved')
       setPreOpForm({ session_id: '', assessment_notes: '', fasting_confirmed: false, allergies: '', blood_group: '', consent_obtained: false, pre_op_medication: '', anaesthesia_type: 'general' })
@@ -180,7 +180,7 @@ export default function Theatre() {
         hospital_id: orgId,
         recorded_by: user.id,
         recorded_at: new Date().toISOString(),
-      }, { onConflict: 'session_id' })
+      }, { onConflict: hospitalConflict('session_id') })
       if (error) throw error
       await supabase.from('theatre_sessions').update({ status: 'completed' }).eq('id', opNotesForm.session_id)
       toast.success('Operation notes saved')
@@ -203,7 +203,7 @@ export default function Theatre() {
         hospital_id: orgId,
         recorded_by: user.id,
         recorded_at: new Date().toISOString(),
-      }, { onConflict: 'session_id' })
+      }, { onConflict: hospitalConflict('session_id') })
       if (error) throw error
       toast.success('Post-op notes saved')
       setPostOpForm({ session_id: '', post_op_notes: '', recovery_status: 'stable', pain_score: '', instructions: '', discharged_to: 'ward', discharge_time: '' })

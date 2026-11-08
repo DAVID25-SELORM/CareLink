@@ -7,7 +7,7 @@ import {
   updateHospitalBrandingCache,
   useHospitalBranding,
 } from '../hooks/useHospitalBranding'
-import { supabase } from '../supabaseClient'
+import { supabase, hospitalConflict } from '../supabaseClient'
 import { withTimeout } from '../services/queryTimeout'
 import { logAuditEvent } from '../services/auditLog'
 
@@ -132,7 +132,7 @@ const HospitalProfile = () => {
       const { data, error } = await withTimeout(
         supabase
           .from('hospital_profile')
-          .upsert([profilePayload], { onConflict: 'singleton_key' })
+          .upsert([profilePayload], { onConflict: hospitalConflict('singleton_key') })
           .select()
           .single(),
         'Save hospital profile',

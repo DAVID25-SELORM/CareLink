@@ -1,0 +1,125 @@
+-- DRAFT: additional module role policies. Requires 007. No shared-mode activation.
+BEGIN;
+DO $$ DECLARE spec record; p record; BEGIN
+ FOR spec IN SELECT * FROM (VALUES
+('admissions',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('ai_suggestions',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('allergies',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('ambulance_dispatches',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('ambulance_fleet',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('anc_registrations',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('anc_visits',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('audit_log',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('beds',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('billing_items',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','cashier','doctor']::text[]),
+('blood_donations',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('blood_inventory',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('blood_requests',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('claim_batches',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('claim_items',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('claims',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','cashier']::text[]),
+('clinical_notes',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('clinical_orders',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('consent_records',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse','records_officer']::text[]),
+('controlled_substance_log',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','pharmacist']::text[]),
+('data_access_log',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('deliveries',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('dental_records',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('dhims2_indicator_mappings',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('dhims2_reports',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('diagnoses',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('diet_orders',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('discharge_summaries',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse','records_officer']::text[]),
+('drug_batches',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','pharmacist']::text[]),
+('drug_interactions',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','pharmacist']::text[]),
+('drugs',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','pharmacist']::text[]),
+('encounters',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[]),
+('fee_schedules',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('fhir_endpoint_config',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('fhir_resource_log',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('fluid_balance_charts',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('handover_notes',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','nurse']::text[]),
+('hospital_departments',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('hospital_onboarding_tasks',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('hospital_profile',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('hospitals',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('hr_attendance',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('hr_leaves',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('hr_payroll',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('hr_staff',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('integration_endpoints',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('inventory_categories',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('inventory_items',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('inventory_transactions',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('lab_panels',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('lab_specimens',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('lab_test_catalog',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('leave_requests',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('maternity_deliveries',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('medical_records',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','records_officer']::text[]),
+('medication_administration_records',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('mortuary_records',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','records_officer']::text[]),
+('nhia_submissions',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('nhia_tariff_catalog',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('nhis_cc_codes',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','cashier','doctor','nurse','records_officer']::text[]),
+('notification_logs',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('notification_settings',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('notification_templates',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('notifications',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('nurse_notes',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','nurse']::text[]),
+('nursing_assessments',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','nurse']::text[]),
+('nursing_care_plans',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','nurse']::text[]),
+('offline_cache_manifest',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('patient_transfers',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('patient_vitals',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','nurse']::text[]),
+('payment_allocations',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','cashier']::text[]),
+('physiotherapy_sessions',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('postnatal_visits',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('problem_list',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('purchase_order_items',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','pharmacist']::text[]),
+('purchase_orders',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','pharmacist']::text[]),
+('queue_management',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[]),
+('radiology_orders',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('radiology_results',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('receipts',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','cashier']::text[]),
+('record_requests',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','records_officer']::text[]),
+('registered_devices',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('report_runs',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('report_templates',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('service_fees',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('staff_schedules',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('suppliers',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','pharmacist']::text[]),
+('surgical_procedures',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('sync_checkpoints',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('sync_conflicts',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('sync_queue',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('theatre_bookings',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('theatre_operation_notes',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('theatre_post_op',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('theatre_pre_op',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('theatre_sessions',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('triage_assessments',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('user_sessions',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('virtual_consultations',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
+('vitals',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
+('ward_rounds',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor']::text[]),
+('wards',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[])
+ ) AS permissions(tab,readers,writers) LOOP
+  FOR p IN SELECT policyname FROM pg_policies WHERE schemaname='public' AND tablename=spec.tab AND policyname<>'hospital_boundary'
+  LOOP EXECUTE format('DROP POLICY %I ON public.%I',p.policyname,spec.tab); END LOOP;
+  EXECUTE format('REVOKE ALL ON public.%I FROM PUBLIC,anon,authenticated',spec.tab);
+  EXECUTE format('GRANT SELECT,INSERT,UPDATE ON public.%I TO authenticated',spec.tab);
+  EXECUTE format('CREATE POLICY hospital_read ON public.%I FOR SELECT TO authenticated USING(public.hospital_role(tenant_id)=ANY(%L::text[]))',spec.tab,spec.readers);
+  EXECUTE format('CREATE POLICY hospital_insert ON public.%I FOR INSERT TO authenticated WITH CHECK(public.hospital_role(tenant_id)=ANY(%L::text[]))',spec.tab,spec.writers);
+  EXECUTE format('CREATE POLICY hospital_update ON public.%I FOR UPDATE TO authenticated USING(public.hospital_role(tenant_id)=ANY(%L::text[])) WITH CHECK(public.hospital_role(tenant_id)=ANY(%L::text[]))',spec.tab,spec.writers,spec.writers);
+ END LOOP;
+END $$;
+ALTER VIEW public.fluid_balance_daily SET(security_invoker=true);
+REVOKE ALL ON public.fluid_balance_daily FROM PUBLIC,anon;
+GRANT SELECT ON public.fluid_balance_daily TO authenticated;
+CREATE OR REPLACE FUNCTION public.get_user_role() RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+ SELECT COALESCE(public.hospital_role(public.current_hospital_id()),'unauthorized');
+$$;
+REVOKE ALL ON FUNCTION public.get_user_role() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.get_user_role() TO authenticated;
+COMMIT;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { supabase, createStaffSignupClient } from '../supabaseClient'
+import { supabase, createStaffSignupClient, sharedHospitalMode } from '../supabaseClient'
+import HospitalStaff from '../components/HospitalStaff'
 import { toast } from 'react-toastify'
 
 /**
@@ -511,4 +512,6 @@ const UserManagement = () => {
   )
 }
 
-export default UserManagement
+export default function StaffManagement() {
+  return sharedHospitalMode ? <HospitalStaff /> : <UserManagement />
+}
