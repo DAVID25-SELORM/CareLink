@@ -10,6 +10,7 @@ import OfflineIndicator from './components/OfflineIndicator'
 
 // Route-level code splitting — each page loads only when first visited
 const Login = lazy(() => import('./pages/Login'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const DoctorDashboard = lazy(() => import('./pages/DoctorDashboard'))
 const NurseDashboard = lazy(() => import('./pages/NurseDashboard'))
@@ -86,6 +87,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/platform/login" element={<Login platform />} />
               <Route path="/platform" element={<ProtectedRoute platformOnly><PlatformOverview /></ProtectedRoute>} />
               <Route path="/platform/hospitals" element={<ProtectedRoute platformOnly><PlatformHospitals /></ProtectedRoute>} />
