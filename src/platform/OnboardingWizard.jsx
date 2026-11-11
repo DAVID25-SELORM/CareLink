@@ -7,6 +7,7 @@ import SharedHospitalOperations from '../components/SharedHospitalOperations'
 import { MODULES } from './domain'
 import { useResource } from './useResource'
 import { ResourceState, titleCase } from './ui'
+import { summarizeReadiness } from './readiness'
 
 const steps = ['Registration', 'Requirements', 'Commercial approval', 'Provisioning', 'Configuration', 'Verification', 'Training', 'Go-live review']
 export default function OnboardingWizard({ hospital, editable }) {
@@ -40,6 +41,13 @@ function DraftEditor({ hospital, draft, editable, reload }) {
     {step===5 && <>{field('verification_notes','Verification results and evidence references','textarea')}<p>Notes alone do not pass a launch gate.</p><div className="pc-actions">{(sharedHospitalMode ? ['deployment','isolation','admin_acceptance','account_protection','backup_restore','clinical','support'] : ['isolation','backup_restore','clinical']).map(kind => <button key={kind} disabled={!editable || !values.verification_notes || busy || (sharedHospitalMode && ['deployment','isolation'].includes(kind) && userRole!=='platform_owner')} onClick={() => evidence(kind, values.verification_notes)}>Record {titleCase(kind)} evidence</button>)}</div></>}
     {step===6 && <>{field('training_notes','Training completion, responsible person and evidence references','textarea')}<button disabled={!editable || !values.training_notes || busy} onClick={() => evidence('training', values.training_notes)}>Record training evidence</button></>}
     {step===7 && sharedHospitalMode && userRole==='platform_owner' && <button disabled={busy || dirty || blockers.length>0 || !draft} onClick={async () => { setBusy(true); try { await command('platform_launch_shared_hospital', { p_tenant_id:hospital.id, p_revision:draft.revision }); setMessage('Hospital is live.'); await refreshReadiness() } catch (error) { setMessage(error.message) } finally { setBusy(false) } }}>Launch approved hospital</button>}
-    {step===7 && <><p>Operational status: <strong>{titleCase(hospital.lifecycle_state)}</strong></p><p>{blockers.length ? `Blocked by: ${blockers.join('; ')}` : 'All readiness blockers are cleared.'}</p>{editable && <button className="pc-primary" disabled={busy || dirty || blockers.length > 0 || !draft || userRole!=='platform_owner'} onClick={async () => { const reason = window.prompt('Approval reason'); if (reason) { setBusy(true); try { await command('platform_approve_launch', { p_tenant_id:hospital.id, p_revision:draft.revision, p_reason:reason }); await refreshReadiness() } catch (error) { setMessage(error.message) } finally { setBusy(false) } } }}>Approve go-live</button>}</>}
+    {step===7 && <><p>Operational status: <strong>{titleCase(hospital.lifecycle_state)}</strong></p><ReadinessList blockers={blockers} />{editable && <button className="pc-primary" disabled={busy || dirty || blockers.length > 0 || !draft || userRole!=='platform_owner'} onClick={async () => { const reason = window.prompt('Approval reason'); if (reason) { setBusy(true); try { await command('platform_approve_launch', { p_tenant_id:hospital.id, p_revision:draft.revision, p_reason:reason }); await refreshReadiness() } catch (error) { setMessage(error.message) } finally { setBusy(false) } } }}>Approve go-live</button>}</>}
     {message && <p role="alert" className="pc-error">{message} <button type="button" disabled={busy} onClick={reload}>Discard edits and reload</button></p>}<p role="status" className="pc-muted">{dirty ? 'Unsaved changes' : draft ? `Saved draft · revision ${draft.revision}` : 'No draft saved yet'}</p><div className="pc-actions"><button disabled={step===0 || busy} onClick={() => move(step-1)}>Previous</button><button disabled={step===7 || busy} onClick={() => move(step+1)}>Next step</button>{editable && <button className="pc-primary" disabled={busy || !dirty} onClick={save}>{busy ? 'Saving…' : 'Save draft'}</button>}</div></div>
+}
+
+function ReadinessList({ blockers }) {
+  const { items, total, blockedByMode } = summarizeReadiness(blockers, { sharedMode: sharedHospitalMode })
+  if (!total) return <p>All readiness blockers are cleared.</p>
+  return <div role="status"><p><strong>Go-live is blocked by {total} requirement{total === 1 ? '' : 's'}.</strong>{blockedByMode > 0 && ` ${blockedByMode} cannot be completed in this deployment mode.`}</p>
+    <ul>{items.map(item => <li key={item.text}><strong>{item.text}</strong> — {item.action}{item.link && <> <Link to={item.link}>Open</Link></>}</li>)}</ul></div>
 }

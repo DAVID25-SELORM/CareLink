@@ -244,7 +244,7 @@ const HospitalOnboarding = () => {
                     </div>
                     <div className="mt-4">
                       <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-                        <span>{hospital.onboardingStats.completed} of {hospital.onboardingStats.total} tasks done</span>
+                        <span>{hospital.onboardingStats.completed} of {hospital.onboardingStats.total} checklist tasks done (go-live also needs platform approval)</span>
                         <span>{hospital.onboardingStats.progress}%</span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all-smooth" style={{ width: `${hospital.onboardingStats.progress}%` }} /></div>
