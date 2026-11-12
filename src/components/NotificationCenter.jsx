@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { toast } from 'react-toastify'
+import { subscribeToTable } from '../services/liveUpdates'
 
 /**
  * Notification Center Component
@@ -20,34 +21,25 @@ const NotificationCenter = () => {
     if (user) {
       fetchNotifications()
       
-      // Subscribe to real-time notifications
-      const subscription = supabase
-        .channel('notifications')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            setNotifications(prev => [payload.new, ...prev])
-            setUnreadCount(prev => prev + 1)
-            
-            // Show toast for high priority notifications
-            if (payload.new.priority === 'urgent' || payload.new.priority === 'high') {
-              toast.info(payload.new.title, {
-                autoClose: 5000
-              })
-            }
+      // Real-time notifications (polling in shared hospital mode)
+      return subscribeToTable({
+        channel: 'notifications',
+        table: 'notifications',
+        event: 'INSERT',
+        filter: `user_id=eq.${user.id}`,
+        refresh: fetchNotifications,
+        onChange: (payload) => {
+          setNotifications(prev => [payload.new, ...prev])
+          setUnreadCount(prev => prev + 1)
+          
+          // Show toast for high priority notifications
+          if (payload.new.priority === 'urgent' || payload.new.priority === 'high') {
+            toast.info(payload.new.title, {
+              autoClose: 5000
+            })
           }
-        )
-        .subscribe()
-
-      return () => {
-        subscription.unsubscribe()
-      }
+        },
+      })
     }
   }, [user])
 

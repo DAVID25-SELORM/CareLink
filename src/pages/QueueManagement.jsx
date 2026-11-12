@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { createEncounter } from '../services/encounterService'
+import { subscribeToTable } from '../services/liveUpdates'
 
 /**
  * Queue Management System
@@ -51,21 +52,8 @@ const QueueManagement = () => {
     fetchQueues()
     fetchPatients()
 
-    // Real-time subscription
-    const subscription = supabase
-      .channel('queue_changes'    )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'queue_management'
-        },
-        () => fetchQueues()
-      )
-      .subscribe()
-
-    return () => subscription.unsubscribe()
+    // Real-time subscription (polling in shared hospital mode)
+    return subscribeToTable({ channel: 'queue_changes', table: 'queue_management', refresh: fetchQueues, onChange: () => fetchQueues() })
   }, [activeTab])
 
   const fetchQueues = async () => {

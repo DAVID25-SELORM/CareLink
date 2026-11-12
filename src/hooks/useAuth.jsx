@@ -48,6 +48,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const selected = await hospitalSession.select(id, user.id)
       setHospitalDatabase(selected.database)
+      // Shared mode resolves the role only after a hospital is chosen, so the sign-in is audited here.
+      void logAuditEvent({ user, action: 'sign_in', tableName: 'auth', recordId: user.id, newValues: { hospital_id: id } })
       const cache = openHospitalCache(id, user.id)
       setActiveCache(cache)
       setHospitalSync(createHospitalSync({ database: selected.database, cache, hospitalId: id, userId: user.id }))
@@ -140,7 +142,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const signOut = async () => {
-    if (!sharedHospitalMode && userRole && !isPlatformRole(userRole)) {
+    if (userRole && !isPlatformRole(userRole) && (!sharedHospitalMode || hospital)) {
       await logAuditEvent({ user, action: 'sign_out', tableName: 'auth', recordId: user?.id })
     }
     const { error } = await supabase.auth.signOut()

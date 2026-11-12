@@ -1,83 +1,98 @@
-# CareLink production audit — handover (2026-11-08)
+# CareLink production handover (2026-11-12)
 
-**Verdict: not ready for real patient data yet.** The code-level blockers are fixed and tested. What remains
-needs account decisions (plans, Sentry, MFA), a rehearsed database conversion, and browser acceptance testing.
-**Nothing from this work is committed.** Review `git status`, then commit in logical groups.
+**Verdict: still not ready for real patient data.** The code, the conversion bundle and the rehearsals are ready.
+The blockers that remain are account actions only you can take, plus two checks I could not run from here.
+**Nothing in this work was applied to production.** The live database, Supabase settings and Vercel settings are unchanged.
 
-## 1. State of the live systems (read-only checks, 2026-11-08)
-| Area | State |
+## 1. What I could and could not do
+
+| Phase | Result |
 |---|---|
-| Supabase project `CareLink` (`wjlpywztfjruqnavwsvr`, eu-west-1) | **Free plan**, no point-in-time recovery. Security Advisor: 0 errors, 59 warnings |
-| Migrations 027, 028 | Applied by the owner (027 confirmed via policy list; 028 reported applied, **re-verify** with the query below) |
-| Instance | `platform` mode, one hospital registered (Health Medics, onboarding), 0 patients, 11 staff, 1 platform owner |
-| Schema vs tested fixture | 140 tables; columns and policy counts match, except `audit_log` (expected) |
-| Vercel | Team `david25-selorms-projects`, **Hobby plan**; two CareLink projects (`care-link`, `care-link-l6u9`); `care-link-l6u9` has only the two Supabase variables, **no `VITE_SENTRY_DSN`**, billing address missing |
+| 0 Accounts (Supabase Pro + PITR, SMTP, Sentry, MFA decision) | **Yours.** Needs your billing and DNS. Not done. |
+| 1 Restore rehearsal on a copy | **Not done.** Needs Pro/PITR and your Supabase access. The conversion bundle was rehearsed on a Docker database seeded like production instead (passes). |
+| 1 Live drift check | **Not done.** The Chrome I control is signed into a different Supabase organisation (it shows HealthFlow Pharmacy, not the CareLink project), so it cannot open the CareLink project. Tooling is ready: see section 4. |
+| 1 SECURITY DEFINER review | **Not done.** The 6 flagged functions' names are not in any file I have. A read-only query is ready: `definer-exposure.sql`. |
+| 2 Shared-mode regressions | **Fixed in code** (section 2). |
+| 2 Browser acceptance with two hospitals | **Not done.** Needs a running Supabase (auth + API); only the SQL layer is tested in Docker. |
+| 3 Production conversion window | **Not done, deliberately.** Gated on Phase 0 and 1 and your explicit approval. |
+| 4 Admin creation | **Built, not deployed** (section 2). |
 
-Verify 028: `select policyname from pg_policies where tablename='audit_log' order by 1;` should return only
-`audit_log_insert_self`, `audit_log_no_updates`, `audit_log_select_admin_or_self`, `carelink_tenant_boundary`.
+## 2. What changed in the repository (branch `conversion-readiness`, uncommitted)
 
-## 2. What changed in the repository
-**Fixed**
-- 12 failing tests (stale mocks) → 36 Vitest tests pass, 3 new for MFA. Lint, build, 44 worker Node tests, 20 shared-client Node tests pass.
-- Dependencies: Vite 7, React Router 7, `npm audit fix`; unused `xlsx` and `src/utils/excelExport.js` removed. `npm audit --omit=dev --audit-level=high` passes (6 moderate build-tool findings remain).
-- `vercel.json`: Content-Security-Policy, HSTS, Permissions-Policy, COOP (verified in Chrome against a local server using these headers; not yet on a real deployment).
-- CI (`.github/workflows/ci-cd.yml`): Node 22, runs worker/shared Node tests, secret scan now fails the build, production-only audit.
-- `src/components/MfaGate.jsx`: optional TOTP step-up and enrolment (Settings card). `VITE_REQUIRE_STAFF_MFA=true` forces enrolment. Client-side gate only; server-side enforcement would need `aal2` checks in RLS.
-- Sign-out (and the existing 30-minute idle timeout) clears cached clinical data in the browser; unsynced queued writes are kept.
-- 25 loose root SQL scripts moved to `archive/legacy-sql/` (do not run). `/migrations` remains the schema source, **but the live database has drifted from it** (policies created by hand, `audit_log` only existed in a legacy script).
+- **Shared mode crash fixed.** `NotificationCenter` and `QueueManagement` called `supabase.channel(...)`, which shared mode
+  forbids by throwing, so those components would have crashed on render. New `src/services/liveUpdates.js` uses realtime
+  in dedicated mode and polls every 20 seconds in shared mode. Tests in `src/__tests__/liveUpdates.test.js`.
+- **Shared-mode audit events.** Sign-in is now audited after a hospital is chosen, and sign-out is audited when a
+  hospital is selected (`src/hooks/useAuth.jsx`). Previously both were skipped. Not covered by an automated test.
+- **Create administrator from the console.** Button text is now "Create administrator login and send invitation"
+  (`src/components/SharedHospitalOperations.jsx`). It registers the invitation, then calls the Edge Function
+  `supabase/functions/invite-hospital-admin`, which uses the service key to email an invite link to the hospital's
+  **registered owner email only**. Only a platform owner can call it. The invite link lands on `/reset-password` to set a password.
+  Tests: `tests/invite-hospital-admin.node-test.mjs` (6) and `src/__tests__/SharedHospitalOperations.test.jsx` (3).
+  **Not deployed and never run against a real Supabase project.**
+- **Drift tooling.** `design/shared-tenancy/live-drift-fingerprint.sql`, `drift-compare.mjs` and `drift-expected.tsv`
+  (812 fingerprints from the tested fixture: 407 policies, 45 functions, 79 triggers, 141 grants, 140 RLS flags).
+- `design/shared-tenancy/definer-exposure.sql` for the SECURITY DEFINER review.
 
-**Migrations**
-- `027_audit_and_function_hardening.sql` (applied): `audit_log` created in migrations, audit/report inserts must be attributable, audit rows append-only, `search_path` pinned on 9 functions.
-- `028_drop_legacy_audit_policies.sql` (applied per owner): drops three hand-made policies that let all staff read/forge/delete audit rows.
+## 3. Verified in Docker (disposable databases, no provider access)
 
-**Shared tenancy (drafts, not applied)** in `design/shared-tenancy/`
-- `016_audit_immutability.sql` + `audit-scope-test.sql`: members append only their own audit events, admins read their hospital's trail, no update/delete. Test fails without 016 (verified).
-- `build-conversion-bundle.mjs`, `conversion-preflight.sql`, `conversion-activate.sql`: one atomic conversion file (drafts 001–016 + staff memberships + shared mode switch + postflight checks).
-- `conversion-rehearsal*.sql`, `test-docker.mjs --rehearse-conversion` (`npm run test:conversion`): rehearses the bundle on a disposable database seeded like production. Passes.
-- `CONVERSION_RUNBOOK.md`: live inventory, steps, rollback, known gaps. `READINESS.md` updated.
+- `npm run test:conversion`: PASS (conversion bundle on a production-shaped seed).
+- `node design/shared-tenancy/test-docker.mjs --full-schema`: PASS (all drafts, two hospitals).
+- Edge Function handler: 6 node tests pass. Test results for the app suites are in section 6.
 
-## 3. Can I create different hospitals from the UI?
-- **Today: no, not working isolated hospitals.** The console registers a hospital record; provisioning then targets the old
-  dedicated-project design, which runs in simulation and is unfinished.
-- **After the shared conversion and a shared-mode build** (`VITE_TENANCY_MODE=shared`): yes. The console supports workspace
-  preparation, administrator invitation, verification evidence, owner approval and launch (drafts 012–014, SQL-tested).
-  Browser-level acceptance has not been done.
+## 4. Do these next, in order
 
-## 4. Open items, in order
-**You (accounts/legal)**
-1. Supabase Pro + point-in-time recovery; restore into a new project to prove it. Vercel Pro + billing address.
-2. Create a Sentry project; set `VITE_SENTRY_DSN` in Vercel (no error monitoring in production today).
-3. Pick the production Vercel project; delete the other CareLink project.
-4. Decide MFA enforcement (`VITE_REQUIRE_STAFF_MFA`) after all admins and the platform owner enrol.
-5. Rotate `worker.env`'s Supabase management token if it was ever shared; scope it narrowly. Stop the onboarding worker for shared hospitals.
-6. Ghana Data Protection Commission registration, data-processing agreement per hospital, privacy notice, breach plan, cross-border (eu-west-1) review.
+**You (accounts)**
+1. Supabase **Pro + point-in-time recovery** on the CareLink project. Then restore it into a new project and tell me.
+2. **Custom SMTP** (Resend or Brevo): Authentication, Emails, SMTP. Add `https://care-link-l6u9.vercel.app/reset-password` to the redirect allow-list (done) and raise the email rate limit. The invite and password-reset emails both need this.
+3. Sentry project and `VITE_SENTRY_DSN` in Vercel. Decide `VITE_REQUIRE_STAFF_MFA` after the owner and the Health Medics admin enrol.
+4. Pick one production Vercel project (`care-link-l6u9` vs `care-link`) and remove the double deploy.
 
-**Engineering**
-7. Re-run the drift query on the day; extend it to policy bodies, functions, grants, triggers; bring `/migrations` in line with live.
-8. Review the 6 `SECURITY DEFINER` functions the advisor flags as publicly executable (names not captured).
-9. Browser acceptance of shared mode with two hospitals (registration, email confirmation, invitation, launch, role matrix).
-10. Shared-mode gaps: sign-in/out audit events skipped, storage/realtime denied, offline writes disabled.
-11. Hospital data lifecycle: no backup/retention step before deleting a tenant (HealthFlow's `delete_tenant` is the pattern to avoid).
-12. Remaining moderate audit findings are in Workbox build tooling only.
+**You, with me (needs a Chrome signed into the CareLink Supabase account)**
+5. Run `design/shared-tenancy/live-drift-fingerprint.sql` in the CareLink SQL editor, export the result as CSV, then
+   `node design/shared-tenancy/drift-compare.mjs <file.csv>`. Expected differences: `audit_log` only (migrations 027 and 028).
+   Anything else: stop and tell me.
+6. Run `definer-exposure.sql` and send me the rows.
+7. Verify 028: `select policyname from pg_policies where tablename='audit_log' order by 1;` should return only
+   `audit_log_insert_self`, `audit_log_no_updates`, `audit_log_select_admin_or_self`, `carelink_tenant_boundary`.
 
-## 5. Commands
+**Then**
+8. Deploy the function: `supabase functions deploy invite-hospital-admin`, and set the secret `SITE_URL=https://care-link-l6u9.vercel.app`.
+9. Restore a copy, run the conversion bundle there, build with `VITE_TENANCY_MODE=shared`, and walk the browser flow with two
+   hospitals (register, invite, accept, launch, role matrix, hospital A cannot see hospital B). I have not done this.
+10. Only then follow `design/shared-tenancy/CONVERSION_RUNBOOK.md` for the window. Ask me before any production step.
+
+## 5. Important corrections and limits
+
+- **The live database is in `platform` mode, so hospital staff logins cannot access clinical data until the conversion.**
+  Earlier I suggested creating the Health Medics admin directly in Supabase; that login would be denied. Do not rely on that path.
+- The go-live gate (platform console) lists blockers that cannot be recorded in the current mode: deployment, admin
+  acceptance, account protection and support evidence. They become available in shared mode. The gate was not weakened.
+- Realtime and storage remain denied in shared mode. Queue and notifications now poll instead. Offline writes are still disabled.
+- Password-reset emails do not arrive for most users until SMTP is configured (Supabase's built-in sender only reaches your team).
+- `.claude/` is untracked and was left alone.
+
+## 6. Test results
+
+- Lint: clean. Production build and `VITE_TENANCY_MODE=shared` build: both pass.
+- Node tests (app, worker, shared client, Edge Function handler): 50 of 50 pass.
+- Vitest: 12 files, 40 tests pass. **Two files, `Login.test.jsx` and `MfaGate.test.jsx`, could not start**: the test
+  worker timed out because this PC had about 0.5 GB of 12 GB memory free (many other Docker containers were running).
+  Both passed earlier on the previous commit and this work does not touch them, but they are **unverified on this
+  branch**. Re-run them on a less busy machine before merging.
+
+Commands that reproduce these:
+
 ```bash
-npm run lint && npx vitest run                 # app tests
-npm run test:shared                            # shared-client + 5 SQL suites (needs Docker)
-node design/shared-tenancy/test-docker.mjs --full-schema   # all drafts, two hospitals
-node design/shared-tenancy/test-docker.mjs --restore       # dump/restore rehearsal
-npm run test:conversion                        # conversion bundle rehearsal
-node design/shared-tenancy/build-conversion-bundle.mjs <hospital-uuid> conversion-bundle.sql
-VITE_TENANCY_MODE=shared npm run build         # shared-mode build
+npm run lint && npx vitest run --maxWorkers=2     # app tests (this machine is busy: default workers time out)
+node --test tests/*.node-test.mjs worker/*.node-test.mjs worker/providers/*.node-test.mjs
+npm run test:conversion
+node design/shared-tenancy/test-docker.mjs --full-schema
+node design/shared-tenancy/drift-compare.mjs expected   # regenerate drift-expected.tsv (Docker)
 ```
-The Docker suites occasionally time out on a slow machine (60 s per Docker call); re-run once.
 
-## 6. Reference: how HealthFlow Pharmacy creates tenants
-Single shared project, `organization_id` on every table, `*_same_org` RLS, super-admin Edge Function `tenant-signup`
-(org → branch → admin login → profile → owner → settings → seed → readiness check, compensating deletes on failure).
-Worth copying: readiness gate and cleanup. Worth fixing there: admin-set passwords, hard-coded delete list with no backup/retention,
-an `audit_logs_insert_all` policy that allows forged audit rows.
+## 7. Branches and deployment state
 
-## 7. Tooling left behind
-Two Chrome tabs opened for the Supabase checks may still be open (closing them timed out). The `.claude/launch.json`
-preview entry I added was removed. Scratch files live under the session scratchpad only.
+- `origin/main` = `c25db42` (password reset page, go-live blocker clarity), deployed by Vercel.
+- `conversion-readiness` holds this work. Merging it to `main` changes the production app (the shared-mode code only
+  activates with `VITE_TENANCY_MODE=shared`; the dedicated-mode behaviour is unchanged apart from audit and polling wrappers).
