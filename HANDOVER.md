@@ -76,10 +76,9 @@ The blockers that remain are account actions only you can take, plus two checks 
 
 - Lint: clean. Production build and `VITE_TENANCY_MODE=shared` build: both pass.
 - Node tests (app, worker, shared client, Edge Function handler): 50 of 50 pass.
-- Vitest: 12 files, 40 tests pass. **Two files, `Login.test.jsx` and `MfaGate.test.jsx`, could not start**: the test
-  worker timed out because this PC had about 0.5 GB of 12 GB memory free (many other Docker containers were running).
-  Both passed earlier on the previous commit and this work does not touch them, but they are **unverified on this
-  branch**. Re-run them on a less busy machine before merging.
+- Vitest: all files pass. 12 files (40 tests) passed in the main run. `Login.test.jsx` and `MfaGate.test.jsx` could not
+  start in that run (worker timeout, about 0.5 GB of 12 GB memory free), so they were re-run alone with `--maxWorkers=1`
+  once memory was available: 2 files, 8 tests pass.
 
 Commands that reproduce these:
 
