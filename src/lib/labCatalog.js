@@ -268,6 +268,7 @@ export function formatRange(analyte) {
   if (analyte.refHigh != null) parts.push(analyte.refHigh)
   else parts.push('∞')
   if (analyte.unit) parts.push(analyte.unit)
+  if (analyte.rangeBasis) parts.push(`(${analyte.rangeBasis})`)
   return parts.join(' ')
 }
 

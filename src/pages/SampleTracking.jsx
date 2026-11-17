@@ -18,6 +18,7 @@ import {
   flagQualitative,
   formatRange,
 } from '../lib/labCatalog'
+import { resolveAnalytes } from '../lib/labRanges'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -135,6 +136,7 @@ const SampleTracking = () => {
   const catalogEntries = useMemo(() => {
     if (!selectedSample) return []
     return resolveCatalogEntries(selectedSample.test_type || selectedSample.test_name || '')
+      .map(entry => ({ ...entry, analytes: resolveAnalytes(entry.analytes, selectedSample.patients) }))
   }, [selectedSample])
 
   // ─── Live flag computation ──────────────────────────────────────────────────

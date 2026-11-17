@@ -10,6 +10,7 @@ import PDFButton from '../components/PDFButton'
 import FileUpload from '../components/FileUpload'
 import { getEncounterCcCode } from '../services/nhisCcCodeService'
 import { criticalFlag } from '../lib/labCritical'
+import { resolveAnalytes } from '../lib/labRanges'
 
 /**
  * Laboratory Management Page
@@ -25,9 +26,11 @@ const formatAnalyteRange = (analyte) => {
   const low = analyte.refLow ?? ''
   const high = analyte.refHigh ?? ''
   if (low === '' && high === '') return ''
-  if (low === '') return `<= ${high}${analyte.unit ? ` ${analyte.unit}` : ''}`
-  if (high === '') return `>= ${low}${analyte.unit ? ` ${analyte.unit}` : ''}`
-  return `${low} - ${high}${analyte.unit ? ` ${analyte.unit}` : ''}`
+  const unit = analyte.unit ? ` ${analyte.unit}` : ''
+  const basis = analyte.rangeBasis ? ` (${analyte.rangeBasis})` : ''
+  if (low === '') return `<= ${high}${unit}${basis}`
+  if (high === '') return `>= ${low}${unit}${basis}`
+  return `${low} - ${high}${unit}${basis}`
 }
 
 const flagAnalyteValue = (analyte, value) => {
@@ -107,9 +110,11 @@ const Laboratory = () => {
     }) || null
   }, [catalogTests, selectedTest])
 
-  const selectedAnalytes = Array.isArray(selectedCatalogTest?.analytes)
-    ? selectedCatalogTest.analytes
-    : []
+  // Reference ranges adjusted for the patient's age and sex where the catalog has a specific range.
+  const selectedAnalytes = useMemo(
+    () => (Array.isArray(selectedCatalogTest?.analytes) ? resolveAnalytes(selectedCatalogTest.analytes, selectedTest?.patients) : []),
+    [selectedCatalogTest, selectedTest],
+  )
 
   const resultFlags = useMemo(() => {
     if (!selectedCatalogTest || selectedAnalytes.length === 0) return {}
@@ -136,7 +141,7 @@ const Laboratory = () => {
         .from('lab_tests')
         .select(`
           *,
-          patients (name, phone)
+          patients (*)
         `)
         .order('created_at', { ascending: false })
 
