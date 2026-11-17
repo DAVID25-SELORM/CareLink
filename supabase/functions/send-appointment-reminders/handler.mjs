@@ -6,14 +6,8 @@ const ALLOWED_ROLES = ['admin', 'doctor', 'nurse', 'records_officer', 'reception
 const MAX_PER_CALL = 200
 const json = (status, body, cors) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...cors } })
 
-/** Ghana numbers: 0244123456, 244123456, +233244123456 -> 233244123456. Anything else returns null. */
-export function normalizeGhanaPhone(value) {
-  const digits = String(value || '').replace(/[\s()-]/g, '').replace(/^\+/, '')
-  if (/^0\d{9}$/.test(digits)) return `233${digits.slice(1)}`
-  if (/^233\d{9}$/.test(digits)) return digits
-  if (/^\d{9}$/.test(digits)) return `233${digits}`
-  return null
-}
+import { normalizeGhanaPhone } from '../_shared/sms.mjs'
+export { normalizeGhanaPhone }
 
 export function buildReminderMessage({ patientName, hospitalName, date, time }) {
   const first = String(patientName || '').trim().split(/\s+/)[0] || 'Patient'
