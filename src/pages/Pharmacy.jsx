@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
+import { checkDispensing } from '../lib/drugAlerts'
 import { supabase } from '../supabaseClient'
 import {
   pingHealthFlow,
@@ -113,7 +114,7 @@ const Pharmacy = () => {
         .from('prescription_items')
         .select(`
           *,
-          drugs (name, price, stock)
+          drugs (name, price, stock, expiry_date)
         `)
         .eq('prescription_id', prescriptionId)
 
@@ -240,6 +241,24 @@ const Pharmacy = () => {
     if (insufficientStockItem) {
       toast.error(`Insufficient stock for ${insufficientStockItem.drugs.name}`)
       return
+    }
+
+    const { blocked, warnings } = checkDispensing(prescriptionItems)
+    if (blocked.length > 0) {
+      toast.error(`Cannot dispense expired stock. ${blocked.join(' ')}`)
+      return
+    }
+    if (warnings.length > 0) {
+      const message = ['Near-expiry warning:', ...warnings.map((w) => '- ' + w), '', 'Dispense anyway?'].join(String.fromCharCode(10))
+      const proceed = window.confirm(message)
+      if (!proceed) return
+      await logAuditEvent({
+        user,
+        action: 'dispense_near_expiry',
+        tableName: 'prescriptions',
+        recordId: selectedPrescription.id,
+        newValues: { warnings },
+      })
     }
 
     try {
@@ -572,6 +591,23 @@ const Pharmacy = () => {
                   <p className="text-purple-100 text-sm mt-1">Prescriptions</p>
                 </div>
               </div>
+
+              {(expiredDrugs.length > 0 || outOfStockDrugs.length > 0) && (
+                <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  {expiredDrugs.length > 0 && (
+                    <p>
+                      <strong>{expiredDrugs.length} expired drug{expiredDrugs.length > 1 ? 's' : ''}</strong> still in stock. They cannot be dispensed. Remove them from the shelf and write them off.{' '}
+                      <button type="button" className="underline" onClick={() => setActiveTab('expiry')}>View expiry list</button>
+                    </p>
+                  )}
+                  {outOfStockDrugs.length > 0 && (
+                    <p>
+                      <strong>{outOfStockDrugs.length} out of stock.</strong>{' '}
+                      <button type="button" className="underline" onClick={() => setActiveTab('low-stock')}>View low stock</button>
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
