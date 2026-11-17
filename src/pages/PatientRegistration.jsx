@@ -33,6 +33,9 @@ const PRIVATE_INSURANCE_COMPANIES = [
   'Other'
 ]
 
+// Bump when the privacy notice text changes so each record shows which wording the patient saw.
+export const CONSENT_NOTICE_VERSION = '2026-11'
+
 const PatientRegistration = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -47,19 +50,26 @@ const PatientRegistration = () => {
     insurance_type: '',
     insurance_name: '',
     insurance_number: '',
-    address: ''
+    address: '',
+    consent_treatment: false,
+    consent_data_processing: false,
+    consent_sms: false,
   })
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!formData.consent_treatment || !formData.consent_data_processing) {
+      toast.error('Treatment and privacy consent must be recorded before registering')
+      return
+    }
     setLoading(true)
 
     try {
@@ -82,12 +92,26 @@ const PatientRegistration = () => {
         insurance_number: formData.insurance_number || null,
         address: formData.address || null,
       }
+      const consentPayload = {
+        consent_treatment: true,
+        consent_data_processing: true,
+        consent_sms: formData.consent_sms,
+        consent_notice_version: CONSENT_NOTICE_VERSION,
+        consent_recorded_at: new Date().toISOString(),
+        consent_recorded_by: user?.email || null,
+      }
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('patients')
-        .insert([patientPayload])
+        .insert([{ ...patientPayload, ...consentPayload }])
         .select()
         .single()
+
+      // Migration 029 not applied yet: register without the consent columns, and say so.
+      if (error && /consent_/.test(error.message || '')) {
+        toast.warn('Consent fields are not set up in the database yet (migration 029). Record consent on paper.')
+        ;({ data, error } = await supabase.from('patients').insert([patientPayload]).select().single())
+      }
 
       if (error) throw error
 
@@ -97,6 +121,13 @@ const PatientRegistration = () => {
         tableName: 'patients',
         recordId: data.id,
         newValues: patientPayload,
+      })
+      await logAuditEvent({
+        user,
+        action: 'record_consent',
+        tableName: 'patients',
+        recordId: data.id,
+        newValues: consentPayload,
       })
 
       toast.success('Patient registered successfully!')
@@ -286,6 +317,27 @@ const PatientRegistration = () => {
                 placeholder="Enter patient's address"
               />
             </div>
+
+            {/* Consent (Data Protection Act, 2012) */}
+            <fieldset className="border border-gray-200 rounded-lg p-4 space-y-3">
+              <legend className="px-2 text-sm font-semibold text-gray-700">Consent and privacy</legend>
+              <p className="text-xs text-gray-500">
+                Read the privacy notice to the patient, or their parent/guardian, before ticking. Health information is
+                special personal data. It is used for care, billing and legally required reporting, and is shared only as needed.
+              </p>
+              <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input type="checkbox" name="consent_treatment" checked={formData.consent_treatment} onChange={handleChange} className="mt-1" />
+                <span>The patient agrees to examination, treatment and care. <span className="text-red-500">*</span></span>
+              </label>
+              <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input type="checkbox" name="consent_data_processing" checked={formData.consent_data_processing} onChange={handleChange} className="mt-1" />
+                <span>The patient was given the privacy notice and agrees to their health data being recorded and processed. <span className="text-red-500">*</span></span>
+              </label>
+              <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input type="checkbox" name="consent_sms" checked={formData.consent_sms} onChange={handleChange} className="mt-1" />
+                <span>Optional: the patient agrees to appointment and result reminders by SMS.</span>
+              </label>
+            </fieldset>
 
             {/* Actions */}
             <div className="flex justify-end space-x-4 pt-6 border-t">

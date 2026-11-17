@@ -1,3 +1,4 @@
+import { criticalFlag } from './labCritical'
 /**
  * Lab Test Catalog for CareLink HMS
  * Common laboratory tests with analyte-level reference ranges
@@ -242,6 +243,8 @@ export function flagValue(value, analyte) {
   if (value == null || (!analyte.refLow && analyte.refLow !== 0) && !analyte.refHigh) return null
   const v = Number(value)
   if (isNaN(v)) return null
+  const critical = criticalFlag(analyte.name, v, analyte.unit)
+  if (critical) return critical
   if (analyte.refHigh != null && v > analyte.refHigh) return 'HIGH'
   if (analyte.refLow != null && v < analyte.refLow) return 'LOW'
   return 'NORMAL'

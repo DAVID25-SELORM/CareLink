@@ -9,6 +9,7 @@ import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import PDFButton from '../components/PDFButton'
 import FileUpload from '../components/FileUpload'
 import { getEncounterCcCode } from '../services/nhisCcCodeService'
+import { criticalFlag } from '../lib/labCritical'
 
 /**
  * Laboratory Management Page
@@ -37,6 +38,8 @@ const flagAnalyteValue = (analyte, value) => {
 
   const numericValue = Number(value)
   if (Number.isNaN(numericValue)) return null
+  const critical = criticalFlag(analyte.name, numericValue, analyte.unit)
+  if (critical) return critical
   if (analyte.refHigh != null && numericValue > Number(analyte.refHigh)) return 'HIGH'
   if (analyte.refLow != null && numericValue < Number(analyte.refLow)) return 'LOW'
   return 'NORMAL'
@@ -49,10 +52,12 @@ const FlagBadge = ({ flag }) => {
     LOW: 'bg-orange-100 text-orange-700 border-orange-200',
     NORMAL: 'bg-green-100 text-green-700 border-green-200',
     ABNORMAL: 'bg-red-100 text-red-700 border-red-200',
+    CRITICAL_LOW: 'bg-red-700 text-white border-red-800',
+    CRITICAL_HIGH: 'bg-red-700 text-white border-red-800',
   }
   return (
     <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${styles[flag] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-      {flag}
+      {String(flag).replace('_', ' ')}
     </span>
   )
 }
@@ -116,6 +121,7 @@ const Laboratory = () => {
   }, [resultValues, selectedAnalytes, selectedCatalogTest])
 
   const abnormalCount = Object.values(resultFlags).filter((flag) => flag && flag !== 'NORMAL').length
+  const criticalCount = Object.values(resultFlags).filter((flag) => flag === 'CRITICAL_LOW' || flag === 'CRITICAL_HIGH').length
 
   useEffect(() => {
     fetchLabTests()
@@ -312,7 +318,11 @@ const Laboratory = () => {
         result_details: resultDetails,
         is_abnormal: abnormalCount > 0,
         completed_by: user?.id || null,
-        result_flag: hasStructuredCatalog ? (abnormalCount > 0 ? 'abnormal' : 'normal') : null,
+        result_flag: hasStructuredCatalog
+          ? (analyteResults.some((row) => row.flag === 'CRITICAL_HIGH') ? 'critical_high'
+            : analyteResults.some((row) => row.flag === 'CRITICAL_LOW') ? 'critical_low'
+              : abnormalCount > 0 ? 'abnormal' : 'normal')
+          : null,
         status: 'completed',
         completed_at: new Date().toISOString(),
       }
@@ -336,6 +346,11 @@ const Laboratory = () => {
         newValues: labResultPayload,
       })
 
+      const criticalNames = analyteResults.filter((row) => row.flag === 'CRITICAL_LOW' || row.flag === 'CRITICAL_HIGH').map((row) => `${row.analyte} ${row.value}${row.unit ? ` ${row.unit}` : ''}`).join(', ')
+      if (criticalCount > 0) {
+        await logAuditEvent({ user, action: 'critical_lab_result', tableName: 'lab_tests', recordId: selectedTest.id, newValues: { critical: criticalNames } })
+      }
+
       // Notify the ordering doctor that results are ready
       if (selectedTest.encounter_id) {
         const { data: enc } = await supabase
@@ -350,9 +365,11 @@ const Laboratory = () => {
             patient_id: selectedTest.patient_id,
             type: 'lab_result',
             channel: 'in_app',
-            title: abnormalCount > 0 ? 'Abnormal Lab Result' : 'Lab Result Ready',
-            message: `${selectedTest.test_name} results for ${selectedTest.patients?.name} are ready for review`,
-            priority: 'normal',
+            title: criticalCount > 0 ? 'CRITICAL Lab Result' : abnormalCount > 0 ? 'Abnormal Lab Result' : 'Lab Result Ready',
+            message: criticalCount > 0
+              ? `CRITICAL: ${criticalNames} for ${selectedTest.patients?.name}. Act now.`
+              : `${selectedTest.test_name} results for ${selectedTest.patients?.name} are ready for review`,
+            priority: criticalCount > 0 ? 'urgent' : 'normal',
             status: 'unread',
             link: `/laboratory?test=${selectedTest.id}`,
           })
@@ -360,7 +377,11 @@ const Laboratory = () => {
         }
       }
 
-      toast.success(abnormalCount > 0 ? 'Result saved with abnormal flags' : 'Test result added successfully!')
+      if (criticalCount > 0) {
+        toast.error(`CRITICAL VALUE: ${criticalNames}. Phone the clinician now and record who was told.`, { autoClose: false })
+      } else {
+        toast.success(abnormalCount > 0 ? 'Result saved with abnormal flags' : 'Test result added successfully!')
+      }
       setSelectedTest(null)
       setTestResult('')
       setResultValues({})
@@ -828,6 +849,12 @@ const Laboratory = () => {
                   className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
                   placeholder="Enter test result details..."
                 />
+              )}
+
+              {criticalCount > 0 && (
+                <div role="alert" className="mb-4 rounded-lg border-2 border-red-700 bg-red-700 px-3 py-2 text-sm font-semibold text-white">
+                  CRITICAL VALUE: {criticalCount} result{criticalCount > 1 ? 's are' : ' is'} at a dangerous level. Phone the clinician now.
+                </div>
               )}
 
               {abnormalCount > 0 && (

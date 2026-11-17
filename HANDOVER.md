@@ -95,3 +95,36 @@ node design/shared-tenancy/drift-compare.mjs expected   # regenerate drift-expec
 - `origin/main` = `c25db42` (password reset page, go-live blocker clarity), deployed by Vercel.
 - `conversion-readiness` holds this work. Merging it to `main` changes the production app (the shared-mode code only
   activates with `VITE_TENANCY_MODE=shared`; the dedicated-mode behaviour is unchanged apart from audit and polling wrappers).
+
+## 8. Product review for real facilities (2026-11-17)
+
+About 50 modules exist (patients, appointments, queue, triage, OPD encounters, nursing, MAR, wards and beds, lab, radiology,
+pharmacy, theatre, maternity, blood bank, billing, cashier, claims, DHIMS2 export, HR, procurement, portal, telemedicine).
+Breadth is not the blocker. Depth, safety and operations are.
+
+**Built in this pass**
+- Prescribing safety (`src/lib/drugSafety.js`, wired into `Prescriptions.jsx`): checks recorded drug allergies (including
+  drug classes) and common serious interactions before saving; the prescriber must confirm, and overrides are audited.
+  It is a curated list, not a full drug database. Verified by a direct Node run and lint. The Vitest file
+  `src/__tests__/drugSafety.test.js` could not start (worker timeout, low memory), so it is unrun.
+
+**Gaps to build next (priority order)**
+1. Pre-launch blockers: shared-mode conversion on a restored copy, Pro and PITR backups, SMTP, Sentry.
+2. Patient consent and privacy notice capture (Data Protection Act 2012, Act 843, treats health data as special personal data). Only 1 file mentions consent today.
+3. SMS appointment and result reminders (3 files mention it; no confirmed provider).
+4. Mobile money payment collection at the cashier (Ghana norm; no provider integration confirmed).
+5. Printable receipts, wristbands and queue tickets; CSV export for finance and stock reports.
+6. Lab reference ranges with critical-value alerts; expiry and low-stock alerts in pharmacy.
+7. Immunisation schedule and child welfare; chronic care recall lists.
+8. Day-close cash reconciliation, refunds and voids with approval.
+9. Staff training material and a facility go-live checklist.
+
+**Market note.** The Ministry of Health has named GHIMS as the authorised system for public facilities (eligibility,
+billing, NHIA claims, referrals). CareLink is best aimed at private hospitals and clinics until its position for public
+facilities is confirmed with NHIA/MoH. Sources: Graphic Online and MyJoyOnline coverage of the GHIMS rollout.
+
+**Added after review (2026-11-17, uncommitted)**
+- Patient consent: registration now requires treatment and privacy consent (optional SMS consent), records notice version, time and recorder, and audits it. Stored as columns on `patients` by `migrations/029_patient_consent.sql` (no new table, so shared-tenancy policies and drift baseline are unaffected). **Apply 029 before deploying.** Until then the app registers without consent fields and warns the user. Existing patients have no consent recorded.
+- Receipts: Cashier "Completed" tab has Print and Download per payment (`generatePaymentReceiptPDF`, amount taken from the payment). Fixed the Billing receipt number (was a full UUID) and the hospital phone/email missing from PDF headers. Not tested in a browser; the PDF table step could not run in Node, the build and lint pass.
+- Not verified: new Vitest file for drug safety; migration 029 not run in Docker (it is plain ALTER TABLE ADD COLUMN IF NOT EXISTS).
+- Lab critical values (`src/lib/labCritical.js`): adult panic limits for Hb, platelets, WBC, potassium, sodium, glucose, calcium and creatinine, applied only when the unit is recognised. Used in Laboratory and Sample Tracking. A critical result shows a red banner, a persistent toast, an urgent notification to the ordering doctor, an audit event, and `result_flag` critical_low/critical_high (already allowed by migration 014). Limits are common adult defaults: have the facility lab lead confirm them. Not tested in a browser; unit logic verified by a direct Node run. `src/__tests__/labCritical.test.js` is unrun (worker timeout).

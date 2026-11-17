@@ -74,10 +74,12 @@ function FlagBadge({ flag }) {
     LOW:      'bg-orange-100 text-orange-700 border border-orange-200',
     NORMAL:   'bg-green-100 text-green-700 border border-green-200',
     ABNORMAL: 'bg-red-100 text-red-700 border border-red-200',
+    CRITICAL_LOW: 'bg-red-700 text-white border border-red-800',
+    CRITICAL_HIGH: 'bg-red-700 text-white border border-red-800',
   }
   return (
     <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${styles[flag] || 'bg-slate-100 text-slate-600'}`}>
-      {flag}
+      {String(flag).replace('_', ' ')}
     </span>
   )
 }

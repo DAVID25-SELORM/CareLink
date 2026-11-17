@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
 import { supabase } from '../supabaseClient'
+import { generatePaymentReceiptPDF, downloadPDF, printPDF, receiptNumber } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 
 /**
  * Cashier Page
@@ -15,6 +17,7 @@ const Cashier = () => {
   const { user } = useAuth()
   const [pendingBills, setPendingBills] = useState([])
   const [completedPayments, setCompletedPayments] = useState([])
+  const { branding } = useHospitalBranding()
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('pending') // 'pending' or 'completed'
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -337,6 +340,9 @@ const Cashier = () => {
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Reference
                     </th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Receipt
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-100">
@@ -368,6 +374,13 @@ const Cashier = () => {
                       </td>
                       <td className="px-6 py-4 text-xs text-slate-500 font-mono">
                         {payment.transaction_reference || '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs font-mono text-slate-500">{receiptNumber(payment.id)}</div>
+                        <div className="flex gap-2 mt-1">
+                          <button type="button" onClick={() => printPDF(generatePaymentReceiptPDF(payment, branding))} className="text-xs text-blue-600 hover:underline">Print</button>
+                          <button type="button" onClick={() => downloadPDF(generatePaymentReceiptPDF(payment, branding), `${receiptNumber(payment.id)}.pdf`)} className="text-xs text-blue-600 hover:underline">Download</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
