@@ -12,6 +12,8 @@ import { supabase } from '../supabaseClient'
 
 const Appointments = () => {
   const { user } = useAuth()
+  const [reminding, setReminding] = useState(false)
+  const [reminderResult, setReminderResult] = useState(null)
   const [appointments, setAppointments] = useState([])
   const [patients, setPatients] = useState([])
   const [doctors, setDoctors] = useState([])
@@ -155,6 +157,24 @@ const Appointments = () => {
     )
   }
 
+  const sendReminders = async () => {
+    if (!window.confirm("Send SMS reminders for tomorrow's scheduled appointments? Only patients who agreed to SMS are texted.")) return
+    setReminding(true)
+    setReminderResult(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('send-appointment-reminders', { body: {} })
+      if (error || !data) throw new Error(data?.error || error?.message || 'Reminder service is not available')
+      setReminderResult(data)
+      await logAuditEvent({ user, action: 'send_appointment_reminders', tableName: 'appointments', recordId: user?.id, newValues: data })
+      toast[data.failed > 0 ? 'warn' : 'success'](`${data.sent} reminder${data.sent === 1 ? '' : 's'} sent`)
+      fetchAppointments()
+    } catch (error) {
+      toast.error(error.message || 'Could not send reminders')
+    } finally {
+      setReminding(false)
+    }
+  }
+
   const today = new Date().toISOString().split('T')[0]
   const upcomingAppointments = appointments.filter(a => a.appointment_date >= today && a.status === 'scheduled')
 
@@ -165,12 +185,27 @@ const Appointments = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-xl font-semibold text-slate-800 sm:text-2xl">Appointments Schedule</h2>
           <button
+            onClick={sendReminders}
+            disabled={reminding}
+            className="w-full rounded-lg border border-blue-200 bg-white px-5 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-60 sm:w-auto"
+          >
+            {reminding ? 'Sending...' : "SMS tomorrow's reminders"}
+          </button>
+          <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="w-full rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-all-smooth shadow-sm hover:bg-blue-700 hover:shadow sm:w-auto"
           >
             {showAddForm ? '✕ Close' : '+ New Appointment'}
           </button>
         </div>
+
+        {reminderResult && (
+          <div role="status" className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            Reminders for {reminderResult.date}: {reminderResult.sent} sent, {reminderResult.already_reminded} already reminded,
+            {' '}{reminderResult.no_consent} without SMS consent, {reminderResult.no_phone} without a valid phone,
+            {' '}{reminderResult.failed} failed{reminderResult.not_marked ? `, ${reminderResult.not_marked} sent but not marked (do not resend)` : ''}.
+          </div>
+        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

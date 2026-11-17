@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
+import { useAuth } from '../hooks/useAuth'
+import { logAuditEvent } from '../services/auditLog'
 
 /**
  * Patient Detail Page
@@ -13,6 +15,7 @@ import { supabase } from '../supabaseClient'
 const PatientDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [patient, setPatient] = useState(null)
   const [prescriptions, setPrescriptions] = useState([])
   const [labTests, setLabTests] = useState([])
@@ -97,6 +100,20 @@ const PatientDetail = () => {
     { id: 'vitals', label: `Vitals (${vitals.length})` },
   ]
 
+  const toggleSmsConsent = async (granted) => {
+    const { error } = await supabase
+      .from('patients')
+      .update({ consent_sms: granted, consent_recorded_at: new Date().toISOString(), consent_recorded_by: user?.email || null })
+      .eq('id', patient.id)
+    if (error) {
+      toast.error('Could not save SMS consent. Check that migration 029 is applied.')
+      return
+    }
+    setPatient({ ...patient, consent_sms: granted })
+    await logAuditEvent({ user, action: 'record_consent', tableName: 'patients', recordId: patient.id, newValues: { consent_sms: granted } })
+    toast.success(granted ? 'SMS reminders allowed' : 'SMS reminders turned off')
+  }
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -145,6 +162,14 @@ const PatientDetail = () => {
                 <div>
                   <p className="text-xs text-slate-400 uppercase tracking-wide">Phone</p>
                   <p className="font-medium text-slate-700">{patient.phone || '—'}</p>
+                  <label className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                    <input
+                      type="checkbox"
+                      checked={patient.consent_sms === true}
+                      onChange={(e) => toggleSmsConsent(e.target.checked)}
+                    />
+                    Agrees to SMS reminders
+                  </label>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase tracking-wide">Address</p>
