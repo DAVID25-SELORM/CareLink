@@ -13159,6 +13159,76 @@
       "type": "timestamp with time zone",
       "required": true,
       "default_sql": "now()"
+    },
+    {
+      "tab": "immunizations",
+      "col": "id",
+      "type": "uuid",
+      "required": true,
+      "default_sql": "gen_random_uuid()"
+    },
+    {
+      "tab": "immunizations",
+      "col": "patient_id",
+      "type": "uuid",
+      "required": true,
+      "default_sql": null
+    },
+    {
+      "tab": "immunizations",
+      "col": "vaccine_code",
+      "type": "text",
+      "required": true,
+      "default_sql": null
+    },
+    {
+      "tab": "immunizations",
+      "col": "given_date",
+      "type": "date",
+      "required": true,
+      "default_sql": null
+    },
+    {
+      "tab": "immunizations",
+      "col": "batch_number",
+      "type": "text",
+      "required": false,
+      "default_sql": null
+    },
+    {
+      "tab": "immunizations",
+      "col": "site",
+      "type": "text",
+      "required": false,
+      "default_sql": null
+    },
+    {
+      "tab": "immunizations",
+      "col": "given_by",
+      "type": "uuid",
+      "required": false,
+      "default_sql": null
+    },
+    {
+      "tab": "immunizations",
+      "col": "notes",
+      "type": "text",
+      "required": false,
+      "default_sql": null
+    },
+    {
+      "tab": "immunizations",
+      "col": "created_at",
+      "type": "timestamp with time zone",
+      "required": true,
+      "default_sql": "now()"
+    },
+    {
+      "tab": "immunizations",
+      "col": "updated_at",
+      "type": "timestamp with time zone",
+      "required": true,
+      "default_sql": "now()"
     }
   ],
   "constraints": [
@@ -17679,6 +17749,36 @@
       "name": "sync_queue_status_check",
       "kind": "c",
       "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'syncing'::text, 'synced'::text, 'conflict'::text, 'failed'::text])))"
+    },
+    {
+      "tab": "immunizations",
+      "name": "immunizations_pkey",
+      "kind": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "tab": "immunizations",
+      "name": "immunizations_patient_vaccine_key",
+      "kind": "u",
+      "definition": "UNIQUE (patient_id, vaccine_code)"
+    },
+    {
+      "tab": "immunizations",
+      "name": "immunizations_not_future",
+      "kind": "c",
+      "definition": "CHECK ((given_date <= (CURRENT_DATE + 1)))"
+    },
+    {
+      "tab": "immunizations",
+      "name": "immunizations_patient_id_fkey",
+      "kind": "f",
+      "definition": "FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE"
+    },
+    {
+      "tab": "immunizations",
+      "name": "immunizations_given_by_fkey",
+      "kind": "f",
+      "definition": "FOREIGN KEY (given_by) REFERENCES users(id) ON DELETE SET NULL"
     }
   ],
   "sequences": [
@@ -17946,6 +18046,9 @@
     },
     {
       "definition": "CREATE TRIGGER binding_audit AFTER INSERT OR UPDATE ON public.platform_tenant_bindings FOR EACH ROW EXECUTE FUNCTION audit_platform_change()"
+    },
+    {
+      "definition": "CREATE TRIGGER update_immunizations_timestamp BEFORE UPDATE ON public.immunizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
     }
   ]
 }

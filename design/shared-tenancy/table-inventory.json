@@ -282,6 +282,12 @@
     "has_hospital_id": true
   },
   {
+    "table_name": "immunizations",
+    "rls_enabled": true,
+    "has_tenant_id": false,
+    "has_hospital_id": false
+  },
+  {
     "table_name": "integration_endpoints",
     "rls_enabled": true,
     "has_tenant_id": false,

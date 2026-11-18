@@ -1887,6 +1887,16 @@ CREATE TABLE public."wards"("id" uuid DEFAULT gen_random_uuid() NOT NULL,
 "status" text DEFAULT 'active'::text,
 "created_at" timestamp with time zone DEFAULT now() NOT NULL,
 "updated_at" timestamp with time zone DEFAULT now() NOT NULL);
+CREATE TABLE public."immunizations"("id" uuid DEFAULT gen_random_uuid() NOT NULL,
+"patient_id" uuid NOT NULL,
+"vaccine_code" text NOT NULL,
+"given_date" date NOT NULL,
+"batch_number" text,
+"site" text,
+"given_by" uuid,
+"notes" text,
+"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+"updated_at" timestamp with time zone DEFAULT now() NOT NULL);
 ALTER TABLE public."suppliers" ADD CONSTRAINT "suppliers_pkey" PRIMARY KEY (id);
 ALTER TABLE public."report_runs" ADD CONSTRAINT "report_runs_pkey" PRIMARY KEY (id);
 ALTER TABLE public."purchase_orders" ADD CONSTRAINT "purchase_orders_pkey" PRIMARY KEY (id);
@@ -2027,6 +2037,7 @@ ALTER TABLE public."hr_staff" ADD CONSTRAINT "hr_staff_pkey" PRIMARY KEY (id);
 ALTER TABLE public."hospital_onboarding_tasks" ADD CONSTRAINT "hospital_onboarding_tasks_pkey" PRIMARY KEY (id);
 ALTER TABLE public."theatre_post_op" ADD CONSTRAINT "theatre_post_op_pkey" PRIMARY KEY (id);
 ALTER TABLE public."ai_suggestions" ADD CONSTRAINT "ai_suggestions_pkey" PRIMARY KEY (id);
+ALTER TABLE public."immunizations" ADD CONSTRAINT "immunizations_pkey" PRIMARY KEY (id);
 ALTER TABLE public."sync_checkpoints" ADD CONSTRAINT "sync_checkpoints_hospital_id_table_name_key" UNIQUE (hospital_id, table_name);
 ALTER TABLE public."platform_tenant_bindings" ADD CONSTRAINT "platform_tenant_bindings_tenant_id_key" UNIQUE (tenant_id);
 ALTER TABLE public."notification_templates" ADD CONSTRAINT "notification_templates_hospital_id_event_type_channel_key" UNIQUE (hospital_id, event_type, channel);
@@ -2073,6 +2084,7 @@ ALTER TABLE public."staff_schedules" ADD CONSTRAINT "staff_schedules_user_id_shi
 ALTER TABLE public."platform_onboarding_drafts" ADD CONSTRAINT "platform_onboarding_drafts_tenant_id_key" UNIQUE (tenant_id);
 ALTER TABLE public."platform_jobs" ADD CONSTRAINT "platform_jobs_request_key_key" UNIQUE (request_key);
 ALTER TABLE public."hr_attendance" ADD CONSTRAINT "hr_attendance_hospital_id_staff_id_date_key" UNIQUE (hospital_id, staff_id, date);
+ALTER TABLE public."immunizations" ADD CONSTRAINT "immunizations_patient_vaccine_key" UNIQUE (patient_id, vaccine_code);
 ALTER TABLE public."hr_staff" ADD CONSTRAINT "hr_staff_status_check" CHECK ((status = ANY (ARRAY['active'::text, 'inactive'::text, 'terminated'::text, 'suspended'::text])));
 ALTER TABLE public."maternity_deliveries" ADD CONSTRAINT "maternity_deliveries_baby_sex_check" CHECK ((baby_sex = ANY (ARRAY['male'::text, 'female'::text])));
 ALTER TABLE public."hospital_onboarding_tasks" ADD CONSTRAINT "hospital_onboarding_tasks_status_check" CHECK ((status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text, 'blocked'::text])));
@@ -2307,6 +2319,7 @@ ALTER TABLE public."payments" ADD CONSTRAINT "payments_payment_method_check" CHE
 ALTER TABLE public."platform_tenant_costs" ADD CONSTRAINT "platform_tenant_costs_amount_check" CHECK ((amount >= (0)::numeric));
 ALTER TABLE public."platform_tenant_costs" ADD CONSTRAINT "platform_tenant_costs_currency_check" CHECK ((currency ~ '^[A-Z]{3}$'::text));
 ALTER TABLE public."sync_queue" ADD CONSTRAINT "sync_queue_status_check" CHECK ((status = ANY (ARRAY['pending'::text, 'syncing'::text, 'synced'::text, 'conflict'::text, 'failed'::text])));
+ALTER TABLE public."immunizations" ADD CONSTRAINT "immunizations_not_future" CHECK ((given_date <= (CURRENT_DATE + 1)));
 ALTER TABLE public."platform_tenant_costs" ADD CONSTRAINT "platform_tenant_costs_tenant_id_fkey" FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id) ON DELETE CASCADE;
 ALTER TABLE public."hr_payroll" ADD CONSTRAINT "hr_payroll_processed_by_fkey" FOREIGN KEY (processed_by) REFERENCES auth.users(id);
 ALTER TABLE public."nhia_submissions" ADD CONSTRAINT "nhia_submissions_batch_id_fkey" FOREIGN KEY (batch_id) REFERENCES claim_batches(id) ON DELETE CASCADE;
@@ -2640,6 +2653,8 @@ ALTER TABLE public."platform_launch_approvals" ADD CONSTRAINT "platform_launch_a
 ALTER TABLE public."platform_tenant_bindings" ADD CONSTRAINT "platform_tenant_bindings_tenant_id_fkey" FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id) ON DELETE CASCADE;
 ALTER TABLE public."platform_tenant_schema_ledger" ADD CONSTRAINT "platform_tenant_schema_ledger_tenant_id_fkey" FOREIGN KEY (tenant_id) REFERENCES platform_tenants(id) ON DELETE CASCADE;
 ALTER TABLE public."hr_leaves" ADD CONSTRAINT "hr_leaves_approved_by_fkey" FOREIGN KEY (approved_by) REFERENCES auth.users(id);
+ALTER TABLE public."immunizations" ADD CONSTRAINT "immunizations_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE;
+ALTER TABLE public."immunizations" ADD CONSTRAINT "immunizations_given_by_fkey" FOREIGN KEY (given_by) REFERENCES users(id) ON DELETE SET NULL;
 CREATE OR REPLACE FUNCTION public.is_platform_owner()
  RETURNS boolean
  LANGUAGE sql
@@ -3468,6 +3483,7 @@ CREATE TRIGGER execution_audit AFTER INSERT OR UPDATE ON public.platform_launch_
 CREATE TRIGGER execution_audit AFTER INSERT OR UPDATE ON public.platform_launch_approvals FOR EACH ROW EXECUTE FUNCTION audit_platform_change();
 CREATE TRIGGER snapshot_job BEFORE INSERT ON public.platform_jobs FOR EACH ROW EXECUTE FUNCTION platform_snapshot_job();
 CREATE TRIGGER binding_audit AFTER INSERT OR UPDATE ON public.platform_tenant_bindings FOR EACH ROW EXECUTE FUNCTION audit_platform_change();
+CREATE TRIGGER update_immunizations_timestamp BEFORE UPDATE ON public.immunizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE VIEW public."fluid_balance_daily" WITH(security_invoker=true) AS  SELECT admission_id,
     patient_id,
     chart_date,
@@ -3632,6 +3648,7 @@ ALTER TABLE public."virtual_consultations" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."vitals" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."ward_rounds" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."wards" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."immunizations" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can view all referrals" ON public."referrals" AS PERMISSIVE FOR ALL TO "public" USING((EXISTS ( SELECT 1
    FROM users
   WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))));
@@ -4291,5 +4308,10 @@ CREATE POLICY "Admin full access triage" ON public."triage_assessments" AS PERMI
    FROM users
   WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'nurse'::text, 'doctor'::text]))))));
 CREATE POLICY "carelink_tenant_boundary" ON public."triage_assessments" AS RESTRICTIVE FOR ALL TO "public" USING(is_tenant_user()) WITH CHECK(is_tenant_user());
+CREATE POLICY "Clinical staff manage immunizations" ON public."immunizations" AS PERMISSIVE FOR ALL TO "public" USING((EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text]))))));
+CREATE POLICY "Staff view immunizations" ON public."immunizations" AS PERMISSIVE FOR SELECT TO "authenticated" USING(true);
+CREATE POLICY "carelink_tenant_boundary" ON public."immunizations" AS RESTRICTIVE FOR ALL TO "public" USING(is_tenant_user()) WITH CHECK(is_tenant_user());
 -- Fixture grants are deliberately broad to exercise restrictive isolation, not a production grant replica.
 GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO authenticated;

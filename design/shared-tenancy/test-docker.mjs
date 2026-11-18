@@ -9,7 +9,7 @@ const name = `carelink-shared-test-${randomUUID()}`
 const image = 'postgres:16-alpine'
 const directory = fileURLToPath(new URL('.', import.meta.url))
 function docker(args) {
-  const result = spawnSync('docker', args, { encoding: 'utf8', timeout: 60000, windowsHide: true })
+  const result = spawnSync('docker', args, { encoding: 'utf8', timeout: Number(process.env.DOCKER_TIMEOUT_MS) || 60000, windowsHide: true })
   if (result.error || result.status !== 0) throw new Error(`Docker ${args[0]} failed: ${result.error?.message || result.stderr}`)
   return result.stdout
 }

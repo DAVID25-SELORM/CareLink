@@ -4883,6 +4883,42 @@
       "cmd": "ALL",
       "qual": "is_tenant_user()",
       "with_check": "is_tenant_user()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "immunizations",
+      "policyname": "Clinical staff manage immunizations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM users\n  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'doctor'::text, 'nurse'::text])))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "immunizations",
+      "policyname": "Staff view immunizations",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "immunizations",
+      "policyname": "carelink_tenant_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_tenant_user()",
+      "with_check": "is_tenant_user()"
     }
   ],
   "functions": [

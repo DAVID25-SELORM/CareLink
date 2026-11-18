@@ -625,6 +625,22 @@
     ]
   },
   {
+    "table": "immunizations",
+    "readers": [
+      "admin",
+      "cashier",
+      "doctor",
+      "nurse",
+      "pharmacist",
+      "records_officer"
+    ],
+    "writers": [
+      "admin",
+      "doctor",
+      "nurse"
+    ]
+  },
+  {
     "table": "integration_endpoints",
     "readers": [
       "admin"
