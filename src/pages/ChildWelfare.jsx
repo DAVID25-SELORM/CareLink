@@ -4,7 +4,9 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { logAuditEvent } from '../services/auditLog'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import { ageText, buildChildSchedule, summarizeSchedule } from '../lib/epiSchedule'
+import { RECALL_KIND, RECALL_COOLDOWN_DAYS, buildRecallMessage, lastRecallByPatient, recallBlocker, recalledRecently } from '../lib/immunisationRecall'
 
 const TABS = ['Child record', 'Overdue list']
 const SITES = ['', 'Left thigh', 'Right thigh', 'Left upper arm', 'Right upper arm', 'Oral']
@@ -27,6 +29,9 @@ const yearsOld = (patient) => {
 
 export default function ChildWelfare() {
   const { user } = useAuth()
+  const { branding } = useHospitalBranding()
+  const [recalls, setRecalls] = useState(new Map())
+  const [texting, setTexting] = useState('')
   const [tab, setTab] = useState(TABS[0])
   const [children, setChildren] = useState([])
   const [allDoses, setAllDoses] = useState([])
@@ -56,7 +61,12 @@ export default function ChildWelfare() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  const loadRecalls = useCallback(async () => {
+    const { data } = await supabase.from('audit_log').select('record_id, created_at, new_values').eq('action', 'send_sms').order('created_at', { ascending: false }).limit(500)
+    setRecalls(lastRecallByPatient(data))
+  }, [])
+
+  useEffect(() => { load(); loadRecalls() }, [load, loadRecalls])
 
   const child = children.find((c) => c.id === selectedId) || null
   const childDoses = useMemo(() => allDoses.filter((d) => d.patient_id === selectedId), [allDoses, selectedId])
@@ -85,6 +95,39 @@ export default function ChildWelfare() {
       .filter((x) => x.overdue.length > 0)
       .sort((a, b) => b.overdue.length - a.overdue.length)
   }, [children, allDoses])
+
+  // One recall text. Consent and the phone number are enforced again by the send-sms function.
+  const sendRecall = async (c) => {
+    const message = buildRecallMessage({ childName: c.name, hospital: branding?.hospitalName })
+    const { data, error } = await supabase.functions.invoke('send-sms', { body: { patient_id: c.id, message } })
+    if (error || data?.status !== 'sent') {
+      let reason = data?.error
+      if (!reason && error?.context?.json) reason = (await error.context.json().catch(() => null))?.error
+      throw new Error(reason || error?.message || 'The SMS service is not available')
+    }
+    await logAuditEvent({ user, action: 'send_sms', tableName: 'patients', recordId: c.id, newValues: { status: 'sent', kind: RECALL_KIND, length: message.length } })
+    setRecalls((prev) => new Map(prev).set(c.id, Date.now()))
+  }
+
+  const recallOne = async (c) => {
+    if (recalledRecently(recalls.get(c.id)) && !window.confirm(`${c.name} was already texted in the last ${RECALL_COOLDOWN_DAYS} days. Send another?`)) return
+    setTexting(c.id)
+    try { await sendRecall(c); toast.success(`Recall sent for ${c.name}`) } catch (e) { toast.error(e.message) } finally { setTexting('') }
+  }
+
+  const recallAll = async () => {
+    const targets = overdueList.map((x) => x.child).filter((c) => !recallBlocker(c) && !recalledRecently(recalls.get(c.id)))
+    if (targets.length === 0) { toast.info('Nobody to text: everyone is either without consent or phone, or was texted recently'); return }
+    if (!window.confirm(`Send a recall SMS to ${targets.length} guardian(s)? Children texted in the last ${RECALL_COOLDOWN_DAYS} days are skipped.`)) return
+    setTexting('all')
+    let sent = 0
+    let failed = 0
+    for (const c of targets) {
+      try { await sendRecall(c); sent += 1 } catch { failed += 1 }
+    }
+    setTexting('')
+    toast[failed ? 'warn' : 'success'](`${sent} sent, ${failed} failed`)
+  }
 
   const saveDose = async (event) => {
     event.preventDefault()
@@ -264,23 +307,37 @@ export default function ChildWelfare() {
         )}
 
         {tab === 'Overdue list' && (
+          <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-slate-500">The text asks the guardian to bring the child in. It never names vaccines. Only guardians who agreed to SMS can be texted.</p>
+            <button type="button" onClick={recallAll} disabled={texting !== '' || overdueList.length === 0} className="shrink-0 px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg disabled:opacity-50">{texting === 'all' ? 'Sending...' : 'Text all eligible'}</button>
+          </div>
           <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>{['Child', 'Age', 'Phone', 'Overdue vaccines'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-600 uppercase">{h}</th>)}</tr>
+                <tr>{['Child', 'Age', 'Phone', 'Overdue vaccines', 'Recall'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-600 uppercase">{h}</th>)}</tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {overdueList.length === 0 && <tr><td colSpan={4} className="text-center py-10 text-slate-400">{loading ? 'Loading...' : 'No children under 5 with overdue doses'}</td></tr>}
+                {overdueList.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-slate-400">{loading ? 'Loading...' : 'No children under 5 with overdue doses'}</td></tr>}
                 {overdueList.map(({ child: c, overdue }) => (
                   <tr key={c.id}>
                     <td className="px-4 py-3"><button type="button" className="text-indigo-600 underline" onClick={() => { setSelectedId(c.id); setTab(TABS[0]) }}>{c.name}</button></td>
                     <td className="px-4 py-3 text-slate-600">{ageText(c.date_of_birth)}</td>
                     <td className="px-4 py-3 text-slate-600">{c.phone || c.emergency_phone || '-'}</td>
                     <td className="px-4 py-3 text-xs text-slate-600">{overdue.map((o) => o.label).join(', ')}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {recallBlocker(c) ? <span className="text-slate-400">{recallBlocker(c)}</span> : (
+                        <div className="space-y-1">
+                          <button type="button" onClick={() => recallOne(c)} disabled={texting !== ''} className="text-indigo-600 underline disabled:opacity-50">{texting === c.id ? 'Sending...' : 'Send SMS'}</button>
+                          {recalls.get(c.id) && <p className="text-slate-400">Last texted {new Date(recalls.get(c.id)).toLocaleDateString('en-GB')}</p>}
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
           </div>
         )}
       </div>
