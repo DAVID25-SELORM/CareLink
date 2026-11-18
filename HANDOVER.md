@@ -108,16 +108,21 @@ Breadth is not the blocker. Depth, safety and operations are.
   It is a curated list, not a full drug database. Verified by a direct Node run and lint. The Vitest file
   `src/__tests__/drugSafety.test.js` could not start (worker timeout, low memory), so it is unrun.
 
-**Gaps to build next (priority order)**
-1. Pre-launch blockers: shared-mode conversion on a restored copy, Pro and PITR backups, SMTP, Sentry.
-2. Patient consent and privacy notice capture (Data Protection Act 2012, Act 843, treats health data as special personal data). Only 1 file mentions consent today.
-3. SMS appointment and result reminders (3 files mention it; no confirmed provider).
-4. Mobile money payment collection at the cashier (Ghana norm; no provider integration confirmed).
-5. Printable receipts, wristbands and queue tickets; CSV export for finance and stock reports.
-6. Lab reference ranges with critical-value alerts; expiry and low-stock alerts in pharmacy.
-7. Immunisation schedule and child welfare; chronic care recall lists.
-8. Day-close cash reconciliation, refunds and voids with approval.
-9. Staff training material and a facility go-live checklist.
+**Build status of the original gap list**
+1. Pre-launch blockers: still yours (conversion on a restored copy, Pro and PITR backups, SMTP, Sentry).
+2. Consent and privacy notice: built (migration 029).
+3. SMS reminders: built (migration 030, `send-sms`, `send-appointment-reminders`); provider call never run live.
+4. Mobile money: reference and network required, duplicates refused; payments are cashier-confirmed, no provider API.
+5. Receipts, wristbands, queue tickets, CSV: built (CSV only for the patient register and chronic-care list).
+6. Lab ranges and critical alerts; pharmacy expiry and per-batch stock: built.
+7. Immunisation and child welfare (migration 031) and chronic-care recall: built.
+8. Day close, refunds: built (single-step admin approval, no request queue).
+9. Go-live checklist: built (`/go-live`, admin only); formal staff training material is NOT written.
+
+**Still not built:** provider-connected mobile money collection, WHO growth z-scores, minimum dose gaps in the immunisation
+schedule, a refund request/approve queue, CSV export beyond the patient register, barcode/QR on wristbands, training
+manuals. **Nothing has been tried in a browser** (no test login was available); a two-hospital browser acceptance run is
+the first thing to do on a test copy.
 
 **Market note.** The Ministry of Health has named GHIMS as the authorised system for public facilities (eligibility,
 billing, NHIA claims, referrals). CareLink is best aimed at private hospitals and clinics until its position for public
@@ -156,3 +161,7 @@ Cashier has a **Day close** tab (`src/components/DayClose.jsx`, `src/lib/dayClos
 - **Chronic Care Follow-up** (`/chronic-care`, `src/lib/chronicCare.js`): patients with hypertension, diabetes, asthma, COPD, epilepsy, sickle cell, CKD or heart failure (ICD-10 prefixes, or diagnosis flagged chronic) not seen for 30-180 days; SMS reminder via `send-sms` that never names the condition (30-day cooldown, audited as `send_sms` kind `chronic_recall`), CSV export. HIV is deliberately excluded. The ICD list and the 90-day default need clinical sign-off. Nothing in the UI sets `is_chronic`, so the ICD list does the work.
 - **CSV export**: `src/lib/csvExport.js` (formula-safe, UTF-8 BOM) and an administrator-only **Export CSV** of the patient register on the Patients page, confirmed and audited as `export_patient_register`. Other modules have no export yet.
 - Tests `chronicCare.test.js` unrun in Vitest; logic checked in Node. Not tried in a browser.
+
+
+### Go-live checklist page
+`/go-live` (admin): reads profile, roles, drugs, batches, fees, patients, a sent SMS and a day close from the facility's own data, plus eight manual sign-offs (ticks saved in that browser only). `src/lib/goLive.js`; `goLive.test.js` unrun in Vitest, logic checked in Node.

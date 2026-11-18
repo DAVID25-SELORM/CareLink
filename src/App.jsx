@@ -55,6 +55,7 @@ const Theatre = lazy(() => import('./pages/Theatre'))
 const Maternity = lazy(() => import('./pages/Maternity'))
 const ChildWelfare = lazy(() => import('./pages/ChildWelfare'))
 const ChronicCare = lazy(() => import('./pages/ChronicCare'))
+const GoLiveChecklist = lazy(() => import('./pages/GoLiveChecklist'))
 const Dietary = lazy(() => import('./pages/Dietary'))
 const NotificationSettings = lazy(() => import('./pages/NotificationSettings'))
 const HRPayroll = lazy(() => import('./pages/HRPayroll'))
@@ -402,6 +403,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'doctor', 'nurse']}>
                     <Maternity />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/go-live"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <GoLiveChecklist />
                   </ProtectedRoute>
                 }
               />
