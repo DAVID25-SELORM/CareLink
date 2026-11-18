@@ -131,6 +131,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Theatre', path: '/theatre', icon: '⚔', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'Maternity', path: '/maternity', icon: '♀', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'Child Welfare', path: '/child-welfare', icon: '👶', roles: ['admin', 'doctor', 'nurse'] },
+    { name: 'Chronic Care', path: '/chronic-care', icon: '♥', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'Dietary', path: '/dietary', icon: '◑', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'Ambulance', path: '/ambulance', icon: '⚡', roles: ['admin', 'doctor', 'nurse'] },
     { name: 'HR & Payroll', path: '/hr-payroll', icon: '◒', roles: ['admin'] },

@@ -643,3 +643,55 @@ export const printPDF = (doc) => {
     URL.revokeObjectURL(url)
   }, 1000)
 }
+
+/**
+ * Queue ticket (80 mm wide, thermal-friendly). Shows the first name only so a ticket left on a seat does not
+ * expose a full name, and no clinical detail.
+ */
+export const generateQueueTicketPDF = (queue, branding = {}) => {
+  const config = getHospitalConfig(branding)
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [80, 70] })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.text(config.name, 40, 8, { align: 'center', maxWidth: 72 })
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.text(String(queue.department || '').toUpperCase(), 40, 15, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(40)
+  doc.text(String(queue.queue_number ?? '-'), 40, 36, { align: 'center' })
+  doc.setFontSize(10)
+  doc.text(String(queue.patients?.name || '').trim().split(/\s+/)[0] || '', 40, 45, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  if (queue.priority && queue.priority !== 'normal') doc.text(`Priority: ${String(queue.priority).toUpperCase()}`, 40, 51, { align: 'center' })
+  const when = new Date(queue.checked_in_at || Date.now())
+  doc.text(`${when.toLocaleDateString('en-GB')} ${when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`, 40, 58, { align: 'center' })
+  doc.text('Please wait to be called.', 40, 64, { align: 'center' })
+  return doc
+}
+
+/**
+ * Patient wristband label (landscape, 100 x 25 mm). Name, ID, age/sex and active allergies; allergies are the
+ * reason a wristband exists, so they are printed in capitals when present.
+ */
+export const generateWristbandPDF = (patient, allergies = [], branding = {}) => {
+  const config = getHospitalConfig(branding)
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [100, 25] })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  doc.text(String(patient.name || '').toUpperCase(), 3, 7, { maxWidth: 94 })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  const id = patient.patient_id || String(patient.id || '').slice(0, 8).toUpperCase()
+  const age = patient.date_of_birth ? `DOB ${String(patient.date_of_birth).slice(0, 10)}` : patient.age != null && patient.age !== '' ? `${patient.age} yrs` : ''
+  doc.text([`ID ${id}`, age, patient.gender ? String(patient.gender).toUpperCase() : ''].filter(Boolean).join('   '), 3, 13)
+  const names = allergies.map((a) => a.allergen_name).filter(Boolean)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.text(names.length ? `ALLERGY: ${names.join(', ').toUpperCase()}` : 'NO KNOWN ALLERGIES RECORDED', 3, 19, { maxWidth: 94 })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6)
+  doc.text(config.name, 3, 23)
+  return doc
+}

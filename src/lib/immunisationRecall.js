@@ -13,10 +13,10 @@ export function buildRecallMessage({ childName, hospital }) {
 }
 
 /** Latest recall time per patient from audit entries ({record_id, created_at, new_values:{kind}}). */
-export function lastRecallByPatient(entries) {
+export function lastRecallByPatient(entries, kind = RECALL_KIND) {
   const latest = new Map()
   for (const e of entries || []) {
-    if (e?.new_values?.kind !== RECALL_KIND || !e.record_id) continue
+    if (e?.new_values?.kind !== kind || !e.record_id) continue
     const at = new Date(e.created_at).getTime()
     if (!(at > (latest.get(e.record_id) || 0))) continue
     latest.set(e.record_id, at)

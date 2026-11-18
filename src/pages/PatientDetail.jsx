@@ -5,6 +5,9 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { logAuditEvent } from '../services/auditLog'
+import { generateWristbandPDF, printPDF } from '../services/pdfService'
+import { getPatientAllergies } from '../services/encounterService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 
 /**
  * Patient Detail Page
@@ -16,6 +19,7 @@ const PatientDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { branding } = useHospitalBranding()
   const [patient, setPatient] = useState(null)
   const [prescriptions, setPrescriptions] = useState([])
   const [labTests, setLabTests] = useState([])
@@ -100,6 +104,12 @@ const PatientDetail = () => {
     { id: 'vitals', label: `Vitals (${vitals.length})` },
   ]
 
+  const printWristband = async () => {
+    const { data, error } = await getPatientAllergies(patient.id)
+    if (error && !window.confirm('Allergies could not be loaded, so the wristband would show none. Print anyway?')) return
+    printPDF(generateWristbandPDF(patient, error ? [] : data || [], branding))
+  }
+
   const toggleSmsConsent = async (granted) => {
     const { error } = await supabase
       .from('patients')
@@ -145,6 +155,7 @@ const PatientDetail = () => {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-slate-800">{patient.name}</h1>
+                  <button type="button" onClick={printWristband} className="text-xs text-blue-600 hover:underline mt-0.5">Print wristband</button>
                   <p className="text-slate-500 text-sm mt-0.5">
                     ID: {patient.patient_id || patient.id.slice(0, 8).toUpperCase()}
                   </p>
