@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
+import { checkPaymentReference, REFERENCE_REQUIRED_METHODS } from '../lib/paymentReference'
 import { supabase } from '../supabaseClient'
 import { generatePaymentReceiptPDF, downloadPDF, printPDF, receiptNumber } from '../services/pdfService'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
@@ -112,7 +113,15 @@ const Cashier = () => {
   const handlePayment = async (e) => {
     e.preventDefault()
 
+    const check = checkPaymentReference({ method: paymentData.payment_method, provider: paymentData.momo_provider, reference: paymentData.transaction_reference })
+    if (!check.ok) { toast.error(check.error); return }
+
     try {
+      if (check.reference && REFERENCE_REQUIRED_METHODS.includes(paymentData.payment_method)) {
+        const { data: used, error: dupError } = await supabase.from('payments').select('id').eq('transaction_reference', check.reference).limit(1)
+        if (dupError) throw dupError
+        if (used && used.length > 0) { toast.error('This reference was already used on another payment. Check the confirmation message.'); return }
+      }
       // 1. Create payment record
       const paymentPayload = {
         patient_id: selectedBill.patient_id,
@@ -121,7 +130,7 @@ const Cashier = () => {
         amount: selectedBill.total_amount,
         payment_method: paymentData.payment_method,
         momo_provider: paymentData.payment_method === 'momo' ? paymentData.momo_provider : null,
-        transaction_reference: paymentData.transaction_reference || null,
+        transaction_reference: check.reference,
         status: 'completed',
         paid_by: paymentData.paid_by,
         notes: paymentData.notes
@@ -493,15 +502,19 @@ const Cashier = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Transaction Reference
+                        {['momo', 'card'].includes(paymentData.payment_method) ? (paymentData.payment_method === 'momo' ? 'MoMo Transaction ID *' : 'Card Receipt Number *') : 'Transaction Reference'}
                       </label>
                       <input
                         type="text"
                         value={paymentData.transaction_reference}
                         onChange={(e) => setPaymentData({ ...paymentData, transaction_reference: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        required={['momo', 'card'].includes(paymentData.payment_method)}
                         placeholder="Receipt/Ref number"
                       />
+                      {paymentData.payment_method === 'momo' && (
+                        <p className="text-xs text-amber-700 mt-1">Confirm the money has arrived in the facility wallet (check the confirmation SMS) before saving. Payments are not verified automatically.</p>
+                      )}
                     </div>
                   </div>
 
