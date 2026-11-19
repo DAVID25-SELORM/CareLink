@@ -8,7 +8,10 @@ import { supabase } from '../supabaseClient'
 import { generatePaymentReceiptPDF, downloadPDF, printPDF, receiptNumber } from '../services/pdfService'
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import DayClose from '../components/DayClose'
+import RefundRequests from '../components/RefundRequests'
 import { refundBlocker } from '../lib/dayClose'
+import { checkReason, requestBlocker } from '../lib/refunds'
+import { executeRefund, requestRefund } from '../services/refundService'
 
 /**
  * Cashier Page
@@ -113,27 +116,33 @@ const Cashier = () => {
     setShowPaymentModal(true)
   }
 
-  // Refund: administrator only, medication must not be dispensed; the prescription goes back to pending.
+  // Direct refund (administrator). Cashiers use "Request refund", which the administrator approves in the Refund requests tab.
   const refundPayment = async (payment) => {
     const blocker = refundBlocker(payment, userRole)
     if (blocker) { toast.error(blocker); return }
-    const reason = window.prompt(`Refund GH₵ ${Number(payment.amount).toFixed(2)} to ${payment.patients?.name || 'the patient'}? Enter the reason:`)
-    if (!reason || reason.trim().length < 5) { if (reason !== null) toast.error('Give a reason of at least 5 characters'); return }
+    const check = checkReason(window.prompt(`Refund GH₵ ${Number(payment.amount).toFixed(2)} to ${payment.patients?.name || 'the patient'}? Enter the reason:`))
+    if (!check.ok) { toast.error(check.error); return }
     try {
-      const note = [payment.notes, `REFUND ${new Date().toISOString().slice(0, 10)} by ${user?.email || 'admin'}: ${reason.trim()}`].filter(Boolean).join(' | ')
-      const { error } = await supabase.from('payments').update({ status: 'refunded', notes: note }).eq('id', payment.id).eq('status', 'completed')
-      if (error) throw error
-      if (payment.prescription_id) {
-        const { error: rxError } = await supabase.from('prescriptions').update({ status: 'pending' }).eq('id', payment.prescription_id).eq('status', 'paid')
-        if (rxError) throw rxError
-      }
-      await logAuditEvent({ user, action: 'refund_payment', tableName: 'payments', recordId: payment.id, newValues: { amount: payment.amount, method: payment.payment_method, reference: payment.transaction_reference, reason: reason.trim() } })
+      await executeRefund({ payment, reason: check.reason, user })
       toast.success('Payment refunded. Hand the money back and keep the reason on file.')
       fetchPendingBills()
       fetchCompletedPayments()
     } catch (error) {
       console.error('Refund failed:', error)
-      toast.error('Could not refund the payment')
+      toast.error(error.message || 'Could not refund the payment')
+    }
+  }
+
+  const askForRefund = async (payment) => {
+    const blocker = requestBlocker(payment)
+    if (blocker) { toast.error(blocker); return }
+    const check = checkReason(window.prompt(`Request a refund of GH₵ ${Number(payment.amount).toFixed(2)} for ${payment.patients?.name || 'the patient'}? Enter the reason:`))
+    if (!check.ok) { toast.error(check.error); return }
+    try {
+      await requestRefund({ payment, reason: check.reason, user })
+      toast.success('Request sent. An administrator will approve or decline it.')
+    } catch (error) {
+      toast.error('Could not send the request')
     }
   }
 
@@ -245,6 +254,16 @@ const Cashier = () => {
               }`}
             >
               Day close
+            </button>
+            <button
+              onClick={() => setActiveTab('refunds')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'refunds'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Refund requests
             </button>
           </div>
         </div>
@@ -426,7 +445,9 @@ const Cashier = () => {
                         <div className="flex gap-2 mt-1">
                           <button type="button" onClick={() => printPDF(generatePaymentReceiptPDF(payment, branding))} className="text-xs text-blue-600 hover:underline">Print</button>
                           <button type="button" onClick={() => downloadPDF(generatePaymentReceiptPDF(payment, branding), `${receiptNumber(payment.id)}.pdf`)} className="text-xs text-blue-600 hover:underline">Download</button>
-                          {userRole === 'admin' && <button type="button" onClick={() => refundPayment(payment)} className="text-xs text-red-600 hover:underline">Refund</button>}
+                          {userRole === 'admin'
+                            ? <button type="button" onClick={() => refundPayment(payment)} className="text-xs text-red-600 hover:underline">Refund</button>
+                            : <button type="button" onClick={() => askForRefund(payment)} className="text-xs text-red-600 hover:underline">Request refund</button>}
                         </div>
                       </td>
                     </tr>
@@ -438,6 +459,7 @@ const Cashier = () => {
         )}
 
         {activeTab === 'dayclose' && <DayClose user={user} />}
+        {activeTab === 'refunds' && <RefundRequests user={user} isAdmin={userRole === 'admin'} onChanged={() => { fetchPendingBills(); fetchCompletedPayments() }} />}
 
         {/* Payment Modal */}
         {showPaymentModal && selectedBill && (

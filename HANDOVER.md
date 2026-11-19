@@ -165,3 +165,9 @@ Cashier has a **Day close** tab (`src/components/DayClose.jsx`, `src/lib/dayClos
 
 ### Go-live checklist page
 `/go-live` (admin): reads profile, roles, drugs, batches, fees, patients, a sent SMS and a day close from the facility's own data, plus eight manual sign-offs (ticks saved in that browser only). `src/lib/goLive.js`; `goLive.test.js` unrun in Vitest, logic checked in Node.
+
+
+### Refund request queue and staff guides
+- **Refund requests** (Cashier tab): non-admin staff use **Request refund** on a completed payment; an administrator approves or declines in **Refund requests**. No new table: a request is an `audit_log` entry (`refund_request`), approval is the existing refund (`refund_payment`, requester recorded), a decline is a `refund_reject` entry plus a dated line in the payment notes so the cashier can see the outcome. Admins can still refund directly from Completed (one-step, audited); that path has no second person. Refund still needs the medicine to be undispensed. Code: `src/lib/refunds.js`, `src/services/refundService.js`, `src/components/RefundRequests.jsx`; `refunds.test.js` unrun in Vitest, logic checked in Node.
+- **Audit visibility caveat:** `audit_log` is readable by administrators and by each user for their own rows only (migration 027). So cashiers see only their own refund requests, and the 14/30-day SMS recall cooldowns and the Day close "recent closes" list only know about the signed-in user's own entries; an admin sees everything. Another nurse texting the same child is not caught.
+- **Staff guides** in `training/` (admin, doctor, nurse, pharmacist, cashier, lab, records officer) written from the screens as built; the trainer should walk each through the browser test script on test patients before go-live. The app has no `receptionist` role in its menu; use records officer.
