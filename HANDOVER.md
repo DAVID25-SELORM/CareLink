@@ -1,83 +1,173 @@
-# CareLink production audit — handover (2026-11-08)
+# CareLink production handover (2026-11-12)
 
-**Verdict: not ready for real patient data yet.** The code-level blockers are fixed and tested. What remains
-needs account decisions (plans, Sentry, MFA), a rehearsed database conversion, and browser acceptance testing.
-**Nothing from this work is committed.** Review `git status`, then commit in logical groups.
+**Verdict: still not ready for real patient data.** The code, the conversion bundle and the rehearsals are ready.
+The blockers that remain are account actions only you can take, plus two checks I could not run from here.
+**Nothing in this work was applied to production.** The live database, Supabase settings and Vercel settings are unchanged.
 
-## 1. State of the live systems (read-only checks, 2026-11-08)
-| Area | State |
+## 1. What I could and could not do
+
+| Phase | Result |
 |---|---|
-| Supabase project `CareLink` (`wjlpywztfjruqnavwsvr`, eu-west-1) | **Free plan**, no point-in-time recovery. Security Advisor: 0 errors, 59 warnings |
-| Migrations 027, 028 | Applied by the owner (027 confirmed via policy list; 028 reported applied, **re-verify** with the query below) |
-| Instance | `platform` mode, one hospital registered (Health Medics, onboarding), 0 patients, 11 staff, 1 platform owner |
-| Schema vs tested fixture | 140 tables; columns and policy counts match, except `audit_log` (expected) |
-| Vercel | Team `david25-selorms-projects`, **Hobby plan**; two CareLink projects (`care-link`, `care-link-l6u9`); `care-link-l6u9` has only the two Supabase variables, **no `VITE_SENTRY_DSN`**, billing address missing |
+| 0 Accounts (Supabase Pro + PITR, SMTP, Sentry, MFA decision) | **Yours.** Needs your billing and DNS. Not done. |
+| 1 Restore rehearsal on a copy | **Not done.** Needs Pro/PITR and your Supabase access. The conversion bundle was rehearsed on a Docker database seeded like production instead (passes). |
+| 1 Live drift check | **Not done.** The Chrome I control is signed into a different Supabase organisation (it shows HealthFlow Pharmacy, not the CareLink project), so it cannot open the CareLink project. Tooling is ready: see section 4. |
+| 1 SECURITY DEFINER review | **Not done.** The 6 flagged functions' names are not in any file I have. A read-only query is ready: `definer-exposure.sql`. |
+| 2 Shared-mode regressions | **Fixed in code** (section 2). |
+| 2 Browser acceptance with two hospitals | **Not done.** Needs a running Supabase (auth + API); only the SQL layer is tested in Docker. |
+| 3 Production conversion window | **Not done, deliberately.** Gated on Phase 0 and 1 and your explicit approval. |
+| 4 Admin creation | **Built, not deployed** (section 2). |
 
-Verify 028: `select policyname from pg_policies where tablename='audit_log' order by 1;` should return only
-`audit_log_insert_self`, `audit_log_no_updates`, `audit_log_select_admin_or_self`, `carelink_tenant_boundary`.
+## 2. What changed in the repository (branch `conversion-readiness`, uncommitted)
 
-## 2. What changed in the repository
-**Fixed**
-- 12 failing tests (stale mocks) → 36 Vitest tests pass, 3 new for MFA. Lint, build, 44 worker Node tests, 20 shared-client Node tests pass.
-- Dependencies: Vite 7, React Router 7, `npm audit fix`; unused `xlsx` and `src/utils/excelExport.js` removed. `npm audit --omit=dev --audit-level=high` passes (6 moderate build-tool findings remain).
-- `vercel.json`: Content-Security-Policy, HSTS, Permissions-Policy, COOP (verified in Chrome against a local server using these headers; not yet on a real deployment).
-- CI (`.github/workflows/ci-cd.yml`): Node 22, runs worker/shared Node tests, secret scan now fails the build, production-only audit.
-- `src/components/MfaGate.jsx`: optional TOTP step-up and enrolment (Settings card). `VITE_REQUIRE_STAFF_MFA=true` forces enrolment. Client-side gate only; server-side enforcement would need `aal2` checks in RLS.
-- Sign-out (and the existing 30-minute idle timeout) clears cached clinical data in the browser; unsynced queued writes are kept.
-- 25 loose root SQL scripts moved to `archive/legacy-sql/` (do not run). `/migrations` remains the schema source, **but the live database has drifted from it** (policies created by hand, `audit_log` only existed in a legacy script).
+- **Shared mode crash fixed.** `NotificationCenter` and `QueueManagement` called `supabase.channel(...)`, which shared mode
+  forbids by throwing, so those components would have crashed on render. New `src/services/liveUpdates.js` uses realtime
+  in dedicated mode and polls every 20 seconds in shared mode. Tests in `src/__tests__/liveUpdates.test.js`.
+- **Shared-mode audit events.** Sign-in is now audited after a hospital is chosen, and sign-out is audited when a
+  hospital is selected (`src/hooks/useAuth.jsx`). Previously both were skipped. Not covered by an automated test.
+- **Create administrator from the console.** Button text is now "Create administrator login and send invitation"
+  (`src/components/SharedHospitalOperations.jsx`). It registers the invitation, then calls the Edge Function
+  `supabase/functions/invite-hospital-admin`, which uses the service key to email an invite link to the hospital's
+  **registered owner email only**. Only a platform owner can call it. The invite link lands on `/reset-password` to set a password.
+  Tests: `tests/invite-hospital-admin.node-test.mjs` (6) and `src/__tests__/SharedHospitalOperations.test.jsx` (3).
+  **Not deployed and never run against a real Supabase project.**
+- **Drift tooling.** `design/shared-tenancy/live-drift-fingerprint.sql`, `drift-compare.mjs` and `drift-expected.tsv`
+  (812 fingerprints from the tested fixture: 407 policies, 45 functions, 79 triggers, 141 grants, 140 RLS flags).
+- `design/shared-tenancy/definer-exposure.sql` for the SECURITY DEFINER review.
 
-**Migrations**
-- `027_audit_and_function_hardening.sql` (applied): `audit_log` created in migrations, audit/report inserts must be attributable, audit rows append-only, `search_path` pinned on 9 functions.
-- `028_drop_legacy_audit_policies.sql` (applied per owner): drops three hand-made policies that let all staff read/forge/delete audit rows.
+## 3. Verified in Docker (disposable databases, no provider access)
 
-**Shared tenancy (drafts, not applied)** in `design/shared-tenancy/`
-- `016_audit_immutability.sql` + `audit-scope-test.sql`: members append only their own audit events, admins read their hospital's trail, no update/delete. Test fails without 016 (verified).
-- `build-conversion-bundle.mjs`, `conversion-preflight.sql`, `conversion-activate.sql`: one atomic conversion file (drafts 001–016 + staff memberships + shared mode switch + postflight checks).
-- `conversion-rehearsal*.sql`, `test-docker.mjs --rehearse-conversion` (`npm run test:conversion`): rehearses the bundle on a disposable database seeded like production. Passes.
-- `CONVERSION_RUNBOOK.md`: live inventory, steps, rollback, known gaps. `READINESS.md` updated.
+- `npm run test:conversion`: PASS (conversion bundle on a production-shaped seed).
+- `node design/shared-tenancy/test-docker.mjs --full-schema`: PASS (all drafts, two hospitals).
+- Edge Function handler: 6 node tests pass. Test results for the app suites are in section 6.
 
-## 3. Can I create different hospitals from the UI?
-- **Today: no, not working isolated hospitals.** The console registers a hospital record; provisioning then targets the old
-  dedicated-project design, which runs in simulation and is unfinished.
-- **After the shared conversion and a shared-mode build** (`VITE_TENANCY_MODE=shared`): yes. The console supports workspace
-  preparation, administrator invitation, verification evidence, owner approval and launch (drafts 012–014, SQL-tested).
-  Browser-level acceptance has not been done.
+## 4. Do these next, in order
 
-## 4. Open items, in order
-**You (accounts/legal)**
-1. Supabase Pro + point-in-time recovery; restore into a new project to prove it. Vercel Pro + billing address.
-2. Create a Sentry project; set `VITE_SENTRY_DSN` in Vercel (no error monitoring in production today).
-3. Pick the production Vercel project; delete the other CareLink project.
-4. Decide MFA enforcement (`VITE_REQUIRE_STAFF_MFA`) after all admins and the platform owner enrol.
-5. Rotate `worker.env`'s Supabase management token if it was ever shared; scope it narrowly. Stop the onboarding worker for shared hospitals.
-6. Ghana Data Protection Commission registration, data-processing agreement per hospital, privacy notice, breach plan, cross-border (eu-west-1) review.
+**You (accounts)**
+1. Supabase **Pro + point-in-time recovery** on the CareLink project. Then restore it into a new project and tell me.
+2. **Custom SMTP** (Resend or Brevo): Authentication, Emails, SMTP. Add `https://care-link-l6u9.vercel.app/reset-password` to the redirect allow-list (done) and raise the email rate limit. The invite and password-reset emails both need this.
+3. Sentry project and `VITE_SENTRY_DSN` in Vercel. Decide `VITE_REQUIRE_STAFF_MFA` after the owner and the Health Medics admin enrol.
+4. Pick one production Vercel project (`care-link-l6u9` vs `care-link`) and remove the double deploy.
 
-**Engineering**
-7. Re-run the drift query on the day; extend it to policy bodies, functions, grants, triggers; bring `/migrations` in line with live.
-8. Review the 6 `SECURITY DEFINER` functions the advisor flags as publicly executable (names not captured).
-9. Browser acceptance of shared mode with two hospitals (registration, email confirmation, invitation, launch, role matrix).
-10. Shared-mode gaps: sign-in/out audit events skipped, storage/realtime denied, offline writes disabled.
-11. Hospital data lifecycle: no backup/retention step before deleting a tenant (HealthFlow's `delete_tenant` is the pattern to avoid).
-12. Remaining moderate audit findings are in Workbox build tooling only.
+**You, with me (needs a Chrome signed into the CareLink Supabase account)**
+5. Run `design/shared-tenancy/live-drift-fingerprint.sql` in the CareLink SQL editor, export the result as CSV, then
+   `node design/shared-tenancy/drift-compare.mjs <file.csv>`. Expected differences: `audit_log` only (migrations 027 and 028).
+   Anything else: stop and tell me.
+6. Run `definer-exposure.sql` and send me the rows.
+7. Verify 028: `select policyname from pg_policies where tablename='audit_log' order by 1;` should return only
+   `audit_log_insert_self`, `audit_log_no_updates`, `audit_log_select_admin_or_self`, `carelink_tenant_boundary`.
 
-## 5. Commands
+**Then**
+8. Deploy the function: `supabase functions deploy invite-hospital-admin`, and set the secret `SITE_URL=https://care-link-l6u9.vercel.app`.
+9. Restore a copy, run the conversion bundle there, build with `VITE_TENANCY_MODE=shared`, and walk the browser flow with two
+   hospitals (register, invite, accept, launch, role matrix, hospital A cannot see hospital B). I have not done this.
+10. Only then follow `design/shared-tenancy/CONVERSION_RUNBOOK.md` for the window. Ask me before any production step.
+
+## 5. Important corrections and limits
+
+- **The live database is in `platform` mode, so hospital staff logins cannot access clinical data until the conversion.**
+  Earlier I suggested creating the Health Medics admin directly in Supabase; that login would be denied. Do not rely on that path.
+- The go-live gate (platform console) lists blockers that cannot be recorded in the current mode: deployment, admin
+  acceptance, account protection and support evidence. They become available in shared mode. The gate was not weakened.
+- Realtime and storage remain denied in shared mode. Queue and notifications now poll instead. Offline writes are still disabled.
+- Password-reset emails do not arrive for most users until SMTP is configured (Supabase's built-in sender only reaches your team).
+- `.claude/` is untracked and was left alone.
+
+## 6. Test results
+
+- Lint: clean. Production build and `VITE_TENANCY_MODE=shared` build: both pass.
+- Node tests (app, worker, shared client, Edge Function handler): 50 of 50 pass.
+- Vitest: all files pass. 12 files (40 tests) passed in the main run. `Login.test.jsx` and `MfaGate.test.jsx` could not
+  start in that run (worker timeout, about 0.5 GB of 12 GB memory free), so they were re-run alone with `--maxWorkers=1`
+  once memory was available: 2 files, 8 tests pass.
+
+Commands that reproduce these:
+
 ```bash
-npm run lint && npx vitest run                 # app tests
-npm run test:shared                            # shared-client + 5 SQL suites (needs Docker)
-node design/shared-tenancy/test-docker.mjs --full-schema   # all drafts, two hospitals
-node design/shared-tenancy/test-docker.mjs --restore       # dump/restore rehearsal
-npm run test:conversion                        # conversion bundle rehearsal
-node design/shared-tenancy/build-conversion-bundle.mjs <hospital-uuid> conversion-bundle.sql
-VITE_TENANCY_MODE=shared npm run build         # shared-mode build
+npm run lint && npx vitest run --maxWorkers=2     # app tests (this machine is busy: default workers time out)
+node --test tests/*.node-test.mjs worker/*.node-test.mjs worker/providers/*.node-test.mjs
+npm run test:conversion
+node design/shared-tenancy/test-docker.mjs --full-schema
+node design/shared-tenancy/drift-compare.mjs expected   # regenerate drift-expected.tsv (Docker)
 ```
-The Docker suites occasionally time out on a slow machine (60 s per Docker call); re-run once.
 
-## 6. Reference: how HealthFlow Pharmacy creates tenants
-Single shared project, `organization_id` on every table, `*_same_org` RLS, super-admin Edge Function `tenant-signup`
-(org → branch → admin login → profile → owner → settings → seed → readiness check, compensating deletes on failure).
-Worth copying: readiness gate and cleanup. Worth fixing there: admin-set passwords, hard-coded delete list with no backup/retention,
-an `audit_logs_insert_all` policy that allows forged audit rows.
+## 7. Branches and deployment state
 
-## 7. Tooling left behind
-Two Chrome tabs opened for the Supabase checks may still be open (closing them timed out). The `.claude/launch.json`
-preview entry I added was removed. Scratch files live under the session scratchpad only.
+- `origin/main` = `c25db42` (password reset page, go-live blocker clarity), deployed by Vercel.
+- `conversion-readiness` holds this work. Merging it to `main` changes the production app (the shared-mode code only
+  activates with `VITE_TENANCY_MODE=shared`; the dedicated-mode behaviour is unchanged apart from audit and polling wrappers).
+
+## 8. Product review for real facilities (2026-11-17)
+
+About 50 modules exist (patients, appointments, queue, triage, OPD encounters, nursing, MAR, wards and beds, lab, radiology,
+pharmacy, theatre, maternity, blood bank, billing, cashier, claims, DHIMS2 export, HR, procurement, portal, telemedicine).
+Breadth is not the blocker. Depth, safety and operations are.
+
+**Built in this pass**
+- Prescribing safety (`src/lib/drugSafety.js`, wired into `Prescriptions.jsx`): checks recorded drug allergies (including
+  drug classes) and common serious interactions before saving; the prescriber must confirm, and overrides are audited.
+  It is a curated list, not a full drug database. Verified by a direct Node run and lint. The Vitest file
+  `src/__tests__/drugSafety.test.js` could not start (worker timeout, low memory), so it is unrun.
+
+**Build status of the original gap list**
+1. Pre-launch blockers: still yours (conversion on a restored copy, Pro and PITR backups, SMTP, Sentry).
+2. Consent and privacy notice: built (migration 029).
+3. SMS reminders: built (migration 030, `send-sms`, `send-appointment-reminders`); provider call never run live.
+4. Mobile money: reference and network required, duplicates refused; payments are cashier-confirmed, no provider API.
+5. Receipts, wristbands, queue tickets, CSV: built (CSV only for the patient register and chronic-care list).
+6. Lab ranges and critical alerts; pharmacy expiry and per-batch stock: built.
+7. Immunisation and child welfare (migration 031) and chronic-care recall: built.
+8. Day close, refunds: built (single-step admin approval, no request queue).
+9. Go-live checklist: built (`/go-live`, admin only); formal staff training material is NOT written.
+
+**Still not built:** provider-connected mobile money collection, WHO growth z-scores, minimum dose gaps in the immunisation
+schedule, a refund request/approve queue, CSV export beyond the patient register, barcode/QR on wristbands, training
+manuals. **Nothing has been tried in a browser** (no test login was available); a two-hospital browser acceptance run is
+the first thing to do on a test copy.
+
+**Market note.** The Ministry of Health has named GHIMS as the authorised system for public facilities (eligibility,
+billing, NHIA claims, referrals). CareLink is best aimed at private hospitals and clinics until its position for public
+facilities is confirmed with NHIA/MoH. Sources: Graphic Online and MyJoyOnline coverage of the GHIMS rollout.
+
+**Added after review (2026-11-17, uncommitted)**
+- Patient consent: registration now requires treatment and privacy consent (optional SMS consent), records notice version, time and recorder, and audits it. Stored as columns on `patients` by `migrations/029_patient_consent.sql` (no new table, so shared-tenancy policies and drift baseline are unaffected). **Apply 029 before deploying.** Until then the app registers without consent fields and warns the user. Existing patients have no consent recorded.
+- Receipts: Cashier "Completed" tab has Print and Download per payment (`generatePaymentReceiptPDF`, amount taken from the payment). Fixed the Billing receipt number (was a full UUID) and the hospital phone/email missing from PDF headers. Not tested in a browser; the PDF table step could not run in Node, the build and lint pass.
+- Not verified: new Vitest file for drug safety; migration 029 not run in Docker (it is plain ALTER TABLE ADD COLUMN IF NOT EXISTS).
+- Lab critical values (`src/lib/labCritical.js`): adult panic limits for Hb, platelets, WBC, potassium, sodium, glucose, calcium and creatinine, applied only when the unit is recognised. Used in Laboratory and Sample Tracking. A critical result shows a red banner, a persistent toast, an urgent notification to the ordering doctor, an audit event, and `result_flag` critical_low/critical_high (already allowed by migration 014). Limits are common adult defaults: have the facility lab lead confirm them. Not tested in a browser; unit logic verified by a direct Node run. `src/__tests__/labCritical.test.js` is unrun (worker timeout).
+- Pharmacy (`src/lib/drugAlerts.js`, `Pharmacy.jsx`): the low-stock and expiry tabs already existed. New: dispensing is now blocked for expired stock, near-expiry (30 days) needs confirmation and is audited, and the overview shows a red banner for expired and out-of-stock drugs. Expiry is per drug record, not per batch: if a facility holds several batches of one drug, record the earliest expiry. Per-batch stock is a larger change still to build. Logic verified by direct Node run; `src/__tests__/drugAlerts.test.js` unrun (worker timeout); lint and build pass.
+- Per-batch stock (`src/lib/drugBatches.js`, `src/components/DrugBatches.jsx`, Pharmacy "Batches" tab): uses the existing `drug_batches` table (already in the live schema and the shared-tenancy manifest, writable by admin and pharmacist), so no migration and no catalog change. Receive a delivery as a batch (opening batch created from existing unbatched stock the first time), see every batch, quarantine, release or recall. Dispensing takes first-expiry-first-out for drugs that have batches, blocks when in-date stock is short, and keeps `drugs.stock` as the total and `drugs.expiry_date` as the earliest live batch. Drugs without batches behave as before. Known limits: client-side sequence with best-effort rollback of batch quantities, not one database transaction (a failure after some drug-stock updates can leave drugs.stock out of step; reconcile in Manage); quarantined stock still counts in `drugs.stock`; no supplier or purchase-order link in the receive form yet; no browser test; `src/__tests__/drugBatches.test.js` unrun (worker timeout), logic verified by direct Node run; lint and build pass.
+- Correction: a `consent_records` table already exists (migration 005/013, in the tenancy manifest) with consent type, method, witness and revoke dates. Registration consent was built as columns on `patients` (029) for a simple required check. If you want withdrawal, witness and per-purpose history, move to `consent_records` later.
+- SMS appointment reminders: Edge Function `supabase/functions/send-appointment-reminders` (handler + 6 passing node tests), button "SMS tomorrow's reminders" on Appointments, and an "Agrees to SMS reminders" tick on the patient page. Texts only patients with recorded SMS consent, reads the phone from the patient record (never from the caller), sends only for scheduled appointments, and never twice (`appointments.reminder_sent_at`, migration 030). The SMS key lives in Edge Function secrets, not the database. **To go live:** apply migrations 029 and 030, create an SMS provider account (Arkesel adapter written; check its current API docs), register a sender ID, set secrets `SITE_URL`, `SMS_API_KEY`, `SMS_SENDER_ID`, run `supabase functions deploy send-appointment-reminders`, then send one test reminder to your own number. Never run against a real provider from here: the provider call is untested. Existing patients have no SMS consent until staff tick it. No automatic daily schedule yet (staff click the button); a Supabase scheduled call can be added later. Whether the hospital header reaches the function in shared mode is unverified.
+- SMS settings page rebuilt (`NotificationSettings.jsx`): provider keys can no longer be entered in the browser (the old page stored them in `notification_settings`, which the browser could read, and never sent anything). It now has Send SMS (patient must have SMS consent; number comes from the patient record), a Sent log (from the audit log: who, when, type and length, never the message text) and a Gateway page explaining the server secrets. New Edge Function `send-sms` (5 node tests) shares a provider adapter and phone helper with the reminder function under `supabase/functions/_shared`. Removed: WhatsApp, templates and the old notification_* tables from this page (they are bound to the old `hospitals`/`users.hospital_id` model and do not fit either mode). Deploy: `supabase functions deploy send-sms` with the same secrets. **Cleanup to do on the live database:** any real keys previously typed into `notification_settings` should be treated as exposed: rotate them, then clear the table. Unverified: provider call, shared-mode header, browser behaviour. The page is admin-only; the function also allows doctor, nurse, records and reception.
+- Lab reference ranges by age and sex (`src/lib/labRanges.js`): haemoglobin, haematocrit, RBC, WBC, creatinine (mg/dL and µmol/L), uric acid, ALT, GGT, ALP and HDL now use child/male/female ranges, applied in Laboratory and Sample Tracking; the report shows the basis, e.g. "12 - 15.5 g/dL (female)". A range is replaced only when the unit matches and the patient's age and/or sex is known; otherwise the catalog default stays. Values are common textbook ranges: **each facility's lab lead must confirm them** against their analyser. Critical-value limits (labCritical) are still adult limits, so children's critical values are not covered. Neonates and pregnancy are not handled. Logic verified by direct Node run (10 checks); `src/__tests__/labRanges.test.js` unrun (worker timeout); lint and build pass; not tried in a browser.
+- **Possible live-schema problem to check:** the schema snapshot of the live database has no `patients.date_of_birth` column, but registration always sends it, and migration 009 is what adds it. If 009 was never applied live, patient registration fails with a column error. Run `select column_name from information_schema.columns where table_name='patients' and column_name='date_of_birth';` on the live project. If empty, apply migration 009. Lab ranges use `age` when date_of_birth is missing, so they work either way.
+- Child welfare and immunisation (`/child-welfare`, `src/pages/ChildWelfare.jsx`, `src/lib/epiSchedule.js`, **migration 031 adds the `immunizations` table**): Ghana GHS schedule (BCG, OPV, Hep B birth, Penta, PCV, Rota, IPV, malaria vaccine, MR, yellow fever, Men A, vitamin A to 5 years, HPV at 9) read from ghs.gov.gh/immunisation on 2026-11-17. Per child: due dates from birth date, status (given, due, due soon, overdue after 28 days, rotavirus past age limit), record a dose (date, batch, site, notes; one row per vaccine per child; audited), weight entries with a drop alert, and an overdue list for children under 5 with guardian phone for tracing. Needs `patients.date_of_birth` (migration 009); if missing, children show "no birth date" and saving one fails with a message. **The source page repeated the 6-week doses under "At birth"; I treated birth as BCG, OPV0, Hep B only. Have your immunisation lead confirm the whole schedule.** Not built: weight-for-age growth scoring (needs official WHO tables), recording doses given elsewhere with source, SMS recall to guardians (could reuse send-sms), catch-up minimum intervals.
+- Shared-tenancy bookkeeping for the new table: added `immunizations` to the 007 manifest, 008 role list, module-permissions, table-inventory, empty-database check, schema and access catalogs; regenerated the fixture and drift baseline (818 fingerprints, +6). Docker: full-schema test and conversion rehearsal both PASS with it. The live drift check will report these 6 as missing until migration 031 is applied. The Docker harness timeout is now configurable (`DOCKER_TIMEOUT_MS`) because it failed at 60s on this memory-starved PC. Node tests 37/37, lint and build pass; `src/__tests__/epiSchedule.test.js` unrun (worker timeout); page not tried in a browser.
+
+
+### Immunisation SMS recall
+The Overdue list on the Child Welfare page can text a guardian ("Send SMS") or all eligible guardians ("Text all eligible"). It reuses the `send-sms` function, so consent and the phone number come from the patient record on the server. The text never names vaccines. Each send is audited as `send_sms` with kind `immunisation_recall`; children texted in the last 14 days are skipped or need a confirm. No database change. Recall consent is the SMS consent on the child record (guardian phone), which staff must confirm is the guardian's number. `src/__tests__/immunisationRecall.test.js` is unrun in Vitest (worker timeout); the same logic was checked in Node. Not tried in a browser; needs `send-sms` deployed with provider secrets.
+
+
+### Mobile money at the cashier
+Mobile money and card payments now require a transaction ID/receipt number (6-30 letters/digits, normalised to upper case) and a mobile money network; a reference already on another payment is refused (`src/lib/paymentReference.js`, `Cashier.jsx`). Payments are still **confirmed by the cashier** against the provider confirmation SMS or wallet statement; no provider API (MTN MoMo, Hubtel, Paystack) is connected, so there is no automatic prompt-to-pay or reconciliation. The duplicate check is application-side only (two cashiers saving the same reference at the same instant could both pass); a unique index would need existing data checked first. `src/__tests__/paymentReference.test.js` unrun in Vitest; same logic checked in Node. Not tried in a browser.
+
+
+### Day close and refunds
+Cashier has a **Day close** tab (`src/components/DayClose.jsx`, `src/lib/dayClose.js`): totals by method for a chosen day, cash expected vs counted, a required note for any difference, recorded in the audit log as `day_close`. Refunds: administrator-only "Refund" on the Completed tab, reason required, only while the prescription is still `paid` (not dispensed); payment becomes `refunded`, prescription returns to `pending`, audited as `refund_payment`. No new table, so no tenancy changes. Limits: refund is single-step (the admin who clicks is the approver, no separate request/approve queue); insurance claims are not reversed; dispensed items cannot be refunded here. `src/__tests__/dayClose.test.js` unrun in Vitest, logic checked in Node. Not tried in a browser; whether the `payments` update policy allows the admin to set status must be confirmed on a test copy.
+
+
+### Front desk and follow-up additions
+- **Queue ticket** (80 mm, first name only, no clinical detail) on each queue row and **patient wristband** (100x25 mm: name, ID, age/sex, active allergies, or "no known allergies recorded") on the patient page; `generateQueueTicketPDF` / `generateWristbandPDF` in `pdfService.js`. Page sizes verified in Node; real printer output and label stock fit were not tested. No barcode/QR yet.
+- **Chronic Care Follow-up** (`/chronic-care`, `src/lib/chronicCare.js`): patients with hypertension, diabetes, asthma, COPD, epilepsy, sickle cell, CKD or heart failure (ICD-10 prefixes, or diagnosis flagged chronic) not seen for 30-180 days; SMS reminder via `send-sms` that never names the condition (30-day cooldown, audited as `send_sms` kind `chronic_recall`), CSV export. HIV is deliberately excluded. The ICD list and the 90-day default need clinical sign-off. Nothing in the UI sets `is_chronic`, so the ICD list does the work.
+- **CSV export**: `src/lib/csvExport.js` (formula-safe, UTF-8 BOM) and an administrator-only **Export CSV** of the patient register on the Patients page, confirmed and audited as `export_patient_register`. Other modules have no export yet.
+- Tests `chronicCare.test.js` unrun in Vitest; logic checked in Node. Not tried in a browser.
+
+
+### Go-live checklist page
+`/go-live` (admin): reads profile, roles, drugs, batches, fees, patients, a sent SMS and a day close from the facility's own data, plus eight manual sign-offs (ticks saved in that browser only). `src/lib/goLive.js`; `goLive.test.js` unrun in Vitest, logic checked in Node.
+
+
+### Refund request queue and staff guides
+- **Refund requests** (Cashier tab): non-admin staff use **Request refund** on a completed payment; an administrator approves or declines in **Refund requests**. No new table: a request is an `audit_log` entry (`refund_request`), approval is the existing refund (`refund_payment`, requester recorded), a decline is a `refund_reject` entry plus a dated line in the payment notes so the cashier can see the outcome. Admins can still refund directly from Completed (one-step, audited); that path has no second person. Refund still needs the medicine to be undispensed. Code: `src/lib/refunds.js`, `src/services/refundService.js`, `src/components/RefundRequests.jsx`; `refunds.test.js` unrun in Vitest, logic checked in Node.
+- **Audit visibility caveat:** `audit_log` is readable by administrators and by each user for their own rows only (migration 027). So cashiers see only their own refund requests, and the 14/30-day SMS recall cooldowns and the Day close "recent closes" list only know about the signed-in user's own entries; an admin sees everything. Another nurse texting the same child is not caught.
+- **Staff guides** in `training/` (admin, doctor, nurse, pharmacist, cashier, lab, records officer) written from the screens as built; the trainer should walk each through the browser test script on test patients before go-live. The app has no `receptionist` role in its menu; use records officer.

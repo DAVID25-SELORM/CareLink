@@ -191,6 +191,10 @@
       "has_rows": false
     },
     {
+      "table_name": "immunizations",
+      "has_rows": false
+    },
+    {
       "table_name": "integration_endpoints",
       "has_rows": false
     },

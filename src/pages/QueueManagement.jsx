@@ -5,6 +5,9 @@ import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
 import { createEncounter } from '../services/encounterService'
+import { subscribeToTable } from '../services/liveUpdates'
+import { generateQueueTicketPDF, printPDF } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 
 /**
  * Queue Management System
@@ -14,6 +17,7 @@ import { createEncounter } from '../services/encounterService'
 
 const QueueManagement = () => {
   const { user, userRole } = useAuth()
+  const { branding } = useHospitalBranding()
   const navigate = useNavigate()
   const location = useLocation()
   const [activeTab, setActiveTab] = useState('opd')
@@ -51,21 +55,8 @@ const QueueManagement = () => {
     fetchQueues()
     fetchPatients()
 
-    // Real-time subscription
-    const subscription = supabase
-      .channel('queue_changes'    )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'queue_management'
-        },
-        () => fetchQueues()
-      )
-      .subscribe()
-
-    return () => subscription.unsubscribe()
+    // Real-time subscription (polling in shared hospital mode)
+    return subscribeToTable({ channel: 'queue_changes', table: 'queue_management', refresh: fetchQueues, onChange: () => fetchQueues() })
   }, [activeTab])
 
   const fetchQueues = async () => {
@@ -401,6 +392,12 @@ const QueueManagement = () => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
+                            <button
+                              onClick={() => printPDF(generateQueueTicketPDF(queue, branding))}
+                              className="text-slate-600 hover:text-slate-800 text-sm font-medium"
+                            >
+                              Ticket
+                            </button>
                             {queue.status === 'waiting' && (
                               <button
                                 onClick={() => updateQueueStatus(queue.id, 'called')}

@@ -8,6 +8,9 @@ import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import PDFButton from '../components/PDFButton'
 import FileUpload from '../components/FileUpload'
 import { toast } from 'react-toastify'
+import { useAuth } from '../hooks/useAuth'
+import { logAuditEvent } from '../services/auditLog'
+import { downloadCsv } from '../lib/csvExport'
 
 /**
  * Patients List Page
@@ -17,6 +20,8 @@ import { toast } from 'react-toastify'
 const Patients = () => {
   const navigate = useNavigate()
   const { branding } = useHospitalBranding()
+  const { user, userRole } = useAuth()
+  const [exporting, setExporting] = useState(false)
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -26,6 +31,22 @@ const Patients = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 20
+
+  // Full register export for the administrator (reports, backups, migrations). Audited because it moves personal data.
+  const exportRegister = async () => {
+    if (!window.confirm('Export every patient record to a CSV file? The file contains personal data; keep it secure.')) return
+    setExporting(true)
+    const { data, error } = await supabase.from('patients').select('patient_id, name, gender, age, date_of_birth, phone, address, nhis_number, insurance_type, created_at').order('created_at', { ascending: true }).limit(50000)
+    setExporting(false)
+    if (error) { toast.error('Could not export the register'); return }
+    downloadCsv(`patient-register-${new Date().toISOString().slice(0, 10)}.csv`, [
+      { label: 'Patient ID', key: 'patient_id' }, { label: 'Name', key: 'name' }, { label: 'Gender', key: 'gender' }, { label: 'Age', key: 'age' },
+      { label: 'Date of birth', key: 'date_of_birth' }, { label: 'Phone', key: 'phone' }, { label: 'Address', key: 'address' },
+      { label: 'NHIS number', key: 'nhis_number' }, { label: 'Insurance', key: 'insurance_type' }, { label: 'Registered', key: 'created_at' },
+    ], data || [])
+    await logAuditEvent({ user, action: 'export_patient_register', tableName: 'patients', newValues: { rows: (data || []).length } })
+    toast.success(`${(data || []).length} patients exported`)
+  }
 
   useEffect(() => {
     fetchPatients()
@@ -124,6 +145,11 @@ const Patients = () => {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
             />
           </div>
+          {userRole === 'admin' && (
+            <button type="button" onClick={exportRegister} disabled={exporting} className="w-full sm:w-auto min-h-[44px] rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+              {exporting ? 'Exporting...' : 'Export CSV'}
+            </button>
+          )}
           <Link
             to="/patients/register"
             className="w-full sm:w-auto min-h-[44px] flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-center text-white transition hover:bg-blue-600 active:bg-blue-700"

@@ -3,6 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { supabase } from '../supabaseClient'
+import { useAuth } from '../hooks/useAuth'
+import { logAuditEvent } from '../services/auditLog'
+import { generateWristbandPDF, printPDF } from '../services/pdfService'
+import { getPatientAllergies } from '../services/encounterService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 
 /**
  * Patient Detail Page
@@ -13,6 +18,8 @@ import { supabase } from '../supabaseClient'
 const PatientDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const { branding } = useHospitalBranding()
   const [patient, setPatient] = useState(null)
   const [prescriptions, setPrescriptions] = useState([])
   const [labTests, setLabTests] = useState([])
@@ -97,6 +104,26 @@ const PatientDetail = () => {
     { id: 'vitals', label: `Vitals (${vitals.length})` },
   ]
 
+  const printWristband = async () => {
+    const { data, error } = await getPatientAllergies(patient.id)
+    if (error && !window.confirm('Allergies could not be loaded, so the wristband would show none. Print anyway?')) return
+    printPDF(generateWristbandPDF(patient, error ? [] : data || [], branding))
+  }
+
+  const toggleSmsConsent = async (granted) => {
+    const { error } = await supabase
+      .from('patients')
+      .update({ consent_sms: granted, consent_recorded_at: new Date().toISOString(), consent_recorded_by: user?.email || null })
+      .eq('id', patient.id)
+    if (error) {
+      toast.error('Could not save SMS consent. Check that migration 029 is applied.')
+      return
+    }
+    setPatient({ ...patient, consent_sms: granted })
+    await logAuditEvent({ user, action: 'record_consent', tableName: 'patients', recordId: patient.id, newValues: { consent_sms: granted } })
+    toast.success(granted ? 'SMS reminders allowed' : 'SMS reminders turned off')
+  }
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -128,6 +155,7 @@ const PatientDetail = () => {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-slate-800">{patient.name}</h1>
+                  <button type="button" onClick={printWristband} className="text-xs text-blue-600 hover:underline mt-0.5">Print wristband</button>
                   <p className="text-slate-500 text-sm mt-0.5">
                     ID: {patient.patient_id || patient.id.slice(0, 8).toUpperCase()}
                   </p>
@@ -145,6 +173,14 @@ const PatientDetail = () => {
                 <div>
                   <p className="text-xs text-slate-400 uppercase tracking-wide">Phone</p>
                   <p className="font-medium text-slate-700">{patient.phone || '—'}</p>
+                  <label className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                    <input
+                      type="checkbox"
+                      checked={patient.consent_sms === true}
+                      onChange={(e) => toggleSmsConsent(e.target.checked)}
+                    />
+                    Agrees to SMS reminders
+                  </label>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase tracking-wide">Address</p>

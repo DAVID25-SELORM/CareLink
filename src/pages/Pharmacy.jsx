@@ -3,6 +3,9 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
+import { checkDispensing, daysToExpiry, NEAR_EXPIRY_DAYS } from '../lib/drugAlerts'
+import { allocateFefo, earliestBatchExpiry } from '../lib/drugBatches'
+import DrugBatches from '../components/DrugBatches'
 import { supabase } from '../supabaseClient'
 import {
   pingHealthFlow,
@@ -113,7 +116,7 @@ const Pharmacy = () => {
         .from('prescription_items')
         .select(`
           *,
-          drugs (name, price, stock)
+          drugs (name, price, stock, expiry_date)
         `)
         .eq('prescription_id', prescriptionId)
 
@@ -242,12 +245,88 @@ const Pharmacy = () => {
       return
     }
 
+    // Drugs with batch records are dispensed first-expiry-first-out; others use the drug-level expiry.
+    const drugIds = [...new Set(prescriptionItems.map((item) => item.drug_id))]
+    const { data: batchRows, error: batchError } = await supabase
+      .from('drug_batches')
+      .select('id, drug_id, batch_number, expiry_date, quantity_remaining, status')
+      .in('drug_id', drugIds)
+      .neq('status', 'depleted')
+    if (batchError) {
+      toast.error('Could not check batch stock. Try again.')
+      return
+    }
+    const plans = new Map()
+    const batchRowsByDrug = new Map()
+    const batchBlocked = []
+    const batchWarnings = []
+    const unbatchedItems = []
+    for (const item of prescriptionItems) {
+      const rows = (batchRows || []).filter((row) => row.drug_id === item.drug_id)
+      if (rows.length === 0) {
+        unbatchedItems.push(item)
+        continue
+      }
+      const plan = allocateFefo(rows, item.quantity)
+      if (plan.shortfall > 0) {
+        batchBlocked.push(`${item.drugs.name}: ${item.quantity} needed but only ${plan.usable} are in date and available.`)
+        continue
+      }
+      plans.set(item.id, plan)
+      batchRowsByDrug.set(item.drug_id, rows)
+      for (const allocation of plan.allocations) {
+        const days = daysToExpiry(allocation.expiry_date)
+        if (days !== null && days <= NEAR_EXPIRY_DAYS) {
+          batchWarnings.push(`${item.drugs.name} batch ${allocation.batch_number} expires in ${days} day${days === 1 ? '' : 's'}.`)
+        }
+      }
+    }
+    const unbatched = checkDispensing(unbatchedItems)
+    const blocked = [...batchBlocked, ...unbatched.blocked]
+    const warnings = [...batchWarnings, ...unbatched.warnings]
+    if (blocked.length > 0) {
+      toast.error(`Cannot dispense expired stock. ${blocked.join(' ')}`)
+      return
+    }
+    if (warnings.length > 0) {
+      const message = ['Near-expiry warning:', ...warnings.map((w) => '- ' + w), '', 'Dispense anyway?'].join(String.fromCharCode(10))
+      const proceed = window.confirm(message)
+      if (!proceed) return
+      await logAuditEvent({
+        user,
+        action: 'dispense_near_expiry',
+        tableName: 'prescriptions',
+        recordId: selectedPrescription.id,
+        newValues: { warnings },
+      })
+    }
+
+    const appliedBatches = []
     try {
       for (const item of prescriptionItems) {
-        const newStock = Number(item.drugs.stock) - Number(item.quantity)
+        const plan = plans.get(item.id)
+        const update = { stock: Number(item.drugs.stock) - Number(item.quantity) }
+        if (plan) {
+          for (const allocation of plan.allocations) {
+            const before = (batchRowsByDrug.get(item.drug_id) || []).find((row) => row.id === allocation.batch_id)
+            const { error: batchUpdateError } = await supabase
+              .from('drug_batches')
+              .update({
+                quantity_remaining: allocation.remaining_after,
+                ...(allocation.remaining_after === 0 ? { status: 'depleted' } : {}),
+              })
+              .eq('id', allocation.batch_id)
+            if (batchUpdateError) throw batchUpdateError
+            appliedBatches.push({ id: allocation.batch_id, quantity_remaining: Number(before.quantity_remaining), status: before.status })
+            if (before) before.quantity_remaining = allocation.remaining_after
+          }
+          const rows = batchRowsByDrug.get(item.drug_id) || []
+          update.expiry_date = earliestBatchExpiry(rows.map((row) => (row.quantity_remaining === 0 ? { ...row, status: 'depleted' } : row)))
+        }
+        const newStock = update.stock
         const { error: stockError } = await supabase
           .from('drugs')
-          .update({ stock: newStock })
+          .update(update)
           .eq('id', item.drug_id)
 
         if (stockError) throw stockError
@@ -303,6 +382,10 @@ const Pharmacy = () => {
       fetchAllData()
     } catch (error) {
       console.error('Error dispensing prescription:', error)
+      // Put batch quantities back so stock is not lost when a later step fails.
+      for (const undo of appliedBatches.reverse()) {
+        await supabase.from('drug_batches').update({ quantity_remaining: undo.quantity_remaining, status: undo.status }).eq('id', undo.id)
+      }
       toast.error('Failed to dispense prescription')
     }
   }
@@ -478,6 +561,7 @@ const Pharmacy = () => {
     { id: 'inventory', label: 'Inventory', icon: '📦' },
     { id: 'low-stock', label: 'Low Stock', icon: '⚠️', badge: lowStockDrugs.length },
     { id: 'expiry', label: 'Expiry', icon: '⏰', badge: expiringDrugs.length + expiredDrugs.length },
+    { id: 'batches', label: 'Batches', icon: '🏷️' },
     { id: 'manage-drugs', label: 'Manage', icon: '⚙️' }
   ]
 
@@ -572,6 +656,23 @@ const Pharmacy = () => {
                   <p className="text-purple-100 text-sm mt-1">Prescriptions</p>
                 </div>
               </div>
+
+              {(expiredDrugs.length > 0 || outOfStockDrugs.length > 0) && (
+                <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  {expiredDrugs.length > 0 && (
+                    <p>
+                      <strong>{expiredDrugs.length} expired drug{expiredDrugs.length > 1 ? 's' : ''}</strong> still in stock. They cannot be dispensed. Remove them from the shelf and write them off.{' '}
+                      <button type="button" className="underline" onClick={() => setActiveTab('expiry')}>View expiry list</button>
+                    </p>
+                  )}
+                  {outOfStockDrugs.length > 0 && (
+                    <p>
+                      <strong>{outOfStockDrugs.length} out of stock.</strong>{' '}
+                      <button type="button" className="underline" onClick={() => setActiveTab('low-stock')}>View low stock</button>
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1014,6 +1115,8 @@ const Pharmacy = () => {
           )}
 
           {/* MANAGE DRUGS TAB */}
+          {activeTab === 'batches' && (<DrugBatches drugs={drugs} user={user} onChanged={fetchDrugs} />)}
+
           {activeTab === 'manage-drugs' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">

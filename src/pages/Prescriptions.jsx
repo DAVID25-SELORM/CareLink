@@ -9,6 +9,8 @@ import { generatePrescriptionPDF, downloadPDF, printPDF } from '../services/pdfS
 import { useHospitalBranding } from '../hooks/useHospitalBranding'
 import PDFButton from '../components/PDFButton'
 import { getEncounterCcCode } from '../services/nhisCcCodeService'
+import { getPatientAllergies } from '../services/encounterService'
+import { checkPrescriptionSafety } from '../lib/drugSafety'
 
 const createEmptyItem = () => ({
   drug_id: '',
@@ -239,6 +241,27 @@ const Prescriptions = () => {
     setSaving(true)
 
     try {
+      const allergyResult = await getPatientAllergies(formData.patient_id)
+      const names = formData.items.map((item) => drugs.find((drug) => drug.id === item.drug_id)?.name)
+      const findings = checkPrescriptionSafety({ drugNames: names, allergies: allergyResult.data || [] })
+      const lookupFailed = Boolean(allergyResult.error)
+      if (findings.length > 0 || lookupFailed) {
+        const lines = findings.map((f) => `- [${f.level.toUpperCase()}] ${f.message}`)
+        if (lookupFailed) lines.push('- Could not load this patient\'s allergy record. Check it manually.')
+        const proceed = window.confirm(`Safety warnings:\n${lines.join('\n')}\n\nPrescribe anyway?`)
+        if (!proceed) {
+          setSaving(false)
+          return
+        }
+        await logAuditEvent({
+          user,
+          action: 'prescribe_safety_override',
+          tableName: 'prescriptions',
+          recordId: formData.patient_id,
+          newValues: { warnings: findings.map((f) => f.message), allergy_lookup_failed: lookupFailed },
+        })
+      }
+
       const selectedDoctor =
         doctors.find((doctor) => doctor.id === formData.doctor_id) ||
         currentDoctorRecord ||

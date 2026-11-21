@@ -47,6 +47,7 @@ DO $$ DECLARE spec record; p record; BEGIN
 ('hr_leaves',ARRAY['admin']::text[],ARRAY['admin']::text[]),
 ('hr_payroll',ARRAY['admin']::text[],ARRAY['admin']::text[]),
 ('hr_staff',ARRAY['admin']::text[],ARRAY['admin']::text[]),
+('immunizations',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin','doctor','nurse']::text[]),
 ('integration_endpoints',ARRAY['admin']::text[],ARRAY['admin']::text[]),
 ('inventory_categories',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),
 ('inventory_items',ARRAY['admin','cashier','doctor','nurse','pharmacist','records_officer']::text[],ARRAY['admin']::text[]),

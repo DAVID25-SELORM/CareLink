@@ -15,8 +15,8 @@ const getHospitalConfig = (branding = {}) => ({
   branch: branding.branchName || '',
   platform: branding.platformName || 'CareLink HMS',
   address: branding.address || '',
-  phone: branding.phone || '',
-  email: branding.email || ''
+  phone: branding.phone || branding.contactPhone || '',
+  email: branding.email || branding.contactEmail || ''
 })
 
 // Add header to PDF
@@ -152,6 +152,66 @@ export const generatePrescriptionPDF = (prescription, items, branding = {}) => {
 }
 
 /**
+ * Short, readable receipt number from a payment id (UUID or number).
+ */
+export const receiptNumber = (id) => {
+  const text = String(id ?? '').replace(/[^a-zA-Z0-9]/g, '')
+  return `RCP-${(text.slice(-8) || '0').toUpperCase().padStart(8, '0')}`
+}
+
+/**
+ * Generate a receipt from a payment record alone (what the cashier actually collected).
+ */
+export const generatePaymentReceiptPDF = (payment, branding = {}) => {
+  const doc = new jsPDF()
+  const config = getHospitalConfig(branding)
+  const when = new Date(payment.created_at || Date.now())
+  const amount = Number(payment.amount || 0)
+
+  let yPos = addPDFHeader(doc, config, 'PAYMENT RECEIPT') + 10
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Receipt #: ${receiptNumber(payment.id)}`, 15, yPos)
+  yPos += 5
+  doc.text(`Date: ${when.toLocaleDateString('en-GB')}  ${when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`, 15, yPos)
+  yPos += 8
+  doc.text(`Patient: ${payment.patients?.name || 'N/A'}`, 15, yPos)
+  yPos += 5
+  doc.text(`Received from: ${payment.paid_by || payment.patients?.name || 'N/A'}`, 15, yPos)
+  if (payment.prescriptions?.diagnosis) {
+    yPos += 5
+    doc.text(`For: ${payment.prescriptions.diagnosis}`, 15, yPos)
+  }
+
+  const method = payment.payment_method === 'momo' && payment.momo_provider
+    ? `MOBILE MONEY (${String(payment.momo_provider).toUpperCase()})`
+    : String(payment.payment_method || 'N/A').toUpperCase()
+  doc.autoTable({
+    startY: yPos + 8,
+    head: [['Description', 'Method', 'Reference', 'Amount']],
+    body: [[
+      payment.prescriptions?.diagnosis ? 'Pharmacy / treatment charges' : 'Hospital charges',
+      method,
+      payment.transaction_reference || '-',
+      `GH₵ ${amount.toFixed(2)}`,
+    ]],
+    foot: [[{ content: 'TOTAL PAID', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } }, `GH₵ ${amount.toFixed(2)}`]],
+    theme: 'striped',
+    headStyles: { fillColor: [37, 99, 235] },
+    footStyles: { fillColor: [243, 244, 246], textColor: [0, 0, 0], fontStyle: 'bold' },
+  })
+
+  yPos = doc.lastAutoTable.finalY + 12
+  doc.setFont('helvetica', 'bold')
+  doc.text(`Status: ${String(payment.status || 'completed').toUpperCase()}`, 15, yPos)
+  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(9)
+  doc.text('Keep this receipt as proof of payment.', doc.internal.pageSize.getWidth() / 2, yPos + 14, { align: 'center' })
+  addPDFFooter(doc, config)
+  return doc
+}
+
+/**
  * Generate Billing Receipt PDF
  */
 export const generateBillingReceiptPDF = (prescription, items, payment, branding = {}) => {
@@ -163,7 +223,7 @@ export const generateBillingReceiptPDF = (prescription, items, payment, branding
   // Receipt Details
   yPos += 10
   doc.setFontSize(10)
-  doc.text(`Receipt #: RCP-${payment.id?.toString().padStart(6, '0')}`, 15, yPos)
+  doc.text(`Receipt #: ${receiptNumber(payment.id)}`, 15, yPos)
   yPos += 5
   doc.text(`Date: ${new Date(payment.created_at || Date.now()).toLocaleDateString()}`, 15, yPos)
   yPos += 5
@@ -582,4 +642,56 @@ export const printPDF = (doc) => {
     document.body.removeChild(iframe)
     URL.revokeObjectURL(url)
   }, 1000)
+}
+
+/**
+ * Queue ticket (80 mm wide, thermal-friendly). Shows the first name only so a ticket left on a seat does not
+ * expose a full name, and no clinical detail.
+ */
+export const generateQueueTicketPDF = (queue, branding = {}) => {
+  const config = getHospitalConfig(branding)
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [80, 70] })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.text(config.name, 40, 8, { align: 'center', maxWidth: 72 })
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.text(String(queue.department || '').toUpperCase(), 40, 15, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(40)
+  doc.text(String(queue.queue_number ?? '-'), 40, 36, { align: 'center' })
+  doc.setFontSize(10)
+  doc.text(String(queue.patients?.name || '').trim().split(/\s+/)[0] || '', 40, 45, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  if (queue.priority && queue.priority !== 'normal') doc.text(`Priority: ${String(queue.priority).toUpperCase()}`, 40, 51, { align: 'center' })
+  const when = new Date(queue.checked_in_at || Date.now())
+  doc.text(`${when.toLocaleDateString('en-GB')} ${when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`, 40, 58, { align: 'center' })
+  doc.text('Please wait to be called.', 40, 64, { align: 'center' })
+  return doc
+}
+
+/**
+ * Patient wristband label (landscape, 100 x 25 mm). Name, ID, age/sex and active allergies; allergies are the
+ * reason a wristband exists, so they are printed in capitals when present.
+ */
+export const generateWristbandPDF = (patient, allergies = [], branding = {}) => {
+  const config = getHospitalConfig(branding)
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [100, 25] })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  doc.text(String(patient.name || '').toUpperCase(), 3, 7, { maxWidth: 94 })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  const id = patient.patient_id || String(patient.id || '').slice(0, 8).toUpperCase()
+  const age = patient.date_of_birth ? `DOB ${String(patient.date_of_birth).slice(0, 10)}` : patient.age != null && patient.age !== '' ? `${patient.age} yrs` : ''
+  doc.text([`ID ${id}`, age, patient.gender ? String(patient.gender).toUpperCase() : ''].filter(Boolean).join('   '), 3, 13)
+  const names = allergies.map((a) => a.allergen_name).filter(Boolean)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.text(names.length ? `ALLERGY: ${names.join(', ').toUpperCase()}` : 'NO KNOWN ALLERGIES RECORDED', 3, 19, { maxWidth: 94 })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6)
+  doc.text(config.name, 3, 23)
+  return doc
 }

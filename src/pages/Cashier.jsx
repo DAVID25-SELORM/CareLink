@@ -3,7 +3,15 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../hooks/useAuth'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { logAuditEvent } from '../services/auditLog'
+import { checkPaymentReference, REFERENCE_REQUIRED_METHODS } from '../lib/paymentReference'
 import { supabase } from '../supabaseClient'
+import { generatePaymentReceiptPDF, downloadPDF, printPDF, receiptNumber } from '../services/pdfService'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
+import DayClose from '../components/DayClose'
+import RefundRequests from '../components/RefundRequests'
+import { refundBlocker } from '../lib/dayClose'
+import { checkReason, requestBlocker } from '../lib/refunds'
+import { executeRefund, requestRefund } from '../services/refundService'
 
 /**
  * Cashier Page
@@ -12,9 +20,10 @@ import { supabase } from '../supabaseClient'
  */
 
 const Cashier = () => {
-  const { user } = useAuth()
+  const { user, userRole } = useAuth()
   const [pendingBills, setPendingBills] = useState([])
   const [completedPayments, setCompletedPayments] = useState([])
+  const { branding } = useHospitalBranding()
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('pending') // 'pending' or 'completed'
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -80,7 +89,8 @@ const Cashier = () => {
           patients (name, phone),
           prescriptions (
             diagnosis,
-            doctor_name
+            doctor_name,
+            status
           )
         `)
         .eq('status', 'completed')
@@ -106,10 +116,48 @@ const Cashier = () => {
     setShowPaymentModal(true)
   }
 
+  // Direct refund (administrator). Cashiers use "Request refund", which the administrator approves in the Refund requests tab.
+  const refundPayment = async (payment) => {
+    const blocker = refundBlocker(payment, userRole)
+    if (blocker) { toast.error(blocker); return }
+    const check = checkReason(window.prompt(`Refund GH₵ ${Number(payment.amount).toFixed(2)} to ${payment.patients?.name || 'the patient'}? Enter the reason:`))
+    if (!check.ok) { toast.error(check.error); return }
+    try {
+      await executeRefund({ payment, reason: check.reason, user })
+      toast.success('Payment refunded. Hand the money back and keep the reason on file.')
+      fetchPendingBills()
+      fetchCompletedPayments()
+    } catch (error) {
+      console.error('Refund failed:', error)
+      toast.error(error.message || 'Could not refund the payment')
+    }
+  }
+
+  const askForRefund = async (payment) => {
+    const blocker = requestBlocker(payment)
+    if (blocker) { toast.error(blocker); return }
+    const check = checkReason(window.prompt(`Request a refund of GH₵ ${Number(payment.amount).toFixed(2)} for ${payment.patients?.name || 'the patient'}? Enter the reason:`))
+    if (!check.ok) { toast.error(check.error); return }
+    try {
+      await requestRefund({ payment, reason: check.reason, user })
+      toast.success('Request sent. An administrator will approve or decline it.')
+    } catch (error) {
+      toast.error('Could not send the request')
+    }
+  }
+
   const handlePayment = async (e) => {
     e.preventDefault()
 
+    const check = checkPaymentReference({ method: paymentData.payment_method, provider: paymentData.momo_provider, reference: paymentData.transaction_reference })
+    if (!check.ok) { toast.error(check.error); return }
+
     try {
+      if (check.reference && REFERENCE_REQUIRED_METHODS.includes(paymentData.payment_method)) {
+        const { data: used, error: dupError } = await supabase.from('payments').select('id').eq('transaction_reference', check.reference).limit(1)
+        if (dupError) throw dupError
+        if (used && used.length > 0) { toast.error('This reference was already used on another payment. Check the confirmation message.'); return }
+      }
       // 1. Create payment record
       const paymentPayload = {
         patient_id: selectedBill.patient_id,
@@ -118,7 +166,7 @@ const Cashier = () => {
         amount: selectedBill.total_amount,
         payment_method: paymentData.payment_method,
         momo_provider: paymentData.payment_method === 'momo' ? paymentData.momo_provider : null,
-        transaction_reference: paymentData.transaction_reference || null,
+        transaction_reference: check.reference,
         status: 'completed',
         paid_by: paymentData.paid_by,
         notes: paymentData.notes
@@ -196,6 +244,26 @@ const Cashier = () => {
               }`}
             >
               Completed
+            </button>
+            <button
+              onClick={() => setActiveTab('dayclose')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'dayclose'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Day close
+            </button>
+            <button
+              onClick={() => setActiveTab('refunds')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'refunds'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Refund requests
             </button>
           </div>
         </div>
@@ -337,6 +405,9 @@ const Cashier = () => {
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Reference
                     </th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Receipt
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-100">
@@ -369,6 +440,16 @@ const Cashier = () => {
                       <td className="px-6 py-4 text-xs text-slate-500 font-mono">
                         {payment.transaction_reference || '-'}
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs font-mono text-slate-500">{receiptNumber(payment.id)}</div>
+                        <div className="flex gap-2 mt-1">
+                          <button type="button" onClick={() => printPDF(generatePaymentReceiptPDF(payment, branding))} className="text-xs text-blue-600 hover:underline">Print</button>
+                          <button type="button" onClick={() => downloadPDF(generatePaymentReceiptPDF(payment, branding), `${receiptNumber(payment.id)}.pdf`)} className="text-xs text-blue-600 hover:underline">Download</button>
+                          {userRole === 'admin'
+                            ? <button type="button" onClick={() => refundPayment(payment)} className="text-xs text-red-600 hover:underline">Refund</button>
+                            : <button type="button" onClick={() => askForRefund(payment)} className="text-xs text-red-600 hover:underline">Request refund</button>}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -376,6 +457,9 @@ const Cashier = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'dayclose' && <DayClose user={user} />}
+        {activeTab === 'refunds' && <RefundRequests user={user} isAdmin={userRole === 'admin'} onChanged={() => { fetchPendingBills(); fetchCompletedPayments() }} />}
 
         {/* Payment Modal */}
         {showPaymentModal && selectedBill && (
@@ -480,15 +564,19 @@ const Cashier = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Transaction Reference
+                        {['momo', 'card'].includes(paymentData.payment_method) ? (paymentData.payment_method === 'momo' ? 'MoMo Transaction ID *' : 'Card Receipt Number *') : 'Transaction Reference'}
                       </label>
                       <input
                         type="text"
                         value={paymentData.transaction_reference}
                         onChange={(e) => setPaymentData({ ...paymentData, transaction_reference: e.target.value })}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        required={['momo', 'card'].includes(paymentData.payment_method)}
                         placeholder="Receipt/Ref number"
                       />
+                      {paymentData.payment_method === 'momo' && (
+                        <p className="text-xs text-amber-700 mt-1">Confirm the money has arrived in the facility wallet (check the confirmation SMS) before saving. Payments are not verified automatically.</p>
+                      )}
                     </div>
                   </div>
 

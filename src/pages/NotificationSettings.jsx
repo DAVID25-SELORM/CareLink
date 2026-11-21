@@ -1,206 +1,114 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { supabase, hospitalConflict } from '../supabaseClient'
+import { supabase } from '../supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-import { useOrg } from '../hooks/useOrg'
+import { logAuditEvent } from '../services/auditLog'
+import { useHospitalBranding } from '../hooks/useHospitalBranding'
 
-const TABS = ['Send Notification', 'Templates', 'Logs', 'Settings']
+const TABS = ['Send SMS', 'Sent log', 'Gateway']
+const MAX_LENGTH = 320
 
-const EVENT_TYPES = [
-  { value: 'appointment_reminder', label: 'Appointment Reminder' },
-  { value: 'lab_result_ready', label: 'Lab Result Ready' },
-  { value: 'discharge_notice', label: 'Discharge Notice' },
-  { value: 'payment_receipt', label: 'Payment Receipt' },
-  { value: 'prescription_ready', label: 'Prescription Ready' },
-  { value: 'custom', label: 'Custom Message' },
+// Starting points staff can edit. Placeholders are filled in on this screen before sending.
+const QUICK_MESSAGES = [
+  { value: 'custom', label: 'Custom message', text: '' },
+  { value: 'lab_result_ready', label: 'Lab result ready', text: 'Dear {{name}}, your test results are ready at {{hospital}}. Please come in to collect them.' },
+  { value: 'prescription_ready', label: 'Prescription ready', text: 'Dear {{name}}, your medication is ready for collection at the {{hospital}} pharmacy.' },
+  { value: 'follow_up', label: 'Follow-up visit', text: 'Dear {{name}}, please return to {{hospital}} for your follow-up visit. Call us to book a time.' },
 ]
 
-const CHANNELS = ['SMS', 'WhatsApp', 'Both']
+export const fillMessage = (text, { name, hospital }) =>
+  String(text || '')
+    .replaceAll('{{name}}', String(name || 'Patient').trim().split(/\s+/)[0])
+    .replaceAll('{{hospital}}', hospital || 'the hospital')
+
+const smsUnits = (length) => (length === 0 ? 0 : length <= 160 ? 1 : Math.ceil(length / 153))
 
 export default function NotificationSettings() {
   const { user } = useAuth()
-  const { orgId } = useOrg()
-  const [activeTab, setActiveTab] = useState('Send Notification')
+  const { branding } = useHospitalBranding()
+  const [activeTab, setActiveTab] = useState('Send SMS')
   const [patients, setPatients] = useState([])
-  const [logs, setLogs] = useState([])
-  const [templates, setTemplates] = useState([])
-  const [settings, setSettings] = useState(null)
+  const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
+  const [form, setForm] = useState({ patient_id: '', kind: 'custom', message: '' })
 
-  const [sendForm, setSendForm] = useState({
-    patient_id: '',
-    channel: 'SMS',
-    event_type: 'custom',
-    message: '',
-    phone_override: '',
-  })
-
-  const [templateForm, setTemplateForm] = useState({
-    event_type: 'appointment_reminder',
-    channel: 'SMS',
-    template_text: '',
-  })
-
-  const [settingsForm, setSettingsForm] = useState({
-    sms_provider: 'arkesel',
-    sms_api_key: '',
-    sms_sender_id: '',
-    whatsapp_provider: 'twilio',
-    whatsapp_account_sid: '',
-    whatsapp_auth_token: '',
-    whatsapp_from_number: '',
-    enabled: true,
-  })
-
-  useEffect(() => {
-    if (orgId) {
-      fetchAll()
-      fetchPatients()
-    }
-  }, [orgId])
-
-  async function fetchAll() {
+  const load = useCallback(async () => {
     setLoading(true)
-    try {
-      const [logsRes, tplRes, settRes] = await Promise.all([
-        supabase.from('notification_logs').select('*, patients(full_name)').eq('hospital_id', orgId).order('sent_at', { ascending: false }).limit(100),
-        supabase.from('notification_templates').select('*').eq('hospital_id', orgId),
-        supabase.from('notification_settings').select('*').eq('hospital_id', orgId).maybeSingle(),
-      ])
-      setLogs(logsRes.data || [])
-      setTemplates(tplRes.data || [])
-      if (settRes.data) {
-        setSettings(settRes.data)
-        setSettingsForm(s => ({ ...s, ...settRes.data }))
-      }
-    } catch {
-      toast.error('Failed to load notification data')
-    } finally {
-      setLoading(false)
-    }
+    const [patientRes, logRes] = await Promise.all([
+      supabase.from('patients').select('id, name, phone, consent_sms').order('name').limit(500),
+      supabase
+        .from('audit_log')
+        .select('id, created_at, user_email, action, record_id, new_values')
+        .in('action', ['send_sms', 'send_appointment_reminders'])
+        .order('created_at', { ascending: false })
+        .limit(100),
+    ])
+    if (patientRes.error) toast.error('Could not load patients. If this keeps happening, apply migration 029.')
+    setPatients(patientRes.data || [])
+    setEntries(logRes.data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const patient = patients.find((p) => p.id === form.patient_id)
+  const message = form.message
+  const canSend = Boolean(patient) && patient.consent_sms === true && message.trim().length > 0 && message.length <= MAX_LENGTH
+
+  const chooseKind = (kind) => {
+    const quick = QUICK_MESSAGES.find((q) => q.value === kind)
+    setForm((f) => ({
+      ...f,
+      kind,
+      message: quick?.text ? fillMessage(quick.text, { name: patient?.name, hospital: branding?.hospitalName }) : f.message,
+    }))
   }
 
-  async function fetchPatients() {
-    const { data } = await supabase.from('patients').select('id, full_name, phone_number, folder_number').eq('hospital_id', orgId).order('full_name').limit(500)
-    setPatients(data || [])
+  const choosePatient = (id) => {
+    const next = patients.find((p) => p.id === id)
+    const quick = QUICK_MESSAGES.find((q) => q.value === form.kind)
+    setForm((f) => ({
+      ...f,
+      patient_id: id,
+      message: quick?.text ? fillMessage(quick.text, { name: next?.name, hospital: branding?.hospitalName }) : f.message,
+    }))
   }
 
-  function resolveMessage() {
-    const tpl = templates.find(t => t.event_type === sendForm.event_type && (t.channel === sendForm.channel || sendForm.channel === 'Both'))
-    if (tpl && sendForm.event_type !== 'custom') return tpl.template_text
-    return sendForm.message
-  }
-
-  async function handleSend(e) {
-    e.preventDefault()
-    if (!sendForm.patient_id && !sendForm.phone_override) { toast.error('Select a patient or enter a phone number'); return }
-    const message = resolveMessage()
-    if (!message.trim()) { toast.error('Message is empty'); return }
+  const send = async (event) => {
+    event.preventDefault()
+    if (!canSend) return
     setSending(true)
     try {
-      const patient = patients.find(p => p.id === sendForm.patient_id)
-      const phone = sendForm.phone_override || patient?.phone_number
-      if (!phone) { toast.error('No phone number found for this patient'); setSending(false); return }
-
-      const { error } = await supabase.from('notification_logs').insert({
-        hospital_id: orgId,
-        patient_id: sendForm.patient_id || null,
-        channel: sendForm.channel,
-        event_type: sendForm.event_type,
-        message,
-        recipient_phone: phone,
-        status: 'queued',
-        sent_by: user.id,
-        sent_at: new Date().toISOString(),
-      })
-      if (error) throw error
-      toast.success(`Notification queued for delivery via ${sendForm.channel}`)
-      setSendForm(f => ({ ...f, patient_id: '', message: '', phone_override: '' }))
-      fetchAll()
-    } catch {
-      toast.error('Failed to queue notification')
+      const { data, error } = await supabase.functions.invoke('send-sms', { body: { patient_id: patient.id, message } })
+      if (error || data?.status !== 'sent') {
+        let reason = data?.error
+        if (!reason && error?.context?.json) reason = (await error.context.json().catch(() => null))?.error
+        throw new Error(reason || error?.message || 'The SMS service is not available')
+      }
+      // The audit entry records who texted whom and how long it was, not the message text.
+      await logAuditEvent({ user, action: 'send_sms', tableName: 'patients', recordId: patient.id, newValues: { status: 'sent', kind: form.kind, length: message.length } })
+      toast.success(`SMS sent to ${patient.name}`)
+      setForm({ patient_id: '', kind: 'custom', message: '' })
+      load()
+    } catch (error) {
+      toast.error(error.message || 'Could not send the SMS')
     } finally {
       setSending(false)
     }
   }
 
-  async function handleTemplateSave(e) {
-    e.preventDefault()
-    if (!templateForm.template_text) { toast.error('Template text is required'); return }
-    setSaving(true)
-    try {
-      const { error } = await supabase.from('notification_templates').upsert({
-        ...templateForm,
-        hospital_id: orgId,
-        updated_by: user.id,
-      }, { onConflict: hospitalConflict('hospital_id,event_type,channel') })
-      if (error) throw error
-      toast.success('Template saved')
-      setTemplateForm({ event_type: 'appointment_reminder', channel: 'SMS', template_text: '' })
-      fetchAll()
-    } catch {
-      toast.error('Failed to save template')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleSettingsSave(e) {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      const { error } = await supabase.from('notification_settings').upsert({
-        ...settingsForm,
-        hospital_id: orgId,
-        updated_by: user.id,
-      }, { onConflict: hospitalConflict('hospital_id') })
-      if (error) throw error
-      toast.success('Notification settings saved')
-    } catch {
-      toast.error('Failed to save settings')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const selectedPatient = patients.find(p => p.id === sendForm.patient_id)
-
-  if (loading) return (
-    <DashboardLayout>
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    </DashboardLayout>
-  )
-
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">SMS & Notifications</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Send SMS and WhatsApp messages to patients via configured gateways</p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { label: 'Total Sent', value: logs.length, color: 'bg-indigo-50 text-indigo-700' },
-            { label: 'SMS', value: logs.filter(l => l.channel === 'SMS').length, color: 'bg-blue-50 text-blue-700' },
-            { label: 'WhatsApp', value: logs.filter(l => l.channel === 'WhatsApp').length, color: 'bg-green-50 text-green-700' },
-            { label: 'Failed', value: logs.filter(l => l.status === 'failed').length, color: 'bg-red-50 text-red-700' },
-          ].map(s => (
-            <div key={s.label} className={`rounded-xl p-4 ${s.color} border border-current border-opacity-20`}>
-              <p className="text-2xl font-bold">{s.value}</p>
-              <p className="text-sm font-medium opacity-80">{s.label}</p>
-            </div>
-          ))}
+          <h2 className="text-xl font-semibold text-slate-900">SMS</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Send a text to a patient who agreed to SMS. Appointment reminders are sent from the Appointments page.</p>
         </div>
 
         <div className="flex gap-1 border-b border-slate-200">
-          {TABS.map(tab => (
+          {TABS.map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition ${activeTab === tab ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
               {tab}
@@ -208,135 +116,57 @@ export default function NotificationSettings() {
           ))}
         </div>
 
-        {/* Send Notification */}
-        {activeTab === 'Send Notification' && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm max-w-xl">
-            <h3 className="font-semibold text-slate-900 mb-4">Send a Notification</h3>
-            <form onSubmit={handleSend} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Patient (optional)</label>
-                <select value={sendForm.patient_id} onChange={e => setSendForm(f => ({ ...f, patient_id: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                  <option value="">Search patient...</option>
-                  {patients.map(p => <option key={p.id} value={p.id}>{p.full_name} ({p.folder_number}) — {p.phone_number}</option>)}
-                </select>
-                {selectedPatient && <p className="text-xs text-slate-500 mt-1">Phone: {selectedPatient.phone_number}</p>}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Phone Override (if no patient selected)</label>
-                <input value={sendForm.phone_override} onChange={e => setSendForm(f => ({ ...f, phone_override: e.target.value }))} placeholder="e.g. +233244000000" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Channel</label>
-                  <select value={sendForm.channel} onChange={e => setSendForm(f => ({ ...f, channel: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                    {CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Type</label>
-                  <select value={sendForm.event_type} onChange={e => setSendForm(f => ({ ...f, event_type: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                    {EVENT_TYPES.map(et => <option key={et.value} value={et.value}>{et.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Message {sendForm.event_type !== 'custom' && templates.find(t => t.event_type === sendForm.event_type) ? '(from template)' : ''}
-                </label>
-                <textarea
-                  value={sendForm.event_type !== 'custom' && templates.find(t => t.event_type === sendForm.event_type)
-                    ? templates.find(t => t.event_type === sendForm.event_type).template_text
-                    : sendForm.message}
-                  onChange={e => setSendForm(f => ({ ...f, message: e.target.value, event_type: 'custom' }))}
-                  rows={4}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
-                  placeholder="Type your message here..."
-                />
-                <p className="text-xs text-slate-400 mt-1">{(sendForm.message || '').length} / 160 characters (1 SMS unit)</p>
-              </div>
-              <button type="submit" disabled={sending} className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                {sending ? 'Sending...' : `Send via ${sendForm.channel}`}
-              </button>
-            </form>
-          </div>
+        {activeTab === 'Send SMS' && (
+          <form onSubmit={send} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm max-w-xl space-y-4">
+            <div>
+              <label htmlFor="sms-patient" className="block text-xs font-medium text-slate-600 mb-1">Patient</label>
+              <select id="sms-patient" value={form.patient_id} onChange={(e) => choosePatient(e.target.value)} disabled={loading} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                <option value="">Select a patient...</option>
+                {patients.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}{p.consent_sms === true ? '' : ' (no SMS consent)'}</option>
+                ))}
+              </select>
+              {patient && patient.consent_sms !== true && (
+                <p role="alert" className="text-xs text-red-600 mt-1">This patient has not agreed to SMS. Tick &quot;Agrees to SMS reminders&quot; on their patient page first.</p>
+              )}
+              {patient && patient.consent_sms === true && <p className="text-xs text-slate-500 mt-1">The number on the patient record will be used.</p>}
+            </div>
+            <div>
+              <label htmlFor="sms-kind" className="block text-xs font-medium text-slate-600 mb-1">Message type</label>
+              <select id="sms-kind" value={form.kind} onChange={(e) => chooseKind(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                {QUICK_MESSAGES.map((q) => <option key={q.value} value={q.value}>{q.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="sms-message" className="block text-xs font-medium text-slate-600 mb-1">Message</label>
+              <textarea id="sms-message" value={message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} rows={4} maxLength={MAX_LENGTH}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Type the message. Do not include diagnoses or results." />
+              <p className="text-xs text-slate-400 mt-1">{message.length} / {MAX_LENGTH} characters ({smsUnits(message.length)} SMS unit{smsUnits(message.length) === 1 ? '' : 's'}). Keep clinical details out of texts.</p>
+            </div>
+            <button type="submit" disabled={!canSend || sending} className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+              {sending ? 'Sending...' : 'Send SMS'}
+            </button>
+          </form>
         )}
 
-        {/* Templates */}
-        {activeTab === 'Templates' && (
-          <div className="space-y-4">
-            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm max-w-xl">
-              <h3 className="font-semibold text-slate-900 mb-4">Add / Update Template</h3>
-              <form onSubmit={handleTemplateSave} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Event</label>
-                    <select value={templateForm.event_type} onChange={e => setTemplateForm(f => ({ ...f, event_type: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                      {EVENT_TYPES.filter(et => et.value !== 'custom').map(et => <option key={et.value} value={et.value}>{et.label}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Channel</label>
-                    <select value={templateForm.channel} onChange={e => setTemplateForm(f => ({ ...f, channel: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                      <option value="SMS">SMS</option>
-                      <option value="WhatsApp">WhatsApp</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Template Text</label>
-                  <textarea value={templateForm.template_text} onChange={e => setTemplateForm(f => ({ ...f, template_text: e.target.value }))} rows={4} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Use {{name}}, {{date}}, {{time}}, {{doctor}} as placeholders" />
-                  <p className="text-xs text-slate-400 mt-1">Available variables: {'{{name}}'}, {'{{date}}'}, {'{{time}}'}, {'{{doctor}}'}, {'{{hospital}}'}</p>
-                </div>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                  {saving ? 'Saving...' : 'Save Template'}
-                </button>
-              </form>
-            </div>
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    {['Event', 'Channel', 'Template'].map(h => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {templates.length === 0 && <tr><td colSpan={3} className="text-center py-8 text-slate-400 text-sm">No templates yet</td></tr>}
-                  {templates.map(t => (
-                    <tr key={t.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-slate-700 capitalize">{t.event_type?.replace(/_/g, ' ')}</td>
-                      <td className="px-4 py-3"><span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">{t.channel}</span></td>
-                      <td className="px-4 py-3 text-slate-600 text-xs max-w-xs truncate">{t.template_text}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Logs */}
-        {activeTab === 'Logs' && (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        {activeTab === 'Sent log' && (
+          <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  {['Patient', 'Channel', 'Type', 'Phone', 'Status', 'Sent At'].map(h => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">{h}</th>)}
-                </tr>
+                <tr>{['When', 'By', 'What', 'Detail'].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">{h}</th>)}</tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {logs.length === 0 && <tr><td colSpan={6} className="text-center py-12 text-slate-400 text-sm">No notifications sent yet</td></tr>}
-                {logs.map(l => (
-                  <tr key={l.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-900">{l.patients?.full_name || '—'}</td>
-                    <td className="px-4 py-3"><span className={`px-2 py-1 rounded text-xs font-medium ${l.channel === 'SMS' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>{l.channel}</span></td>
-                    <td className="px-4 py-3 text-slate-600 capitalize text-xs">{l.event_type?.replace(/_/g, ' ')}</td>
-                    <td className="px-4 py-3 text-slate-600">{l.recipient_phone}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${l.status === 'delivered' ? 'bg-green-100 text-green-700' : l.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {l.status}
-                      </span>
+                {entries.length === 0 && <tr><td colSpan={4} className="text-center py-10 text-slate-400">Nothing sent yet</td></tr>}
+                {entries.map((e) => (
+                  <tr key={e.id}>
+                    <td className="px-4 py-3 text-xs text-slate-500">{new Date(e.created_at).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-slate-700">{e.user_email || '-'}</td>
+                    <td className="px-4 py-3 text-slate-700">{e.action === 'send_sms' ? 'Single SMS' : 'Appointment reminders'}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">
+                      {e.action === 'send_sms'
+                        ? `${e.new_values?.kind || 'custom'}, ${e.new_values?.length || 0} characters`
+                        : `${e.new_values?.sent ?? 0} sent for ${e.new_values?.date || ''}, ${e.new_values?.failed ?? 0} failed`}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{l.sent_at ? new Date(l.sent_at).toLocaleString() : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -344,71 +174,19 @@ export default function NotificationSettings() {
           </div>
         )}
 
-        {/* Settings */}
-        {activeTab === 'Settings' && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm max-w-xl">
-            <h3 className="font-semibold text-slate-900 mb-1">Gateway Configuration</h3>
-            <p className="text-xs text-slate-500 mb-4">Configure your SMS and WhatsApp providers. API keys are stored securely.</p>
-            <form onSubmit={handleSettingsSave} className="space-y-5">
-              <div>
-                <h4 className="text-sm font-semibold text-slate-700 mb-3">SMS Gateway</h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Provider</label>
-                    <select value={settingsForm.sms_provider} onChange={e => setSettingsForm(f => ({ ...f, sms_provider: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                      <option value="arkesel">Arkesel (Ghana)</option>
-                      <option value="hubtel">Hubtel (Ghana)</option>
-                      <option value="mnotify">mNotify (Ghana)</option>
-                      <option value="twilio">Twilio</option>
-                      <option value="africas_talking">Africa's Talking</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">API Key</label>
-                    <input type="password" value={settingsForm.sms_api_key} onChange={e => setSettingsForm(f => ({ ...f, sms_api_key: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Sender ID</label>
-                    <input value={settingsForm.sms_sender_id} onChange={e => setSettingsForm(f => ({ ...f, sms_sender_id: e.target.value }))} placeholder="e.g. CARELINK" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-semibold text-slate-700 mb-3">WhatsApp Gateway</h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Provider</label>
-                    <select value={settingsForm.whatsapp_provider} onChange={e => setSettingsForm(f => ({ ...f, whatsapp_provider: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                      <option value="twilio">Twilio WhatsApp</option>
-                      <option value="360dialog">360dialog</option>
-                      <option value="meta_cloud">Meta Cloud API</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Account SID / API Key</label>
-                    <input type="password" value={settingsForm.whatsapp_account_sid} onChange={e => setSettingsForm(f => ({ ...f, whatsapp_account_sid: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Auth Token</label>
-                    <input type="password" value={settingsForm.whatsapp_auth_token} onChange={e => setSettingsForm(f => ({ ...f, whatsapp_auth_token: e.target.value }))} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">From Number</label>
-                    <input value={settingsForm.whatsapp_from_number} onChange={e => setSettingsForm(f => ({ ...f, whatsapp_from_number: e.target.value }))} placeholder="+1415XXXXXXX" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" />
-                  </div>
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={settingsForm.enabled} onChange={e => setSettingsForm(f => ({ ...f, enabled: e.target.checked }))} />
-                Enable notifications
-              </label>
-
-              <button type="submit" disabled={saving} className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                {saving ? 'Saving...' : 'Save Gateway Settings'}
-              </button>
-            </form>
+        {activeTab === 'Gateway' && (
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm max-w-xl space-y-3 text-sm text-slate-700">
+            <h3 className="font-semibold text-slate-900">SMS gateway</h3>
+            <p>
+              SMS provider keys are <strong>not stored in this app</strong> and cannot be entered here. They are set once on the
+              server by whoever runs CareLink, so nobody can read them from a browser.
+            </p>
+            <ol className="list-decimal pl-5 space-y-1 text-slate-600">
+              <li>Open an account with an SMS provider (Arkesel is supported) and register a sender name.</li>
+              <li>The CareLink operator sets the secrets <code>SMS_API_KEY</code> and <code>SMS_SENDER_ID</code> and deploys the <code>send-sms</code> and <code>send-appointment-reminders</code> functions.</li>
+              <li>Send one test message to your own phone before using it with patients.</li>
+            </ol>
+            <p className="text-xs text-slate-500">WhatsApp messaging is not available yet.</p>
           </div>
         )}
       </div>
