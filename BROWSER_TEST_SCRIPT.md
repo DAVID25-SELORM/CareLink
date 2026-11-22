@@ -42,12 +42,12 @@ Login: pharmacist.
 4. **Expect:** a banner or alert listing near-expiry and expired stock.
 
 ## 6. Cashier: payment, mobile money, refund, day close
-Login: cashier (steps 1 to 4), then admin (step 5), then cashier (step 6).
+Login: cashier (steps 1 to 4), then admin (step 5), then cashier (step 6). Cashiers only see their own refund requests; admins see all.
 1. Pay a pending bill by **cash**. **Expect:** saved; a receipt prints and downloads with a receipt number.
 2. Pay another by **Mobile Money**. Leave the network empty. **Expect:** blocked. Choose MTN, leave the reference empty. **Expect:** blocked. Enter `AB12` (too short). **Expect:** blocked with a message. Enter `MP2611180001`. **Expect:** saved; receipt shows MOBILE MONEY (MTN) and the reference.
 3. Pay a third bill by mobile money using the **same** reference `MP2611180001`. **Expect:** refused as already used.
-4. As cashier, open Completed. **Expect:** no Refund button.
-5. As admin, open Completed and click **Refund** on the cash payment, give a reason. **Expect:** payment disappears from completed; the prescription is back in Pending. Try refunding a payment whose medicine was already dispensed. **Expect:** refused.
+4. As cashier, open Completed. **Expect:** no direct Refund button, only **Request refund**. Click it on the cash payment with an empty reason. **Expect:** refused. Give a reason. **Expect:** request saved; the payment stays in Completed. Open the **Refund requests** tab. **Expect:** your request shows as pending.
+5. As admin, open **Refund requests**. **Expect:** the cashier's request is listed. Click **Decline** with a reason. **Expect:** it shows as declined and the payment is unchanged. Ask for it again as cashier, then as admin click **Approve**. **Expect:** the payment leaves Completed; the prescription is back in Pending; the audit log has `refund_request` and `refund_payment`. Also try the direct **Refund** button on another payment, and a payment whose medicine was already dispensed. **Expect:** refused.
 6. Cashier, **Day close**, today. **Expect:** totals by method match what you took, refund shown separately and not counted. Enter counted cash equal to expected, record. **Expect:** "cash balanced". Enter a different amount with no note. **Expect:** blocked. Add a note. **Expect:** saved, shown under Recent closes with the difference.
 
 ## 7. Child welfare and SMS recall
